@@ -24,7 +24,7 @@ public class ErrorHandler {
         for (FieldError err : exception.getBindingResult().getFieldErrors()) {
             Errors error = new Errors();
             error.setField(err.getField());
-            error.setMessage(err.getField());
+            error.setMessage(err.getDefaultMessage());
             errors.add(error);
         }
         return response(HttpStatus.BAD_REQUEST, errors);
