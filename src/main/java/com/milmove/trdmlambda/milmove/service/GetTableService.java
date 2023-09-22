@@ -7,38 +7,26 @@ import com.milmove.trdmlambda.milmove.model.gettable.GetTableResponse;
 
 import jakarta.xml.soap.MessageFactory;
 import jakarta.xml.soap.SOAPBody;
+import jakarta.xml.soap.SOAPConnection;
+import jakarta.xml.soap.SOAPConnectionFactory;
 import jakarta.xml.soap.SOAPElement;
 import jakarta.xml.soap.SOAPEnvelope;
 import jakarta.xml.soap.SOAPHeader;
 import jakarta.xml.soap.SOAPMessage;
 import jakarta.xml.soap.SOAPPart;
 
-/**
- * <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-    xmlns:ret="http://ReturnTablePackage/">
-    <soapenv:Header />
-    <soapenv:Body>
-        <ret:getTableRequestElement>
-            <ret:input>
-                <ret:TRDM>
-                    <ret:physicalName>ACFT</ret:physicalName>
-                    <ret:returnContent>true</ret:returnContent>
-                </ret:TRDM>
-            </ret:input>
-        </ret:getTableRequestElement>
-    </soapenv:Body>
-</soapenv:Envelope>
- */
 @Service
 public class GetTableService {
+    private String endpointURL = "";
 
     /**
      * Processes REST request for getTable
+     * 
      * @param request GetTableRequest
      * @return GetTableResponse
      */
     public GetTableResponse getTableRequest(GetTableRequest request) {
-        buildSoapBody(request);
+        callSoapWebService(endpointURL, "POST", request);
         var response = new GetTableResponse();
         return response;
 
@@ -46,6 +34,7 @@ public class GetTableService {
 
     /**
      * Builds SOAP body from REST request
+     * 
      * @param request - GetTableRequest
      * @return built SOAP XML body with header.
      */
@@ -70,19 +59,39 @@ public class GetTableService {
             SOAPElement returnContentElement = trdmElement.addChildElement("returnContent", "ret");
             returnContentElement.addTextNode(String.valueOf(request.isReturnContent()));
 
-            SOAPElement contentUpdatedSinceDateTimeElement = trdmElement.addChildElement("contentUpdatedSinceDateTime", "ret");
+            SOAPElement contentUpdatedSinceDateTimeElement = trdmElement.addChildElement("contentUpdatedSinceDateTime",
+                    "ret");
             contentUpdatedSinceDateTimeElement.addTextNode(request.getContentUpdatedSinceDateTime());
-            
+
             msg.saveChanges();
-
-            msg.writeTo(System.out);
-
             return msg;
 
         } catch (Exception e) {
             // TODO: handle exception
         }
         return null;
+    }
+
+    private void callSoapWebService(String soapEndpointUrl, String soapAction, GetTableRequest request) {
+        try {
+            // Create SOAP Connection
+            SOAPConnectionFactory soapConnectionFactory = SOAPConnectionFactory.newInstance();
+            SOAPConnection soapConnection = soapConnectionFactory.createConnection();
+
+            // Send SOAP Message to SOAP Server
+            SOAPMessage soapResponse = soapConnection.call(buildSoapBody(request), soapEndpointUrl);
+
+            // Print the SOAP Response
+            System.out.println("Response SOAP Message:");
+            soapResponse.writeTo(System.out);
+            System.out.println();
+
+            soapConnection.close();
+        } catch (Exception e) {
+            System.err.println(
+                    "\nError occurred while sending SOAP Request to Server!\nMake sure you have the correct endpoint URL and SOAPAction!\n");
+            e.printStackTrace();
+        }
     }
 
 }
