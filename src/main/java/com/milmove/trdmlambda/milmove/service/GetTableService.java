@@ -32,6 +32,11 @@ import jakarta.xml.soap.SOAPPart;
 @Service
 public class GetTableService {
 
+    /**
+     * Processes REST request for getTable
+     * @param request GetTableRequest
+     * @return GetTableResponse
+     */
     public GetTableResponse getTableRequest(GetTableRequest request) {
         buildSoapBody(request);
         var response = new GetTableResponse();
@@ -39,7 +44,12 @@ public class GetTableService {
 
     }
 
-    private void buildSoapBody(GetTableRequest request) {
+    /**
+     * Builds SOAP body from REST request
+     * @param request - GetTableRequest
+     * @return built SOAP XML body with header.
+     */
+    private SOAPMessage buildSoapBody(GetTableRequest request) {
         try {
             MessageFactory factory = MessageFactory.newInstance();
             SOAPMessage msg = factory.createMessage();
@@ -67,10 +77,12 @@ public class GetTableService {
 
             msg.writeTo(System.out);
 
+            return msg;
+
         } catch (Exception e) {
             // TODO: handle exception
         }
-
+        return null;
     }
 
 }

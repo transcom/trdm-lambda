@@ -1,6 +1,7 @@
 package com.milmove.trdmlambda.milmove.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,12 +26,12 @@ public class LastTableUpdateController {
     @Autowired
     private LastTableUpdateService lastTableUpdateService;
 
-    @PostMapping("/lastTableUpdate")
-        @ApiResponses(value = {
+    @PostMapping(path = "/lastTableUpdate", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = LastTableUpdateResponse.class)) })
     })
-    public LastTableUpdateResponse lastTableUpdate(@RequestBody @Valid LastTableUpdateRequest requestBody) {
+    public LastTableUpdateResponse lastTableUpdate(@Valid @RequestBody LastTableUpdateRequest requestBody) {
         return lastTableUpdateService.lastTableUpdateRequest(requestBody);
     }
 

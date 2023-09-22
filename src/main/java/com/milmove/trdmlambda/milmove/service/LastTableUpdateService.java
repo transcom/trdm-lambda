@@ -16,6 +16,11 @@ import jakarta.xml.soap.SOAPPart;
 @Service
 public class LastTableUpdateService {
 
+    /**
+     * Processes lastTableUpdate REST request
+     * @param request LastTableUpdateRequest
+     * @return LastTableUpdateResponse
+     */
     public LastTableUpdateResponse lastTableUpdateRequest(LastTableUpdateRequest request) {
         buildSoapBody(request);
         var response = new LastTableUpdateResponse();
@@ -23,7 +28,12 @@ public class LastTableUpdateService {
         return response;
     }
 
-    private void buildSoapBody(LastTableUpdateRequest request) {
+    /**
+     * Builds SOAP body from REST request
+     * @param request - GetTableRequest
+     * @return built SOAP XML body with header.
+     */
+    private SOAPMessage buildSoapBody(LastTableUpdateRequest request) {
         try {
             MessageFactory factory = MessageFactory.newInstance();
             SOAPMessage msg = factory.createMessage();
@@ -42,10 +52,12 @@ public class LastTableUpdateService {
             msg.saveChanges();
 
             msg.writeTo(System.out);
+            return msg;
 
         } catch (Exception e) {
             // TODO: handle exception
         }
+        return null;
     }
 
 }

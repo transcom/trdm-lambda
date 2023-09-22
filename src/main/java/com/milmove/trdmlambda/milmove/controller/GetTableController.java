@@ -1,6 +1,7 @@
 package com.milmove.trdmlambda.milmove.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,12 +25,12 @@ public class GetTableController {
     @Autowired
     private GetTableService getTableService;
 
-    @PostMapping("/getTable")
+    @PostMapping(path = "/getTable", produces = MediaType.APPLICATION_JSON_VALUE)
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = GetTableResponse.class)) })
     })
-    public GetTableResponse getTable(@RequestBody @Valid GetTableRequest requestBody) {
+    public GetTableResponse getTable(@Valid @RequestBody GetTableRequest requestBody) {
         return getTableService.getTableRequest(requestBody);
 
     }
