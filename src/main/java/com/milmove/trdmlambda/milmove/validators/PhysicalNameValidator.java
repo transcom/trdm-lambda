@@ -9,7 +9,7 @@ public class PhysicalNameValidator implements ConstraintValidator<PhysicalNameCo
 
     @Override
     public boolean isValid(String physicalName, ConstraintValidatorContext context) {
-       return physicalName == null;
+       return physicalName != null;
     }
     
 }

@@ -10,6 +10,6 @@ public class ContentUpdatedSinceDateTimeValidator
 
     @Override
     public boolean isValid(String contentUpdatedSinceDateTime, ConstraintValidatorContext context) {
-        return contentUpdatedSinceDateTime == null;
+        return contentUpdatedSinceDateTime != null;
     }
 }
