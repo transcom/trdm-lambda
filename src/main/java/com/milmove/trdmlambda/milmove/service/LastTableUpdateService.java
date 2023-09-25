@@ -1,5 +1,6 @@
 package com.milmove.trdmlambda.milmove.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.milmove.trdmlambda.milmove.model.lasttableupdate.LastTableUpdateRequest;
@@ -17,7 +18,9 @@ import jakarta.xml.soap.SOAPPart;
 
 @Service
 public class LastTableUpdateService {
-    private String endpointURL = "";
+    
+    @Value("{$trdm.wsdl-url}")
+    private String endpointURL;
 
     /**
      * Processes lastTableUpdate REST request
