@@ -73,11 +73,7 @@ public class GetTableService {
     }
 
     private void callSoapWebService(String soapEndpointUrl, String soapAction, GetTableRequest request) {
-        try {
-            // Create SOAP Connection
-            SOAPConnectionFactory soapConnectionFactory = SOAPConnectionFactory.newInstance();
-            SOAPConnection soapConnection = soapConnectionFactory.createConnection();
-
+        try (SOAPConnection soapConnection = SOAPConnectionFactory.newInstance().createConnection()) {
             // Send SOAP Message to SOAP Server
             SOAPMessage soapResponse = soapConnection.call(buildSoapBody(request), soapEndpointUrl);
 
@@ -86,7 +82,6 @@ public class GetTableService {
             soapResponse.writeTo(System.out);
             System.out.println();
 
-            soapConnection.close();
         } catch (Exception e) {
             System.err.println(
                     "\nError occurred while sending SOAP Request to Server!\nMake sure you have the correct endpoint URL and SOAPAction!\n");
