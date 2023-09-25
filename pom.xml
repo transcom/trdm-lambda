@@ -88,6 +88,13 @@
 			<artifactId>aws-serverless-java-container-springboot3</artifactId>
 			<version>2.0.0-M2</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api -->
+		<dependency>
+			<groupId>javax.xml.bind</groupId>
+			<artifactId>jaxb-api</artifactId>
+			<version>2.4.0-b180830.0359</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

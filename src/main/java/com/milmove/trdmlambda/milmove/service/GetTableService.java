@@ -1,11 +1,14 @@
 package com.milmove.trdmlambda.milmove.service;
 
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.milmove.trdmlambda.milmove.model.gettable.GetTableRequest;
 import com.milmove.trdmlambda.milmove.model.gettable.GetTableResponse;
 
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.Unmarshaller;
 import jakarta.xml.soap.MessageFactory;
 import jakarta.xml.soap.SOAPBody;
 import jakarta.xml.soap.SOAPConnection;
@@ -18,10 +21,9 @@ import jakarta.xml.soap.SOAPPart;
 
 @Service
 public class GetTableService {
-    
+
     @Value("{$trdm.wsdl-url}")
     private String endpointURL;
-
     /**
      * Processes REST request for getTable
      * 
@@ -29,10 +31,7 @@ public class GetTableService {
      * @return GetTableResponse
      */
     public GetTableResponse getTableRequest(GetTableRequest request) {
-        callSoapWebService(endpointURL, "POST", request);
-        var response = new GetTableResponse();
-        return response;
-
+        return callSoapWebService(endpointURL, "POST", request);
     }
 
     /**
@@ -75,21 +74,31 @@ public class GetTableService {
         return null;
     }
 
-    private void callSoapWebService(String soapEndpointUrl, String soapAction, GetTableRequest request) {
+    private GetTableResponse callSoapWebService(String soapEndpointUrl, String soapAction, GetTableRequest request) {
+
+        JAXBContext jaxbContext;
         try (SOAPConnection soapConnection = SOAPConnectionFactory.newInstance().createConnection()) {
             // Send SOAP Message to SOAP Server
-            SOAPMessage soapResponse = soapConnection.call(buildSoapBody(request), soapEndpointUrl);
+            SOAPMessage soapResponse = soapConnection.call(buildSoapBody(request),
+                    soapEndpointUrl);
 
-            // Print the SOAP Response
-            System.out.println("Response SOAP Message:");
-            soapResponse.writeTo(System.out);
-            System.out.println();
+            SOAPBody body = soapResponse.getSOAPBody();
+            jaxbContext = JAXBContext.newInstance(GetTableResponse.class);
+            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+            GetTableResponse getTable = (GetTableResponse) jaxbUnmarshaller.unmarshal(body);
+            System.out.println(getTable.getStatusCode());
+            System.out.println(getTable.getRowCount());
+            System.out.println(getTable.getDateTime());
+
+            return getTable;
 
         } catch (Exception e) {
             System.err.println(
                     "\nError occurred while sending SOAP Request to Server!\nMake sure you have the correct endpoint URL and SOAPAction!\n");
             e.printStackTrace();
         }
+        return null;
+
     }
 
 }

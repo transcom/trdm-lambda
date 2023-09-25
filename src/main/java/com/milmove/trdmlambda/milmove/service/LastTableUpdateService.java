@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import com.milmove.trdmlambda.milmove.model.lasttableupdate.LastTableUpdateRequest;
 import com.milmove.trdmlambda.milmove.model.lasttableupdate.LastTableUpdateResponse;
 
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.Unmarshaller;
 import jakarta.xml.soap.MessageFactory;
 import jakarta.xml.soap.SOAPBody;
 import jakarta.xml.soap.SOAPConnection;
@@ -28,10 +30,7 @@ public class LastTableUpdateService {
      * @return LastTableUpdateResponse
      */
     public LastTableUpdateResponse lastTableUpdateRequest(LastTableUpdateRequest request) {
-        callSoapWebService(endpointURL, "POST" ,request);
-        var response = new LastTableUpdateResponse();
-
-        return response;
+       return callSoapWebService(endpointURL, "POST" ,request);
     }
 
     /**
@@ -66,19 +65,24 @@ public class LastTableUpdateService {
         return null;
     }
 
-    private void callSoapWebService(String soapEndpointUrl, String soapAction, LastTableUpdateRequest request) {
+    private LastTableUpdateResponse callSoapWebService(String soapEndpointUrl, String soapAction, LastTableUpdateRequest request) {
+        JAXBContext jaxbContext;
         try(SOAPConnection soapConnection = SOAPConnectionFactory.newInstance().createConnection()) {
             // Send SOAP Message to SOAP Server
             SOAPMessage soapResponse = soapConnection.call(buildSoapBody(request), soapEndpointUrl);
 
-            // Print the SOAP Response
-            System.out.println("Response SOAP Message:");
-            soapResponse.writeTo(System.out);
+            SOAPBody body = soapResponse.getSOAPBody();
+              jaxbContext = JAXBContext.newInstance(LastTableUpdateResponse.class);
+            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+            LastTableUpdateResponse lastTableUpdateResponse = (LastTableUpdateResponse) jaxbUnmarshaller.unmarshal(body);
+
+            return lastTableUpdateResponse;
 
         } catch (Exception e) {
             System.err.println("\nError occurred while sending SOAP Request to Server!\nMake sure you have the correct endpoint URL and SOAPAction!\n");
             e.printStackTrace();
         }
+        return null;
     }
 
 }
