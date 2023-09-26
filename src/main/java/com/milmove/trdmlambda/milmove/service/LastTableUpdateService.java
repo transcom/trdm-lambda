@@ -1,8 +1,9 @@
 package com.milmove.trdmlambda.milmove.service;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.milmove.trdmlambda.milmove.config.TrdmProps;
 import com.milmove.trdmlambda.milmove.model.lasttableupdate.LastTableUpdateRequest;
 import com.milmove.trdmlambda.milmove.model.lasttableupdate.LastTableUpdateResponse;
 
@@ -21,8 +22,8 @@ import jakarta.xml.soap.SOAPPart;
 @Service
 public class LastTableUpdateService {
 
-    @Value("{$trdm.service-url}")
-    private String endpointURL;
+    @Autowired
+    private TrdmProps trdmProps;
 
     /**
      * Processes lastTableUpdate REST request
@@ -31,7 +32,7 @@ public class LastTableUpdateService {
      * @return LastTableUpdateResponse
      */
     public LastTableUpdateResponse lastTableUpdateRequest(LastTableUpdateRequest request) {
-        return callSoapWebService(endpointURL, "POST", request);
+        return callSoapWebService(trdmProps.getServiceUrl(), "POST", request);
     }
 
     /**

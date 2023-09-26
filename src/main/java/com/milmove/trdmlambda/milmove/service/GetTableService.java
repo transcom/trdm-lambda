@@ -1,9 +1,10 @@
 package com.milmove.trdmlambda.milmove.service;
 
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.milmove.trdmlambda.milmove.config.TrdmProps;
 import com.milmove.trdmlambda.milmove.model.gettable.GetTableRequest;
 import com.milmove.trdmlambda.milmove.model.gettable.GetTableResponse;
 
@@ -22,8 +23,8 @@ import jakarta.xml.soap.SOAPPart;
 @Service
 public class GetTableService {
 
-    @Value("{$trdm.service-url}")
-    private String endpointURL;
+    @Autowired
+    private TrdmProps trdmProps;
 
     /**
      * Processes REST request for getTable
@@ -32,7 +33,7 @@ public class GetTableService {
      * @return GetTableResponse
      */
     public GetTableResponse getTableRequest(GetTableRequest request) {
-        return callSoapWebService(endpointURL, "POST", request);
+        return callSoapWebService(trdmProps.getServiceUrl(), "POST", request);
     }
 
     /**
@@ -87,9 +88,6 @@ public class GetTableService {
             jaxbContext = JAXBContext.newInstance(GetTableResponse.class);
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
             GetTableResponse getTable = (GetTableResponse) jaxbUnmarshaller.unmarshal(body);
-            System.out.println(getTable.getStatusCode());
-            System.out.println(getTable.getRowCount());
-            System.out.println(getTable.getDateTime());
 
             return getTable;
 

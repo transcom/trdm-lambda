@@ -1,18 +1,3 @@
-spring:
-    profiles.active: local
----
-org:
-    apache:
-        ws:
-            security:
-                crypto:
-                    provider: org.apache.ws.security.components.crypto.Merlin
-                    merlin:
-                        keystore:
-                            type: jks
-                            password: $KEYSTORE_PASSWORD
-                            alias: $KEYSTORE_ALIAS
-                            file: $TLS_CERTIFICATE
-
 trdm:
-    wsdl-url: $TRDM_WSDL_URL
+    service-url: ${TRDM_SERVICE_URL}
+
