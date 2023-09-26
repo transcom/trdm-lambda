@@ -37,7 +37,7 @@ public class ErrorHandler {
         Errors error = new Errors();
         error.setMessage(exception.getMessage());
         errors.add(error);
-        return response(HttpStatus.BAD_REQUEST, errors);
+        return response(HttpStatus.INTERNAL_SERVER_ERROR, errors);
     }
 
     private ResponseEntity<ErrorResponse> response(HttpStatus status, List<Errors> errs) {

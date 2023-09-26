@@ -22,8 +22,9 @@ import jakarta.xml.soap.SOAPPart;
 @Service
 public class GetTableService {
 
-    @Value("{$trdm.wsdl-url}")
+    @Value("{$trdm.service-url}")
     private String endpointURL;
+
     /**
      * Processes REST request for getTable
      * 

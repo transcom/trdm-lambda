@@ -20,21 +20,23 @@ import jakarta.xml.soap.SOAPPart;
 
 @Service
 public class LastTableUpdateService {
-    
-    @Value("{$trdm.wsdl-url}")
+
+    @Value("{$trdm.service-url}")
     private String endpointURL;
 
     /**
      * Processes lastTableUpdate REST request
+     * 
      * @param request LastTableUpdateRequest
      * @return LastTableUpdateResponse
      */
     public LastTableUpdateResponse lastTableUpdateRequest(LastTableUpdateRequest request) {
-       return callSoapWebService(endpointURL, "POST" ,request);
+        return callSoapWebService(endpointURL, "POST", request);
     }
 
     /**
      * Builds SOAP body from REST request
+     * 
      * @param request - GetTableRequest
      * @return built SOAP XML body with header.
      */
@@ -65,21 +67,22 @@ public class LastTableUpdateService {
         return null;
     }
 
-    private LastTableUpdateResponse callSoapWebService(String soapEndpointUrl, String soapAction, LastTableUpdateRequest request) {
+    private LastTableUpdateResponse callSoapWebService(String soapEndpointUrl, String soapAction,
+            LastTableUpdateRequest request) {
         JAXBContext jaxbContext;
-        try(SOAPConnection soapConnection = SOAPConnectionFactory.newInstance().createConnection()) {
+        try (SOAPConnection soapConnection = SOAPConnectionFactory.newInstance().createConnection()) {
             // Send SOAP Message to SOAP Server
             SOAPMessage soapResponse = soapConnection.call(buildSoapBody(request), soapEndpointUrl);
 
             SOAPBody body = soapResponse.getSOAPBody();
-              jaxbContext = JAXBContext.newInstance(LastTableUpdateResponse.class);
+            jaxbContext = JAXBContext.newInstance(LastTableUpdateResponse.class);
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            LastTableUpdateResponse lastTableUpdateResponse = (LastTableUpdateResponse) jaxbUnmarshaller.unmarshal(body);
-
-            return lastTableUpdateResponse;
+            return (LastTableUpdateResponse) jaxbUnmarshaller
+                    .unmarshal(body);
 
         } catch (Exception e) {
-            System.err.println("\nError occurred while sending SOAP Request to Server!\nMake sure you have the correct endpoint URL and SOAPAction!\n");
+            System.err.println(
+                    "\nError occurred while sending SOAP Request to Server!\nMake sure you have the correct endpoint URL and SOAPAction!\n");
             e.printStackTrace();
         }
         return null;
