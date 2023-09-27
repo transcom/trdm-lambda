@@ -1,3 +1,14 @@
+spring:
+    profiles.active: local
+---
+
+springdoc:
+    swagger-ui:
+        enabled: true
+    api-docs:
+        version: "OPENAPI_3_0"
+        enabled: true
+
 trdm:
     service-url: ${TRDM_SERVICE_URL}
 
