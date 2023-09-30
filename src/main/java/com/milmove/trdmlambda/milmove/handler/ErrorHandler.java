@@ -32,12 +32,12 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ResponseEntity<ErrorResponse> handle(Exception exception) {
+    public void handle(Exception exception) {
         List<Errors> errors = new ArrayList<>();
         Errors error = new Errors();
         error.setMessage(exception.getMessage());
         errors.add(error);
-        return response(HttpStatus.INTERNAL_SERVER_ERROR, errors);
+        System.out.println(error);
     }
 
     private ResponseEntity<ErrorResponse> response(HttpStatus status, List<Errors> errs) {

@@ -1,29 +1,42 @@
 package com.milmove.trdmlambda.milmove.service;
 
+import java.util.Map;
+
+import org.apache.cxf.endpoint.Client;
+import org.apache.cxf.frontend.ClientProxy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.milmove.trdmlambda.milmove.config.TrdmProps;
 import com.milmove.trdmlambda.milmove.model.lasttableupdate.LastTableUpdateRequest;
 import com.milmove.trdmlambda.milmove.model.lasttableupdate.LastTableUpdateResponse;
+import com.milmove.trdmlambda.milmove.util.ClientPasswordCallback;
+import com.milmove.trdmlambda.milmove.util.SHA512PolicyLoader;
 
-import jakarta.xml.bind.JAXBContext;
-import jakarta.xml.bind.Unmarshaller;
-import jakarta.xml.soap.MessageFactory;
-import jakarta.xml.soap.SOAPBody;
-import jakarta.xml.soap.SOAPConnection;
-import jakarta.xml.soap.SOAPConnectionFactory;
-import jakarta.xml.soap.SOAPElement;
-import jakarta.xml.soap.SOAPEnvelope;
-import jakarta.xml.soap.SOAPHeader;
-import jakarta.xml.soap.SOAPMessage;
-import jakarta.xml.soap.SOAPPart;
+import jakarta.xml.ws.BindingProvider;
+import trdm.returntableservice.ReturnTable;
+import trdm.returntableservice.ReturnTableLastUpdateRequest;
+import trdm.returntableservice.ReturnTableLastUpdateResponse;
+import trdm.returntableservice.ReturnTableWSSoapHttpPort;
 
 @Service
 public class LastTableUpdateService {
+    private static final String SUCCESS = "Success";
 
     @Autowired
     private TrdmProps trdmProps;
+
+    private ReturnTable returnTable = new ReturnTable();
+    private ReturnTableWSSoapHttpPort returnTableWSSoapHttpPort = returnTable.getReturnTableWSSoapHttpPort();
+
+    private LastTableUpdateService() {
+        Client client = ClientProxy.getClient(returnTableWSSoapHttpPort);
+        new SHA512PolicyLoader(client.getBus());
+        Map<String, Object> ctx = ((BindingProvider) returnTableWSSoapHttpPort).getRequestContext();
+        ctx.put("ws-security.callback-handler", ClientPasswordCallback.class.getName());
+        ctx.put("ws-security.signature.properties", "etc/client_sign.properties");
+        ctx.put("ws-security.encryption.username", "myAlias");
+    }
 
     /**
      * Processes lastTableUpdate REST request
@@ -32,7 +45,7 @@ public class LastTableUpdateService {
      * @return LastTableUpdateResponse
      */
     public LastTableUpdateResponse lastTableUpdateRequest(LastTableUpdateRequest request) {
-        return callSoapWebService(trdmProps.getServiceUrl(), "POST", request);
+        return createSoapRequest(request);
     }
 
     /**
@@ -41,52 +54,23 @@ public class LastTableUpdateService {
      * @param request - GetTableRequest
      * @return built SOAP XML body with header.
      */
-    private SOAPMessage buildSoapBody(LastTableUpdateRequest request) {
-        try {
-            MessageFactory factory = MessageFactory.newInstance();
-            SOAPMessage msg = factory.createMessage();
-            SOAPPart part = msg.getSOAPPart();
+    private LastTableUpdateResponse createSoapRequest(LastTableUpdateRequest request) {
+        ReturnTableLastUpdateRequest requestElement = new ReturnTableLastUpdateRequest();
+        requestElement.setPhysicalName(request.getPhysicalName());
+        return makeRequest(requestElement);
 
-            SOAPEnvelope envelope = part.getEnvelope();
-            SOAPHeader header = envelope.getHeader();
-            envelope.addNamespaceDeclaration("ret", "http://ReturnTablePackage/");
-            SOAPBody body = envelope.getBody();
-
-            SOAPElement lastTableUpdateRequestElement = body.addChildElement("lastTableUpdateRequestElement", "ret");
-
-            SOAPElement physicalNameElement = lastTableUpdateRequestElement.addChildElement("physicalName", "ret");
-            physicalNameElement.addTextNode(request.getPhysicalName());
-
-            msg.saveChanges();
-
-            msg.writeTo(System.out);
-            return msg;
-
-        } catch (Exception e) {
-            // TODO: handle exception
-        }
-        return null;
     }
 
-    private LastTableUpdateResponse callSoapWebService(String soapEndpointUrl, String soapAction,
-            LastTableUpdateRequest request) {
-        JAXBContext jaxbContext;
-        try (SOAPConnection soapConnection = SOAPConnectionFactory.newInstance().createConnection()) {
-            // Send SOAP Message to SOAP Server
-            SOAPMessage soapResponse = soapConnection.call(buildSoapBody(request), soapEndpointUrl);
+    private LastTableUpdateResponse makeRequest(ReturnTableLastUpdateRequest requestElement) {
+        ReturnTableLastUpdateResponse responseElement = returnTableWSSoapHttpPort.getLastTableUpdate(requestElement);
+        LastTableUpdateResponse lastTableUpdateResponse = new LastTableUpdateResponse();
 
-            SOAPBody body = soapResponse.getSOAPBody();
-            jaxbContext = JAXBContext.newInstance(LastTableUpdateResponse.class);
-            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            return (LastTableUpdateResponse) jaxbUnmarshaller
-                    .unmarshal(body);
-
-        } catch (Exception e) {
-            System.err.println(
-                    "\nError occurred while sending SOAP Request to Server!\nMake sure you have the correct endpoint URL and SOAPAction!\n");
-            e.printStackTrace();
+        if (responseElement.getStatus().getStatusCode().equals(SUCCESS)) {
+            lastTableUpdateResponse.setDateTime(responseElement.getStatus().getDateTime());
+            lastTableUpdateResponse.setLastUpdate(responseElement.getLastUpdate());
+            lastTableUpdateResponse.setStatusCode(responseElement.getStatus().getStatusCode());
         }
-        return null;
+        return lastTableUpdateResponse;
     }
 
 }

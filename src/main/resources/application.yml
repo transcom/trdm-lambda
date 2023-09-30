@@ -11,4 +11,6 @@ springdoc:
 
 trdm:
     service-url: ${TRDM_SERVICE_URL}
+keystore:
+    key-store-password: ${KEY_STORE_PASSWORD}
 

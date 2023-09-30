@@ -1,13 +1,17 @@
 package com.milmove.trdmlambda.milmove.model.gettable;
 
+import java.math.BigInteger;
+
+import javax.xml.datatype.XMLGregorianCalendar;
+
 import lombok.Data;
 
 @Data
 public class GetTableResponse {
 
-    private int rowCount;
+    private BigInteger rowCount;
     private String statusCode;
-    private String dateTime;
+    private XMLGregorianCalendar dateTime;
     private byte[] attachment;
 
     

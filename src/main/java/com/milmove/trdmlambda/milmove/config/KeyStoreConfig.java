@@ -5,9 +5,11 @@ import org.springframework.context.annotation.Configuration;
 
 import lombok.Data;
 
-@ConfigurationProperties(prefix = "trdm")
+@ConfigurationProperties(prefix = "keystore")
 @Configuration
 @Data
-public class TrdmProps {
-   private String serviceUrl;
+public class KeyStoreConfig {
+
+    private String keyStorePassword;
+
 }
