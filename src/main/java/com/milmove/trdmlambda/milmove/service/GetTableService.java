@@ -38,8 +38,8 @@ public class GetTableService {
         new SHA512PolicyLoader(client.getBus());
         Map<String, Object> ctx = ((BindingProvider) returnTableWSSoapHttpPort).getRequestContext();
         ctx.put("ws-security.callback-handler", ClientPasswordCallback.class.getName());
-        ctx.put("ws-security.signature.properties", "etc/client_sign.properties");
-        ctx.put("ws-security.encryption.username", "myAlias");
+        ctx.put("ws-security.signature.properties", trdmProps.getClientPropertiesFilePath());
+        ctx.put("ws-security.encryption.username", trdmProps.getEncryptionUsername());
     }
 
     /**

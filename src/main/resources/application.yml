@@ -10,7 +10,8 @@ springdoc:
         enabled: true
 
 trdm:
-    service-url: ${TRDM_SERVICE_URL}
+    client-properties-file-path: ${CLIENT_PROPS_FILE_PATH}
+    encryption-username: ${ENCRYPTION_USERNAME}
 keystore:
     key-store-password: ${KEY_STORE_PASSWORD}
 

@@ -9,5 +9,6 @@ import lombok.Data;
 @Configuration
 @Data
 public class TrdmProps {
-   private String serviceUrl;
+   private String clientPropertiesFilePath;
+   private String encryptionUsername;
 }
