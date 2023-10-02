@@ -1,17 +1,13 @@
-spring:
-    profiles.active: local
----
-
 springdoc:
     swagger-ui:
         enabled: true
     api-docs:
         version: "OPENAPI_3_0"
         enabled: true
-
-trdm:
-    client-properties-file-path: ${CLIENT_PROPS_FILE_PATH}
-    encryption-username: ${ENCRYPTION_USERNAME}
 keystore:
-    key-store-password: ${KEY_STORE_PASSWORD}
+    password: password
+trdm:
+    props-path: etc/client_sign.properties
+    encryption-username: myAlias
+
 
