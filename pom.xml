@@ -10,10 +10,10 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.milmove.trdmlambda</groupId>
-	<artifactId>milmove</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>milmove</name>
-	<description>Demo project for Spring Boot</description>
+	<artifactId>trdm-lambda</artifactId>
+	<version>0.1.0</version>
+	<name>trdm java spring interface</name>
+	<description>Project for deploying a Java RESTful interface for SOAP requests to TRDM.</description>
 	<properties>
 		<java.version>17</java.version>
 	</properties>
