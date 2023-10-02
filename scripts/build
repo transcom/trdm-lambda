@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+# Extract artifact ID and version from pom.xml
+ARTIFACT_ID=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate \
+-Dexpression=project.artifactId -q -DforceStdout)
+
+VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate \
+-Dexpression=project.version -q -DforceStdout)
+
+# Set Jar Name
+JAR_NAME="target/$ARTIFACT_ID-$VERSION.jar"
+
+# Announce
+echo "Packaging $JAR_NAME..."
+
+# Clean and package via maven
+mvn clean package
+
+# Zip the JAR into deployment.zip
+zip -j deployment.zip $JAR_NAME
+
+# Announce and calculate checksum
+echo "Packaging complete, saving as artifact."
+echo "Calculating checksum."
+sha512sum deployment.zip > checksums.txt
+ls
