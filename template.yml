@@ -10,7 +10,7 @@ Resources:
     Type: AWS::Serverless::Function 
     Properties:
       CodeUri: .
-      Handler: com.milmove.trdmlambdam.ilmove.StreamLambdaHandler::handleRequest
+      Handler: com.milmove.trdmlambda.milmove.StreamLambdaHandler::handleRequest
       Runtime: java17
       AutoPublishAlias: production
       SnapStart:
