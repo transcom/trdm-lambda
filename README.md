@@ -11,6 +11,10 @@ Let’s run AWS SAM CLI on the path where the template.yaml is located and execu
 
 To build the application ru `sam build` from the root directory or in the same directory as the `template.yml` file.
 
+### Run Application Locally
+
+To run the application locally run `sam local start-api`
+
 ### Deploy
 
 To deploy the application to AWS use `sam deploy`. Add the `--guided` flag to go through a guided deploy.
