@@ -37,11 +37,6 @@ jobs:
             - checksums.txt
 workflows:
   version: 2
-  validate:
-    jobs:
-      - validate:
-          context:
-          - org-global
   build:
     jobs:
       - build:
