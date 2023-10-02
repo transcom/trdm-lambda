@@ -2,6 +2,11 @@
 
 set -eu -o pipefail
 
+# Install Maven
+echo "Installing Maven..."
+sudo apt-get update
+sudo apt-get install -y maven
+
 # Extract artifact ID and version from pom.xml
 ARTIFACT_ID=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate \
 -Dexpression=project.artifactId -q -DforceStdout)

@@ -21,9 +21,6 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install Maven
-          command: apt-get update && apt-get install -y maven
-      - run:
           name: Build
           command: scripts/build
       - run:
