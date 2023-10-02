@@ -1,0 +1,13 @@
+springdoc:
+    swagger-ui:
+        enabled: true
+    api-docs:
+        version: "OPENAPI_3_0"
+        enabled: true
+keystore:
+    password: password
+trdm:
+    props-path: etc/client_sign.properties
+    encryption-username: myAlias
+
+
