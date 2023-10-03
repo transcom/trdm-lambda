@@ -28,14 +28,17 @@ public class LastTableUpdateService {
     @Autowired
     private TrdmProps trdmProps;
 
+    @Autowired
+    private ClientPasswordCallback clientPasswordCallback;
+
     private ReturnTable returnTable = new ReturnTable();
     private ReturnTableWSSoapHttpPort returnTableWSSoapHttpPort = returnTable.getReturnTableWSSoapHttpPort();
 
-    public LastTableUpdateService(TrdmProps trdmProps) {
+    public LastTableUpdateService(TrdmProps trdmProps, ClientPasswordCallback clientPasswordCallback) {
         Client client = ClientProxy.getClient(returnTableWSSoapHttpPort);
         new SHA512PolicyLoader(client.getBus());
         Map<String, Object> ctx = ((BindingProvider) returnTableWSSoapHttpPort).getRequestContext();
-        ctx.put("ws-security.callback-handler", ClientPasswordCallback.class.getName());
+        ctx.put("ws-security.callback-handler", clientPasswordCallback);
         ctx.put("ws-security.signature.properties", trdmProps.getPropsPath());
         ctx.put("ws-security.encryption.username", trdmProps.getEncryptionUsername());
 
