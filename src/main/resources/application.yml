@@ -5,9 +5,9 @@ springdoc:
         version: "OPENAPI_3_0"
         enabled: true
 keystore:
-    password: password
+    password: ${KEYSTORE_PASSWORD}
 trdm:
-    props-path: etc/client_sign.properties
-    encryption-username: myAlias
+    props-path: ${CLIENT_PROPS_FILE_PATH}
+    encryption-username: ${ENCRYPTION_USERNAME}
 
 
