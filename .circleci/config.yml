@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: trussworks/gh-cli
+      - image: milmove/docker-mvn
         auth:
           password: $DOCKER_PASSWORD
           username: $DOCKER_USERNAME
@@ -14,7 +14,7 @@ jobs:
           command: scripts/build
   release:
     docker:
-      - image: trussworks/gh-cli
+      - image: milmove/docker-mvn
         auth:
           password: $DOCKER_PASSWORD
           username: $DOCKER_USERNAME
