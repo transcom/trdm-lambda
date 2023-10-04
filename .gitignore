@@ -26,7 +26,6 @@ replay_pid*
 # Local dev testing
 .env
 .envrc
-*.wsdl
 *.p12
 *.jks
 

@@ -1,0 +1,538 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:sa="http://oracle.com/schemas/webservices/streaming-attachments" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:tns="http://trdm/ReturnTableService" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="ReturnTableService" targetNamespace="http://trdm/ReturnTableService" xmlns:wsp="http://www.w3.org/ns/ws-policy" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+<wsp:UsingPolicy wsu:Required="true"/>
+    <wsp:Policy wsu:Id="TrdmPolicy">
+        <sp:AsymmetricBinding xmlns:sp="http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702">
+            <wsp:Policy>
+                <sp:InitiatorToken>
+                    <wsp:Policy>
+                        <sp:X509Token sp:IncludeToken="http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702/IncludeToken/AlwaysToRecipient">
+                            <wsp:Policy>
+                                <sp:WssX509V3Token10/>
+                            </wsp:Policy>
+                        </sp:X509Token>
+                    </wsp:Policy>
+                </sp:InitiatorToken>
+                <sp:RecipientToken>
+                    <wsp:Policy>
+                        <sp:X509Token sp:IncludeToken="http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702/IncludeToken/Never">
+                            <wsp:Policy>
+                                <sp:WssX509V3Token10/>
+                            </wsp:Policy>
+                        </sp:X509Token>
+                    </wsp:Policy>
+                </sp:RecipientToken>
+                <sp:AlgorithmSuite>
+                    <wsp:Policy>
+                        <sp:Basic128RsaSha512/>
+                    </wsp:Policy>
+                </sp:AlgorithmSuite>
+                <sp:Layout>
+                    <wsp:Policy>
+                        <sp:Lax/>
+                    </wsp:Policy>
+                </sp:Layout>
+                <sp:IncludeTimestamp/>
+                <sp:ProtectTokens/>
+                <sp:OnlySignEntireHeadersAndBody/>
+            </wsp:Policy>
+        </sp:AsymmetricBinding>
+        <sp:SignedParts xmlns:sp="http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702">
+            <sp:Body/>
+        </sp:SignedParts>
+        <sp:Wss11 xmlns:sp="http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702">
+            <wsp:Policy>
+                <sp:MustSupportRefKeyIdentifier/>
+                <sp:MustSupportRefIssuerSerial/>
+            </wsp:Policy>
+        </sp:Wss11>
+    </wsp:Policy>
+	<types>
+		<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" elementFormDefault="qualified" targetNamespace="http://trdm/ReturnTableService">
+			<simpleType name="rowNum">
+				<restriction base="positiveInteger"/>
+			</simpleType>
+			<simpleType name="physicalNameType">
+				<restriction base="string">
+					<maxLength value="150"/>
+				</restriction>
+			</simpleType>
+			<simpleType name="dataAuthorityType">
+				<restriction base="string">
+					<maxLength value="1000"/>
+				</restriction>
+			</simpleType>
+			<simpleType name="dataLocationType">
+				<restriction base="string">
+					<maxLength value="1000"/>
+				</restriction>
+			</simpleType>
+			<simpleType name="authorityOrLocationDetailsType">
+				<restriction base="string">
+					<maxLength value="512"/>
+				</restriction>
+			</simpleType>
+			
+			<simpleType name="lastUpdate">
+				<restriction base="dateTime"/>
+			</simpleType>
+			
+			<simpleType name="column">
+				<restriction base="string">
+					<minLength value="1"/>
+					<maxLength value="30"/>
+				</restriction>
+			</simpleType>
+			
+			<simpleType name="noValueFilterType">
+				<restriction base="string">
+					<enumeration value="IS_NULL"/>
+					<enumeration value="IS_NOT_NULL"/>
+				</restriction>
+			</simpleType>
+			
+			<simpleType name="singleValueFilterType">
+				<restriction base="string">
+					<enumeration value="IS_EQUAL"/>
+					<enumeration value="IS_NOT_EQUAL"/>
+					<enumeration value="STARTS_WITH"/>
+					<enumeration value="ENDS_WITH"/>
+					<enumeration value="CONTAINS"/>
+					<enumeration value="DOES_NOT_CONTAIN"/>
+				</restriction>
+			</simpleType>
+			
+			<simpleType name="singleValueNumericalFilterType">
+				<restriction base="string">
+					<enumeration value="IS_GREATER_THAN"/>
+					<enumeration value="IS_GREATER_THAN_OR_EQUAL"/>
+					<enumeration value="IS_LESS_THAN"/>
+					<enumeration value="IS_LESS_THAN_OR_EQUAL"/>
+				</restriction>
+			</simpleType>			
+			
+			<simpleType name="singleValueDateFilterType">
+				<restriction base="string">
+					<enumeration value="IS_ON"/>
+				</restriction>
+			</simpleType>
+			
+			<simpleType name="singleValueDateTimeFilterType">
+				<restriction base="string">
+					<enumeration value="IS_AFTER"/>
+					<enumeration value="IS_ON_OR_AFTER"/>
+					<enumeration value="IS_BEFORE"/>
+					<enumeration value="IS_ON_OR_BEFORE"/>
+				</restriction>
+			</simpleType>			
+			
+			<simpleType name="twoValueFilterType">
+				<restriction base="string">
+					<enumeration value="IS_BETWEEN"/>
+				</restriction>
+			</simpleType>
+						
+			<simpleType name="multiValueFilterType">
+				<restriction base="string">
+					<enumeration value="IS_IN_LIST"/>
+					<enumeration value="IS_NOT_IN_LIST"/>
+				</restriction>
+			</simpleType>
+			
+			<simpleType name="filterValue">
+				<restriction base="string">
+					<minLength value="1"/>
+					<maxLength value="250"/>
+				</restriction>
+			</simpleType>
+
+			<simpleType name="dateFilterValue">
+				<restriction base="date"/>
+			</simpleType>
+
+			<simpleType name="dateTimeFilterValue">
+				<restriction base="dateTime"/>
+			</simpleType>
+
+			<simpleType name="numericalFilterValue">
+				<restriction base="double"/>
+			</simpleType>
+
+			<simpleType name="columnFilterMatchesCriteria">
+				<restriction base="string">
+					<enumeration value="ALL"/>
+					<enumeration value="ANY"/>
+				</restriction>
+			</simpleType>
+			
+			<complexType name="noValueFilter">
+				<sequence>
+					<element name="filterType" type="tns:noValueFilterType" minOccurs="1" maxOccurs="1"/>
+				</sequence>
+			</complexType>
+			
+			<complexType name="singleValueFilter">
+				<sequence>
+					<element name="filterType" type="tns:singleValueFilterType" minOccurs="1" maxOccurs="1"/>
+					<element name="filterValue" type="tns:filterValue" minOccurs="1" maxOccurs="1"/>
+				</sequence>
+			</complexType>
+
+			<complexType name="singleValueDateFilter">
+				<sequence>
+					<element name="filterType" type="tns:singleValueDateFilterType" minOccurs="1" maxOccurs="1"/>
+					<element name="filterValue" type="tns:dateFilterValue" minOccurs="1" maxOccurs="1"/>
+				</sequence>
+			</complexType>
+
+			<complexType name="singleValueDateTimeFilter">
+				<sequence>
+					<element name="filterType" type="tns:singleValueDateTimeFilterType" minOccurs="1" maxOccurs="1"/>
+					<element name="filterValue" type="tns:dateTimeFilterValue" minOccurs="1" maxOccurs="1"/>
+				</sequence>
+			</complexType>
+
+			<complexType name="singleValueNumericalFilter">
+				<sequence>
+					<element name="filterType" type="tns:singleValueNumericalFilterType" minOccurs="1" maxOccurs="1"/>
+					<element name="filterValue" type="tns:numericalFilterValue" minOccurs="1" maxOccurs="1"/>
+				</sequence>
+			</complexType>
+
+			<complexType name="twoValueNumericalFilter">
+				<sequence>
+					<element name="filterType" type="tns:twoValueFilterType" minOccurs="1" maxOccurs="1"/>
+					<element name="filterValue" type="tns:numericalFilterValue" minOccurs="2" maxOccurs="2"/>
+				</sequence>
+			</complexType>
+
+			<complexType name="twoValueDateTimeFilter">
+				<sequence>
+					<element name="filterType" type="tns:twoValueFilterType" minOccurs="1" maxOccurs="1"/>
+					<element name="filterValue" type="tns:dateTimeFilterValue" minOccurs="2" maxOccurs="2"/>
+				</sequence>
+			</complexType>
+
+			<complexType name="multiValueFilter">
+				<sequence>
+					<element name="filterType" type="tns:multiValueFilterType" minOccurs="1" maxOccurs="1"/>
+					<element name="filterValue" type="tns:filterValue" minOccurs="1" maxOccurs="100"/>
+				</sequence>
+			</complexType>			
+			
+			<complexType name="columnFilterTypeAndValues">
+				<choice minOccurs="1" maxOccurs="25">
+					<element name="noValueFilter" type="tns:noValueFilter" minOccurs="0" maxOccurs="1"/>
+					<element name="singleValueFilter" type="tns:singleValueFilter" minOccurs="0" maxOccurs="1"/>
+					<element name="singleValueNumericalFilter" type="tns:singleValueNumericalFilter" minOccurs="0" maxOccurs="1"/>
+					<element name="singleValueDateFilter" type="tns:singleValueDateFilter" minOccurs="0" maxOccurs="1"/>
+					<element name="singleValueDateTimeFilter" type="tns:singleValueDateTimeFilter" minOccurs="0" maxOccurs="1"/>
+					<element name="twoValueNumericalFilter" type="tns:twoValueNumericalFilter" minOccurs="0" maxOccurs="1"/>
+					<element name="twoValueDateTimeFilter" type="tns:twoValueDateTimeFilter" minOccurs="0" maxOccurs="1"/>
+					<element name="multiValueFilter" type="tns:multiValueFilter" minOccurs="0" maxOccurs="1"/>
+				</choice>
+			</complexType>			
+			
+			<complexType name="columnFilter">
+				<sequence>
+					<element name="column" type="tns:column" minOccurs="1" maxOccurs="1"/>
+					<element name="columnFilterTypes" type="tns:columnFilterTypeAndValues" minOccurs="1" maxOccurs="1"/>
+				</sequence>
+			</complexType>			
+			
+			<complexType name="status">
+				<all>
+					<element maxOccurs="1" minOccurs="0" name="rowCount">
+						<simpleType>
+							<restriction base="integer">
+								<minInclusive value = "0"/>								
+							</restriction>
+						</simpleType>
+					</element>
+					<element maxOccurs="1" minOccurs="1" name="statusCode">
+						<simpleType>
+							<restriction base="string">
+								<enumeration value="Successful"/>
+								<enumeration value="Failure"/>
+							</restriction>
+						</simpleType>
+					</element>
+					<element maxOccurs="1" minOccurs="0" name="message">
+						<simpleType>
+							<restriction base="string">
+								<maxLength value="4000"/>
+							</restriction>
+						</simpleType>
+					</element>
+					<element maxOccurs="1" minOccurs="0" name="dateTime">
+						<simpleType>
+							<restriction base="dateTime"/>
+						</simpleType>
+					</element>
+				</all>
+			</complexType>
+			<complexType name="attribute">
+				<sequence>
+					<element maxOccurs="1" minOccurs="1" name="logicalName" nillable="true">
+						<simpleType>
+							<restriction base="string">
+								<maxLength value="250"/>
+							</restriction>
+						</simpleType>
+					</element>
+					<element maxOccurs="1" minOccurs="1" name="physicalName" nillable="true" type="tns:physicalNameType"/>
+					<element maxOccurs="1" minOccurs="1" name="description" nillable="true">
+						<simpleType>
+							<restriction base="string">
+								<maxLength value="4000"/>
+							</restriction>
+						</simpleType>
+					</element>
+					<element maxOccurs="1" minOccurs="1" name="notes" nillable="true">
+						<simpleType>
+							<restriction base="string">
+								<maxLength value="4000"/>
+							</restriction>
+						</simpleType>
+					</element>
+					<element maxOccurs="1" minOccurs="1" name="sourceList" nillable="true">
+						<simpleType>
+							<restriction base="string">
+								<maxLength value="4000"/>
+							</restriction>
+						</simpleType>
+					</element>
+					<element maxOccurs="1" minOccurs="1" name="primaryKeyIndicator" nillable="true">
+						<simpleType>
+							<restriction base="string">
+								<maxLength value="1"/>
+							</restriction>
+						</simpleType>
+					</element>
+					<element maxOccurs="1" minOccurs="1" name="dataType" nillable="true">
+						<simpleType>
+							<restriction base="string">
+								<maxLength value="30"/>
+							</restriction>
+						</simpleType>
+					</element>
+					<element maxOccurs="1" minOccurs="1" name="length" nillable="true">
+						<simpleType>
+							<restriction base="positiveInteger">
+								<totalDigits value="4"/>
+							</restriction>
+						</simpleType>
+					</element>
+					<element maxOccurs="1" minOccurs="1" name="decimalPlaces" nillable="true">
+						<simpleType>
+							<restriction base="positiveInteger">
+								<totalDigits value="4"/>
+							</restriction>
+						</simpleType>
+					</element>
+				</sequence>
+				<attribute name="num" type="tns:rowNum"/>
+			</complexType>
+			<complexType name="entitySource">
+				<all>
+					<element maxOccurs="1" minOccurs="1" name="dataAuthority" nillable="true" type="tns:dataAuthorityType"/>
+					<element maxOccurs="1" minOccurs="1" name="dataLocation" nillable="true" type="tns:dataLocationType"/>
+					<element maxOccurs="1" minOccurs="1" name="authorityOrLocationDetails" nillable="true" type="tns:authorityOrLocationDetailsType"/>
+					<element maxOccurs="1" minOccurs="1" name="lastUpdatedDate" nillable="true">
+						<simpleType>
+							<restriction base="date"/>
+						</simpleType>
+					</element>
+					<element maxOccurs="1" minOccurs="1" name="lastValidatedDate" nillable="true">
+						<simpleType>
+							<restriction base="date"/>
+						</simpleType>
+					</element>
+					<element maxOccurs="1" minOccurs="1" name="validationFrequencey" nillable="true">
+						<simpleType>
+							<restriction base="string">
+								<maxLength value="300"/>
+							</restriction>
+						</simpleType>
+					</element>
+					<element maxOccurs="1" minOccurs="1" name="dataStewardName" nillable="true">
+						<simpleType>
+							<restriction base="string">
+								<maxLength value="60"/>
+							</restriction>
+						</simpleType>
+					</element>
+				</all>
+				<attribute name="num" type="tns:rowNum"/>
+			</complexType>
+			<complexType name="ReturnTableInput">
+				<all>
+					<element maxOccurs="1" minOccurs="1" name="TRDM">
+						<complexType>
+							<all>
+								<element maxOccurs="1" minOccurs="1" name="physicalName" type="tns:physicalNameType"/>
+								<element name="returnContent" minOccurs="0" maxOccurs="1">
+									<simpleType>
+										<restriction base="xsd:boolean"/>
+									</simpleType>
+								</element>
+								<element name="contentUpdatedSinceDateTime" minOccurs="0" maxOccurs="1">
+									<simpleType>
+										<restriction base="dateTime"/>
+									</simpleType>
+								</element>
+								<element name="returnRowStatus" minOccurs="0" maxOccurs="1">
+									<simpleType>
+										<restriction base="boolean"/>
+									</simpleType>
+								</element>
+								<element name="returnMetadata" minOccurs="0" maxOccurs="1">
+									<simpleType>
+										<restriction base="boolean"/>
+									</simpleType>
+								</element>
+								<element name="returnLastUpdate" minOccurs="0" maxOccurs="1">
+									<simpleType>
+										<restriction base="boolean"/>
+									</simpleType>
+								</element>
+								<element name="returnColumns" minOccurs="0" maxOccurs="1">
+									<complexType>
+										<sequence>
+											<element name="column" type="tns:column" minOccurs="1" maxOccurs="200"/>
+										</sequence>										
+									</complexType>
+								</element>
+								<element name="columnFilterMatchesCriteria" type="tns:columnFilterMatchesCriteria" minOccurs="0" maxOccurs="1"/>
+								<element name="columnFilters" minOccurs="0" maxOccurs="1">
+									<complexType>
+										<sequence>											
+											<element name="columnFilter" type="tns:columnFilter" minOccurs="1" maxOccurs="200"/>
+										</sequence>										
+									</complexType>
+								</element>
+							</all>
+						</complexType>
+					</element>
+				</all>
+			</complexType>
+			<complexType name="ReturnTableOutput">
+				<all>
+					<element maxOccurs="1" minOccurs="1" name="TRDM">
+						<complexType>
+							<all>
+								<element maxOccurs="1" minOccurs="0" name="metadata">
+									<complexType>
+										<sequence>
+											<element maxOccurs="1" minOccurs="1" name="entityLogicalName">
+												<simpleType>
+													<restriction base="string">
+														<maxLength value="250"/>
+													</restriction>
+												</simpleType>
+											</element>
+											<element maxOccurs="1" minOccurs="1" name="entityPhysicalName" type="tns:physicalNameType"/>
+											<element maxOccurs="1" minOccurs="1" name="entityDescription" nillable="true">
+												<simpleType>
+													<restriction base="string">
+														<maxLength value="4000"/>
+													</restriction>
+												</simpleType>
+											</element>
+											<element maxOccurs="1" minOccurs="1" name="entityNotes" nillable="true">
+												<simpleType>
+													<restriction base="string">
+														<maxLength value="4000"/>
+													</restriction>
+												</simpleType>
+											</element>
+											<element maxOccurs="100" minOccurs="0" name="entitySource" type="tns:entitySource"/>
+											<element maxOccurs="500" minOccurs="1" name="attribute" type="tns:attribute"/>
+										</sequence>
+									</complexType>
+								</element>
+								<element maxOccurs="1" minOccurs="1" name="status" type="tns:status"/>
+							</all>
+						</complexType>
+					</element>
+				</all>
+			</complexType>
+			<complexType name="ReturnTableRequestElement">
+				<sequence>
+					<element name="input" type="tns:ReturnTableInput"/>
+				</sequence>
+			</complexType>
+			<complexType name="ReturnTableResponseElement">
+				<sequence>
+					<element name="output" type="tns:ReturnTableOutput"/>
+					<element minOccurs="0" name="attachment" type="xsd:base64Binary" xmime:expectedContentTypes="application/octet-stream"/>
+				</sequence>
+			</complexType>
+			<complexType name="ReturnTableLastUpdateRequest">
+				<all>
+					<element maxOccurs="1" minOccurs="1" name="physicalName" type="tns:physicalNameType"/>
+				</all>
+			</complexType>
+			<complexType name="ReturnTableLastUpdateResponse">
+				<all>
+					<element maxOccurs="1" minOccurs="0" name="lastUpdate" type="tns:lastUpdate"/>
+					<element maxOccurs="1" minOccurs="1" name="status" type="tns:status"/>
+				</all>
+			</complexType>
+			<element name="getLastTableUpdateRequestElement" type="tns:ReturnTableLastUpdateRequest"/>
+			<element name="getLastTableUpdateResponseElement" type="tns:ReturnTableLastUpdateResponse"/>
+			<element name="getTableRequestElement" type="tns:ReturnTableRequestElement"/>
+			<element name="getTableResponseElement" type="tns:ReturnTableResponseElement"/>
+		</schema>
+	</types>
+	<message name="getTableRequest">
+		<part element="tns:getTableRequestElement" name="getTableRequestElement"/>
+	</message>
+	<message name="getTableResponse">
+		<part element="tns:getTableResponseElement" name="getTableResponseElement"/>
+	</message>
+	<message name="getLastTableUpdateRequest">
+		<part element="tns:getLastTableUpdateRequestElement" name="getLastTableUpdateRequestElement"/>
+	</message>
+	<message name="getLastTableUpdateResponse">
+		<part element="tns:getLastTableUpdateResponseElement" name="getLastTableUpdateResponseElement"/>
+	</message>
+	<portType name="ReturnTableWSSoapHttpPort">
+		<operation name="getTable">
+			<input message="tns:getTableRequest"/>
+			<output message="tns:getTableResponse"/>
+		</operation>
+		<operation name="getLastTableUpdate">
+			<input message="tns:getLastTableUpdateRequest"/>
+			<output message="tns:getLastTableUpdateResponse"/>
+		</operation>
+	</portType>
+	<binding name="ReturnTableBinding" type="tns:ReturnTableWSSoapHttpPort">
+		<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+		<operation name="getTable">
+			<soap:operation soapAction="getTable"/>
+			<input>
+				<wsp:PolicyReference URI="#TrdmPolicy"/>
+				<soap:body use="literal"/>
+			</input>
+			<output>
+				<soap:body use="literal"/>
+			</output>
+		</operation>
+		<operation name="getLastTableUpdate">
+			<soap:operation soapAction="getLastTableUpdate"/>
+			<input>
+				<wsp:PolicyReference URI="#TrdmPolicy"/>
+				<soap:body use="literal"/>
+			</input>
+			<output>
+				<soap:body use="literal"/>
+			</output>
+		</operation>
+	</binding>
+	<service name="ReturnTable">
+		<port binding="tns:ReturnTableBinding" name="ReturnTableWSSoapHttpPort">
+			<soap:address location="https://trdmas.maf.ustranscom.mil/ReturnTableV7/ReturnTableWSSoapHttpPort"/>
+		</port>
+	</service>
+</definitions>
