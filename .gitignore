@@ -28,6 +28,7 @@ replay_pid*
 .envrc
 *.p12
 *.jks
+src/main/resources/client_sign.properties
 
 target/*
 !.mvn/wrapper/maven-wrapper.jar
