@@ -3,6 +3,7 @@ package com.milmove.trdmlambda.milmove.handler;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -11,11 +12,15 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import com.milmove.trdmlambda.milmove.TrdmRestApplication;
 import com.milmove.trdmlambda.milmove.model.ErrorResponse;
 import com.milmove.trdmlambda.milmove.model.Errors;
 
+import ch.qos.logback.classic.Logger;
+
 @ControllerAdvice
 public class ErrorHandler {
+    private Logger logger = (Logger) LoggerFactory.getLogger(TrdmRestApplication.class);
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -37,7 +42,7 @@ public class ErrorHandler {
         Errors error = new Errors();
         error.setMessage(exception.getMessage());
         errors.add(error);
-        System.out.println(error);
+        logger.error(error.getMessage());
     }
 
     private ResponseEntity<ErrorResponse> response(HttpStatus status, List<Errors> errs) {
