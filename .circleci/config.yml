@@ -49,6 +49,9 @@ jobs:
             - "*.jar"
             - "target/*.jar"
       - attach_workspace:
+          command: |
+            pwd
+            ls
           at: workspace
       - store_artifacts:
           path: workspace/checksums.txt
