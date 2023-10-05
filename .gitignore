@@ -23,9 +23,7 @@
 hs_err_pid*
 replay_pid*
 
-# Local dev testing
 .env
-.envrc
 *.p12
 *.jks
 src/main/resources/client_sign.properties
