@@ -18,11 +18,8 @@ echo "Packaging $JAR_NAME..."
 # Clean and package via maven
 mvn clean package
 
-# Zip the JAR into deployment.zip
-zip -j deployment.zip $JAR_NAME
-
 # Announce and calculate checksum
 echo "Packaging complete, saving as artifact."
 echo "Calculating checksum."
-sha512sum deployment.zip > checksums.txt
+sha512sum $JAR_NAME > checksums.txt
 ls

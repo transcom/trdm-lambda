@@ -25,16 +25,43 @@ jobs:
           command: scripts/build
       - run:
           name: Release
-          command: scripts/release $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME << pipeline.git.tag >>
+          command: |
+            ARTIFACT_ID=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout)
+            VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
+            JAR_NAME="target/$ARTIFACT_ID-$VERSION.jar"
+            scripts/release $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME << pipeline.git.tag >> $JAR_NAME
       - run:
-          name: Move checksum to workspace
+          name: Move jar and checksum to workspace
           command: |
             mkdir -p workspace
+            # Grab jar name
+            ARTIFACT_ID=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout)
+            VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
+            JAR_NAME="target/$ARTIFACT_ID-$VERSION.jar"
+            # Copy jar to workspace
+            cp $JAR_NAME workspace/
+            # Copy checksums to workspace
             cp checksums.txt workspace/checksums.txt
       - persist_to_workspace:
           root: workspace
           paths:
             - checksums.txt
+            - "*.jar"
+            - "target/*.jar"
+      - attach_workspace:
+          command: |
+            pwd
+            ls
+          at: workspace
+      - store_artifacts:
+          path: workspace/checksums.txt
+          destination: artifacts
+      - store_artifacts:
+          path: workspace/*.jar
+          destination: artifacts
+      - store_artifacts:
+          path: workspace/target/*.jar
+          destination: artifacts
 workflows:
   version: 2
   build:
