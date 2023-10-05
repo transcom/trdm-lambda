@@ -48,12 +48,12 @@ jobs:
             - checksums.txt
             - "*.jar"
       - attach_workspace:
-          at: /workspace
+          at: workspace
       - store_artifacts:
-          path: /workspace/checksums.txt
+          path: workspace/checksums.txt
           destination: artifacts
       - store_artifacts:
-          path: /workspace/*.jar
+          path: workspace/*.jar
           destination: artifacts
 workflows:
   version: 2
