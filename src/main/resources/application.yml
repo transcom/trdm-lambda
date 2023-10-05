@@ -1,0 +1,20 @@
+spring:
+    profiles.active: local
+---
+springdoc:
+    api-docs:
+        enabled: true
+    swagger-ui:
+        enabled: true
+
+apache:
+    provider: org.apache.ws.security.components.crypto.Merlin
+    keystore: 
+        type: jks
+        password: password
+        alias: myAlias
+        file: src/main/resources/privatestore.jks
+
+trdm:
+    props-path: src/main/resources/client_sign.properties
+    encryption-username: myAlias
