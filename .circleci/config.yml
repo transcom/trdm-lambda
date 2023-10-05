@@ -25,7 +25,11 @@ jobs:
           command: scripts/build
       - run:
           name: Release
-          command: scripts/release $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME << pipeline.git.tag >>
+          command: |
+            ARTIFACT_ID=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout)
+            VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
+            JAR_NAME="target/$ARTIFACT_ID-$VERSION.jar"
+            scripts/release $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME << pipeline.git.tag >> $JAR_NAME
       - run:
           name: Move jar and checksum to workspace
           command: |
