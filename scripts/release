@@ -15,7 +15,8 @@ readonly GITHUB_USER=$1
 readonly GITHUB_REPO=$2
 readonly NEW_TAG=$3
 
-ZIP_NAME=${ZIP_NAME:-deployment.zip}
+# Pull jar from persisted workspace
+JAR_NAME="workspace/$ARTIFACT_ID-$VERSION.jar"
 
-gh release upload --clobber --repo "${GITHUB_USER}/${GITHUB_REPO}" $NEW_TAG $ZIP_NAME checksums.txt
+gh release upload --clobber --repo "${GITHUB_USER}/${GITHUB_REPO}" $NEW_TAG $JAR_NAME checksums.txt
 echo "Uploaded zipfile and checksums to GitHub Release with tag ${NEW_TAG}"
