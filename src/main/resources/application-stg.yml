@@ -6,15 +6,3 @@ springdoc:
         enabled: false
     swagger-ui:
         enabled: false
-
-apache:
-    provider: ${PROVIDER}
-    keystore: 
-        type: ${KEYSTORE_TYPE}
-        password: ${KEYSTORE_PASSWORD}
-        alias: ${ENCRYPTION_USERNAME}
-        file: ${KEYSTORE_PATH}
-
-trdm:
-    props-path: ${CLIENT_PROPS_FILE_PATH}
-    encryption-username: ${ENCRYPTION_USERNAME}
