@@ -2,7 +2,7 @@
 
 set -e -o pipefail
 
-Setup/how to run
+# Setup/how to run
 usage() {
     echo "Usage: $0 <GITHUB_USER> <GITHUB_REPO> <NEW_TAG>"
     exit 1
