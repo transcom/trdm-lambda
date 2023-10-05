@@ -46,7 +46,7 @@ jobs:
           root: workspace
           paths:
             - checksums.txt
-            - "/*.jar"
+            - "*.jar"
             - "target/*.jar"
       - attach_workspace:
           at: workspace
