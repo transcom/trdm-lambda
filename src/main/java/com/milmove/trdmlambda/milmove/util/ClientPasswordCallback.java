@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ClientPasswordCallback implements CallbackHandler {
 
-    @Value("${keystore.password}")
+    @Value("${apache.keystore.password}")
     private String keyStorePassword;
 
     public void handle(Callback[] callbacks) throws IOException,
