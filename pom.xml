@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.milmove.trdmlambda</groupId>
 	<artifactId>trdm-lambda</artifactId>
-	<version>0.1.0</version>
+	<version>0.1.1</version>
 	<name>trdm java spring interface</name>
 	<description>Project for deploying a Java RESTful interface for SOAP requests to TRDM.</description>
 	<properties>
@@ -123,15 +123,13 @@
 				</executions>
 			</plugin>
 			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.3.0</version>
 				<configuration>
-					<excludes>
-						<exclude>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-						</exclude>
-					</excludes>
+					<includes>
+						<include>**/*.class</include>
+					</includes>
 				</configuration>
 			</plugin>
 			<plugin>
