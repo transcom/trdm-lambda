@@ -1,6 +1,5 @@
 package com.milmove.trdmlambda.milmove.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import com.milmove.trdmlambda.milmove.util.SecretFetcher;
@@ -11,10 +10,6 @@ import lombok.Data;
 @Configuration
 @Data
 public class ApacheProps {
-
-    // @Autowired
-    // private SecretFetcher secretFetcher;
-
     private String provider;
 
     private String type;

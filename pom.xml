@@ -115,7 +115,8 @@
 
 	<build>
 		<plugins>
-			<!-- ! spring-boot-maven-plugin does not provide a lambda friendly build when packaging ! -->
+			<!-- ! spring-boot-maven-plugin does not provide a lambda friendly build when packaging
+			! -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
@@ -131,24 +132,26 @@
 					</includes>
 				</configuration>
 			</plugin>
-
+			<!-- 
+				Additional excusion that can be added to apache maven plugin
+											<artifactSet>
+								<excludes>
+									<exclude>org.apache.tomcat.embed:*</exclude>
+								</excludes>
+							</artifactSet>
+						</configuration> 
+					-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
 				<version>3.4.1</version>
 				<configuration>
-					<createDependencyReducedPom>false</createDependencyReducedPom>
+					<!-- <createDependencyReducedPom>false</createDependencyReducedPom> -->
 					<archive>
 						<manifest>
 							<mainClass>com.milmove.trdmlambda.milmove.TrdmRestApplication</mainClass>
 						</manifest>
 					</archive>
-<!-- 
-					<transformers>
-						<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-							<mainClass>com.milmove.trdmlambda.milmove.TrdmRestApplication</mainClass>
-						</transformer>
-					</transformers> -->
 				</configuration>
 				<executions>
 					<execution>
@@ -156,26 +159,41 @@
 						<goals>
 							<goal>shade</goal>
 						</goals>
-						<!-- <configuration>
-							<artifactSet>
-								<excludes>
-									<exclude>org.apache.tomcat.embed:*</exclude>
-								</excludes>
-							</artifactSet>
-						</configuration> -->
+						<configuration>
+							<transformers>
+								<!-- <transformer
+								implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<mainClass>com.milmove.trdmlambda.milmove.TrdmRestApplication</mainClass>
+								</transformer> -->
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+									<resource>META-INF/cxf/bus-extensions.txt</resource>
+								</transformer>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+									<resource>META-INF/org.apache.cxf.bus.factory</resource>
+								</transformer>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+									<resource>META-INF/cxf/org.apache.cxf.bus.factory</resource>
+								</transformer>
+								<!-- <transformer
+								implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/> -->
+							</transformers>
+							<filters>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>META-INF/*.SF</exclude>
+										<exclude>META-INF/*.DSA</exclude>
+										<exclude>META-INF/*.RSA</exclude>
+									</excludes>
+								</filter>
+							</filters>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
-			<!-- <plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.3.0</version>
-				<configuration>
-					<includes>
-						<include>**/*.class</include>
-					</includes>
-				</configuration>
-			</plugin> -->
 			<plugin>
 				<groupId>org.apache.cxf</groupId>
 				<artifactId>cxf-codegen-plugin</artifactId>
