@@ -99,12 +99,13 @@
 
 	<build>
 		<plugins>
+			<!-- ! spring-boot-maven-plugin does not provide a lambda friendly build when packaging ! -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
 				<version>3.4.1</version>
 				<configuration>
-					<minimizeJar>true</minimizeJar>
+					<createDependencyReducedPom>false</createDependencyReducedPom>
 				</configuration>
 				<executions>
 					<execution>
@@ -154,24 +155,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <descriptors>
-                                <descriptor>src/assembly/zip.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
 		</plugins>
 	</build>
 </project>
