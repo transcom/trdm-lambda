@@ -5,7 +5,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import com.milmove.trdmlambda.milmove.util.SecretFetcher;
 
-import jakarta.annotation.PostConstruct;
 import lombok.Data;
 
 @ConfigurationProperties(prefix = "apache")
@@ -13,8 +12,8 @@ import lombok.Data;
 @Data
 public class ApacheProps {
 
-    @Autowired
-    private SecretFetcher secretFetcher;
+    // @Autowired
+    // private SecretFetcher secretFetcher;
 
     private String provider;
 
@@ -29,8 +28,7 @@ public class ApacheProps {
     private String merlinKeystoreAlias = "org.apache.ws.security.crypto.merlin.keystore.alias";
     private String merlinKeystoreFile = "org.apache.ws.security.crypto.merlin.keystore.file";
 
-    @PostConstruct
-    public void init() {
+    public ApacheProps(SecretFetcher secretFetcher) {
         this.type = secretFetcher.getSecret("trdm_lambda_milmove_keypair_type");
         this.password = secretFetcher.getSecret("trdm_lambda_milmove_keypair_key");
         this.alias = secretFetcher.getSecret("trdm_lambda_milmove_keypair_alias");
