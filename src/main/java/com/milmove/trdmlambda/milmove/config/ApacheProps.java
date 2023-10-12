@@ -1,27 +1,26 @@
 package com.milmove.trdmlambda.milmove.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import com.milmove.trdmlambda.milmove.util.SecretFetcher;
 
+import jakarta.annotation.PostConstruct;
 import lombok.Data;
 
 @ConfigurationProperties(prefix = "apache")
 @Configuration
 @Data
 public class ApacheProps {
+
+    @Autowired
+    private SecretFetcher secretFetcher;
+
     private String provider;
 
-    @Value("${apache.keystore.type}")
     private String type;
-
-    @Value("${apache.keystore.password}")
     private String password;
-
-    @Value("${apache.keystore.alias}")
     private String alias;
-
-    @Value("${apache.keystore.file}")
     private String keystoreFile;
 
     private String cryptoProvider = "org.apache.ws.security.crypto.provider";
@@ -30,4 +29,11 @@ public class ApacheProps {
     private String merlinKeystoreAlias = "org.apache.ws.security.crypto.merlin.keystore.alias";
     private String merlinKeystoreFile = "org.apache.ws.security.crypto.merlin.keystore.file";
 
+    @PostConstruct
+    public void init() {
+        this.type = secretFetcher.getSecret("trdm_lambda_milmove_keypair_type");
+        this.password = secretFetcher.getSecret("trdm_lambda_milmove_keypair_key");
+        this.alias = secretFetcher.getSecret("trdm_lambda_milmove_keypair_alias");
+        this.keystoreFile = secretFetcher.getSecret("trdm_lambda_milmove_keypair_filepath");
+    }
 }
