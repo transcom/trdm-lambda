@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.milmove.trdmlambda</groupId>
 	<artifactId>trdm-lambda</artifactId>
-	<version>0.1.1</version>
+	<version>0.1.2</version>
 	<name>trdm java spring interface</name>
 	<description>Project for deploying a Java RESTful interface for SOAP requests to TRDM.</description>
 	<properties>
@@ -91,21 +91,52 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>me.paulschwarz</groupId>
-			<artifactId>spring-dotenv</artifactId>
-			<version>4.0.0</version>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>aws-sdk-java</artifactId>
+			<version>2.20.162</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>aws-core</artifactId>
+			<version>2.20.162</version>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>ssm</artifactId>
+			<version>2.20.162</version>
 		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
-			<!-- ! spring-boot-maven-plugin does not provide a lambda friendly build when packaging ! -->
+			<!-- ! spring-boot-maven-plugin does not provide a lambda friendly build when packaging
+			! -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.3.0</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>com.milmove.trdmlambda.milmove.TrdmRestApplication</mainClass>
+						</manifest>
+					</archive>
+					<includes>
+						<include>**/*.class</include>
+					</includes>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
 				<version>3.4.1</version>
 				<configuration>
-					<createDependencyReducedPom>false</createDependencyReducedPom>
+					<archive>
+						<manifest>
+							<mainClass>com.milmove.trdmlambda.milmove.TrdmRestApplication</mainClass>
+						</manifest>
+					</archive>
 				</configuration>
 				<executions>
 					<execution>
@@ -114,6 +145,30 @@
 							<goal>shade</goal>
 						</goals>
 						<configuration>
+							<transformers>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+									<resource>META-INF/cxf/bus-extensions.txt</resource>
+								</transformer>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+									<resource>META-INF/org.apache.cxf.bus.factory</resource>
+								</transformer>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+									<resource>META-INF/cxf/org.apache.cxf.bus.factory</resource>
+								</transformer>
+															</transformers>
+							<filters>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>META-INF/*.SF</exclude>
+										<exclude>META-INF/*.DSA</exclude>
+										<exclude>META-INF/*.RSA</exclude>
+									</excludes>
+								</filter>
+							</filters>
 							<artifactSet>
 								<excludes>
 									<exclude>org.apache.tomcat.embed:*</exclude>
@@ -122,16 +177,6 @@
 						</configuration>
 					</execution>
 				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.3.0</version>
-				<configuration>
-					<includes>
-						<include>**/*.class</include>
-					</includes>
-				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.cxf</groupId>

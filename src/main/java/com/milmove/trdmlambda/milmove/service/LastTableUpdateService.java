@@ -35,6 +35,14 @@ public class LastTableUpdateService {
     private ReturnTableWSSoapHttpPort returnTableWSSoapHttpPort = returnTable.getReturnTableWSSoapHttpPort();
 
     public LastTableUpdateService(TrdmProps trdmProps, ClientPasswordCallback clientPasswordCallback) {
+        // This is not pretty, but it can absolutely save sanity when debugging. Leaving until next version comes out
+        if(trdmProps == null) {
+            throw new IllegalArgumentException("trdmProps is null!");
+        }
+        if(trdmProps.getPropsPath() == null) {
+            throw new IllegalArgumentException("trdmProps.getPropsPath() is null!");
+        }
+        
         Client client = ClientProxy.getClient(returnTableWSSoapHttpPort);
         new SHA512PolicyLoader(client.getBus());
         Map<String, Object> ctx = ((BindingProvider) returnTableWSSoapHttpPort).getRequestContext();
