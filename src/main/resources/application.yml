@@ -7,14 +7,5 @@ springdoc:
     swagger-ui:
         enabled: true
 
-# apache:
-#     provider: ${PROVIDER}
-#     keystore: 
-#         type: ${TRDM_LAMBDA_MILMOVE_KEYPAIR_TYPE}
-#         password: ${TRDM_LAMBDA_MILMOVE_KEYPAIR_KEY}
-#         alias: ${TRDM_LAMBDA_MILMOVE_KEYPAIR_ALIAS}
-#         file: ${TRDM_LAMBDA_MILMOVE_KEYPAIR_FILEPATH}
-
 trdm:
     props-path: src/main/resources/client_sign.properties
-    # encryption-username: ${TRDM_LAMBDA_MILMOVE_KEYPAIR_ALIAS}
