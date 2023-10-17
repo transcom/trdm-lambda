@@ -19,19 +19,7 @@ echo "Packaging $JAR_NAME..."
 mvn clean package
 
 # Post process cleanup (Required due to the CXF codegen plugin hard coding paths)
-# scripts/post-process $JAR_NAME
-UNZIP_DIR="target/unzipped"
-mkdir -p $UNZIP_DIR
-jar -xf $JAR_NAME -C $UNZIP_DIR
-
-# Modify the specific file
-FILE_TO_MODIFY="$UNZIP_DIR/trdm/returntableservice/ReturnTable.java" # This holds the hard coded circleci values from codegen
-ORIG_PATH="file:/home/circleci/project/src/main/resources/ReturnTableV7.wsdl" # This is the hard coded circleci value from codegen
-NEW_PATH="classpath:ReturnTableV7.wsdl" # Replacing it with classpath
-sed -i "s|$ORIG_PATH|$NEW_PATH|g" $FILE_TO_MODIFY # Update the values within the file. (There are 3)
-
-# Re-zip into a JAR
-jar -cf $JAR_NAME -C $UNZIP_DIR .
+scripts/post-process $JAR_NAME
 
 # Announce and calculate checksum
 echo "Packaging complete, saving as artifact."
