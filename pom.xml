@@ -110,8 +110,7 @@
 
 	<build>
 		<plugins>
-			<!-- ! spring-boot-maven-plugin does not provide a lambda friendly build when packaging
-			! -->
+			<!-- ! spring-boot-maven-plugin does not provide a lambda friendly build when packaging! -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
@@ -124,6 +123,8 @@
 					</archive>
 					<includes>
 						<include>**/*.class</include>
+						<include>**/*.wsdl</include>
+						<include>**/*.yml</include> <!-- This line should be redundant, but just to be safe -->
 					</includes>
 				</configuration>
 			</plugin>
