@@ -10,7 +10,9 @@ UNZIP_DIR="/home/circleci/project/target/unzipped"
 mkdir -p $UNZIP_DIR
 
 # Extract the JAR into the specified directory
-jar -xf /home/circleci/project/$JAR_NAME -C $UNZIP_DIR
+cd $UNZIP_DIR
+jar -xf /home/circleci/project/$JAR_NAME
+cd -
 
 # Modify the specific file
 FILE_TO_MODIFY="$UNZIP_DIR/trdm/returntableservice/ReturnTable.java" # This holds the hard coded circleci values from codegen
@@ -20,4 +22,6 @@ NEW_PATH="classpath:ReturnTableV7.wsdl" # Replacing it with classpath
 sed -i "s|$ORIG_PATH|$NEW_PATH|g" $FILE_TO_MODIFY # Update the values within the file. (There are 3)
 
 # Re-zip into a JAR
-jar -cf /home/circleci/project/$JAR_NAME -C $UNZIP_DIR .
+cd $UNZIP_DIR
+jar -cf /home/circleci/project/$JAR_NAME .
+cd -
