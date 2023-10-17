@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.milmove.trdmlambda</groupId>
 	<artifactId>trdm-lambda</artifactId>
-	<version>0.1.4</version>
+	<version>0.1.5</version>
 	<name>trdm java spring interface</name>
 	<description>Project for deploying a Java RESTful interface for SOAP requests to TRDM.</description>
 	<properties>
