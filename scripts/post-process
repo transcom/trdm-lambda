@@ -9,7 +9,7 @@ mkdir -p $UNZIP_DIR
 
 # Extract the JAR into the specified directory
 cd $UNZIP_DIR
-jar -xf ../$JAR_NAME
+jar -xf $JAR_NAME
 cd -
 
 # Modify the specific file
@@ -20,5 +20,5 @@ sed -i "s|$ORIG_PATH|$NEW_PATH|g" $FILE_TO_MODIFY # Update the values within the
 
 # Re-zip into a JAR
 cd $UNZIP_DIR
-jar -cf ../$JAR_NAME .
+jar -cf $JAR_NAME .
 cd -
