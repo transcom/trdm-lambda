@@ -19,7 +19,7 @@ echo "Packaging $JAR_NAME..."
 mvn clean package
 
 # Post process cleanup (Required due to the CXF codegen plugin hard coding paths)
-scripts/post-process $JAR_NAME
+# scripts/post-process $JAR_NAME
 
 # Announce and calculate checksum
 echo "Packaging complete, saving as artifact."
