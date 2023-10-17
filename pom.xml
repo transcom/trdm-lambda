@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.milmove.trdmlambda</groupId>
 	<artifactId>trdm-lambda</artifactId>
-	<version>0.1.5</version>
+	<version>0.1.6</version>
 	<name>trdm java spring interface</name>
 	<description>Project for deploying a Java RESTful interface for SOAP requests to TRDM.</description>
 	<properties>
@@ -124,7 +124,8 @@
 					<includes>
 						<include>**/*.class</include>
 						<include>**/*.wsdl</include> <!-- Needed for runtime class generation -->
-						<include>**/*.yml</include> <!-- This line should be redundant, but just to be safe -->
+						<include>**/*.yml</include> <!-- This line should be redundant, but just to
+						be safe -->
 					</includes>
 				</configuration>
 			</plugin>
@@ -159,7 +160,7 @@
 									implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
 									<resource>META-INF/cxf/org.apache.cxf.bus.factory</resource>
 								</transformer>
-															</transformers>
+							</transformers>
 							<filters>
 								<filter>
 									<artifact>*:*</artifact>
@@ -191,7 +192,7 @@
 							<sourceRoot>${project.build.directory}/generated-sources/cxf</sourceRoot>
 							<wsdlOptions>
 								<wsdlOption>
-									<wsdl>src/main/resources/ReturnTableV7.wsdl</wsdl>
+									<wsdl>${project.basedir}/src/main/resources/ReturnTableV7.wsdl</wsdl>
 								</wsdlOption>
 							</wsdlOptions>
 						</configuration>
