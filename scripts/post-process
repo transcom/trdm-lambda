@@ -2,7 +2,7 @@
 
 set -eu -o pipefail
 
-pwd && ls
+pwd && ls && ls target
 
 JAR_NAME=$1
 
