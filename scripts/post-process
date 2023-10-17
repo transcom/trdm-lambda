@@ -2,6 +2,8 @@
 
 set -eu -o pipefail
 
+pwd && ls
+
 JAR_NAME=$1
 
 UNZIP_DIR="target/unzipped"
