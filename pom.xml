@@ -123,7 +123,7 @@
 					</archive>
 					<includes>
 						<include>**/*.class</include>
-						<include>**/*.wsdl</include>
+						<include>**/*.wsdl</include> <!-- Needed for runtime class generation -->
 						<include>**/*.yml</include> <!-- This line should be redundant, but just to be safe -->
 					</includes>
 				</configuration>
