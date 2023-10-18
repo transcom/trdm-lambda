@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.milmove.trdmlambda</groupId>
 	<artifactId>trdm-lambda</artifactId>
-	<version>0.2.3.2</version>
+	<version>0.2.3.3</version>
 	<name>trdm java spring interface</name>
 	<description>Project for deploying a Java RESTful interface for SOAP requests to TRDM.</description>
 	<properties>
@@ -47,9 +47,9 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
-		<dependency>
+				<dependency>
 			<groupId>com.amazonaws.serverless</groupId>
 			<artifactId>aws-serverless-java-container-springboot3</artifactId>
 			<version>2.0.0-M2</version>
