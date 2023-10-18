@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.util.Base64;
 
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import ch.qos.logback.classic.Logger;
@@ -14,8 +13,13 @@ import ch.qos.logback.classic.Logger;
 public class DecodeKeystore {
     private Logger logger = (Logger) LoggerFactory.getLogger(DecodeKeystore.class);
 
-    public DecodeKeystore(@Value("${TRDM_LAMBDA_MILMOVE_KEYPAIR_BASE64}") String base64Content,
-                          @Value("${TRDM_LAMBDA_MILMOVE_KEYPAIR_FILEPATH}") String filepath) throws Exception {
+    private String base64Content;
+    private String filepath;
+
+    public DecodeKeystore(SecretFetcher secretFetcher) {
+        this.base64Content = secretFetcher.getSecret("trdm_lambda_milmove_keypair_base64");
+        this.filepath = secretFetcher.getSecret("trdm_lambda_milmove_keypair_filepath");
+
         File file = new File(filepath);
 
         if (file.exists()) {
