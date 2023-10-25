@@ -10,9 +10,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
-import com.milmove.trdmlambda.milmove.TrdmRestApplication;
 import com.milmove.trdmlambda.milmove.model.ErrorResponse;
 import com.milmove.trdmlambda.milmove.model.Errors;
 
@@ -20,10 +18,9 @@ import ch.qos.logback.classic.Logger;
 
 @ControllerAdvice
 public class ErrorHandler {
-    private Logger logger = (Logger) LoggerFactory.getLogger(TrdmRestApplication.class);
+    private Logger logger = (Logger) LoggerFactory.getLogger(ErrorHandler.class);
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handle(MethodArgumentNotValidException exception) {
         List<Errors> errors = new ArrayList<>();
         for (FieldError err : exception.getBindingResult().getFieldErrors()) {
@@ -32,23 +29,34 @@ public class ErrorHandler {
             error.setMessage(err.getDefaultMessage());
             errors.add(error);
         }
+        logger.error("Validation error: {}", errors);
         return response(HttpStatus.BAD_REQUEST, errors);
     }
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public void handle(Exception exception) {
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handle(Exception exception) {
         List<Errors> errors = new ArrayList<>();
         Errors error = new Errors();
         error.setMessage(exception.getMessage());
         errors.add(error);
-        logger.error(error.getMessage());
+        logger.error("Unexpected error: {}", error.getMessage(), exception);
+        return response(HttpStatus.INTERNAL_SERVER_ERROR, errors);
     }
+
+    @ExceptionHandler(Throwable.class)
+    public ResponseEntity<ErrorResponse> handle(Throwable throwable) {
+        List<Errors> errors = new ArrayList<>();
+        Errors error = new Errors();
+        error.setMessage(throwable.getMessage());
+        errors.add(error);
+        logger.error("Thrown error: {}", error.getMessage(), throwable);
+        return response(HttpStatus.INTERNAL_SERVER_ERROR, errors);
+    }
+
 
     private ResponseEntity<ErrorResponse> response(HttpStatus status, List<Errors> errs) {
         ErrorResponse response = new ErrorResponse();
         response.setErrors(errs);
         return ResponseEntity.status(status).body(response);
     }
-
 }
