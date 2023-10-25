@@ -12,6 +12,9 @@ import com.milmove.trdmlambda.milmove.model.gettable.GetTableRequest;
 import com.milmove.trdmlambda.milmove.model.gettable.GetTableResponse;
 import com.milmove.trdmlambda.milmove.service.GetTableService;
 
+import org.slf4j.LoggerFactory;
+import ch.qos.logback.classic.Logger;
+
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -22,8 +25,11 @@ import jakarta.validation.Valid;
 @Validated
 @RequestMapping("/api/v1")
 public class GetTableController {
+
     @Autowired
     private GetTableService getTableService;
+
+    private Logger logger = (Logger) LoggerFactory.getLogger(GetTableController.class);
 
     @PostMapping(path = "/getTable", produces = MediaType.APPLICATION_JSON_VALUE)
     @ApiResponses(value = {
@@ -31,8 +37,8 @@ public class GetTableController {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = GetTableResponse.class)) })
     })
     public GetTableResponse getTable(@Valid @RequestBody GetTableRequest requestBody) {
+        logger.info("Received a request for LastTableUpdate with details: {}", requestBody);
         return getTableService.getTableRequest(requestBody);
-
     }
 
 }
