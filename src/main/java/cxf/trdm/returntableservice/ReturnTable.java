@@ -24,7 +24,7 @@ public class ReturnTable extends Service {
     public final static QName SERVICE = new QName("http://trdm/ReturnTableService", "ReturnTable");
     public final static QName ReturnTableWSSoapHttpPort = new QName("http://trdm/ReturnTableService", "ReturnTableWSSoapHttpPort");
     static {
-        URL url = ReturnTable.class.getClassLoader().getResource("classpath:ReturnTableV7.wsdl");
+        URL url = ReturnTable.class.getClassLoader().getResource("ReturnTableV7.wsdl");
         if (url == null) {
             java.util.logging.Logger.getLogger(ReturnTable.class.getName())
                 .log(java.util.logging.Level.INFO,
