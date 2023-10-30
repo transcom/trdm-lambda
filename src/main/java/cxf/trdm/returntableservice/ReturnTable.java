@@ -24,13 +24,11 @@ public class ReturnTable extends Service {
     public final static QName SERVICE = new QName("http://trdm/ReturnTableService", "ReturnTable");
     public final static QName ReturnTableWSSoapHttpPort = new QName("http://trdm/ReturnTableService", "ReturnTableWSSoapHttpPort");
     static {
-        URL url = null;
-        try {
-            url = new URL("classpath:ReturnTableV7.wsdl");
-        } catch (MalformedURLException e) {
+        URL url = ReturnTable.class.getClassLoader().getResource("classpath:ReturnTableV7.wsdl");
+        if (url == null) {
             java.util.logging.Logger.getLogger(ReturnTable.class.getName())
                 .log(java.util.logging.Level.INFO,
-                     "Can not initialize the default wsdl from {0}", "classpath:ReturnTableV7.wsdl");
+                    "Can not initialize the default wsdl from {0}", "classpath:ReturnTableV7.wsdl");
         }
         WSDL_LOCATION = url;
     }
