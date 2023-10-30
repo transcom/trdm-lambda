@@ -24,6 +24,26 @@ public class SHA512PolicyLoader implements AlgorithmSuiteLoader {
 
     public SHA512PolicyLoader(Bus bus) {
         bus.setExtension(this, AlgorithmSuiteLoader.class);
+
+        // Auto register on creation
+        AssertionBuilderRegistry reg = bus.getExtension(AssertionBuilderRegistry.class);
+        if (reg != null) {
+            String ns = "http://docs.oasis-open.org/ws-sx/ws-securitypolicy/200702";
+            final Map<QName, Assertion> assertions = new HashMap<>();
+            QName qName = new QName(ns, "Basic128RsaSha512");
+            assertions.put(qName, new PrimitiveAssertion(qName));
+    
+            reg.registerBuilder(new PrimitiveAssertionBuilder(assertions.keySet()) {
+                public Assertion build(Element element, AssertionBuilderFactory fact) {
+                    if (XMLPrimitiveAssertionBuilder.isOptional(element)
+                        || XMLPrimitiveAssertionBuilder.isIgnorable(element)) {
+                        return super.build(element, fact);
+                    }
+                    QName q = new QName(element.getNamespaceURI(), element.getLocalName());
+                    return assertions.get(q);
+                }
+            });
+        }
     }
 
     public AlgorithmSuite getAlgorithmSuite(Bus bus, SPConstants.SPVersion version, Policy nestedPolicy) {
