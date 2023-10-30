@@ -10,7 +10,7 @@ import lombok.Data;
 @Configuration
 @Data
 public class ApacheProps {
-    private String provider;
+    private String provider = "org.apache.ws.security.components.crypto.Merlin";
 
     private String type;
     private String password;
