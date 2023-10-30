@@ -11,7 +11,7 @@ import lombok.Data;
 @Configuration
 @Data
 public class TrdmProps {
-   private String propsPath = "src/main/resources/client_sign.properties";
+   private String propsPath = "/tmp/client_sign.properties";
    private String encryptionUsername;
 
    public TrdmProps(SecretFetcher secretFetcher) {

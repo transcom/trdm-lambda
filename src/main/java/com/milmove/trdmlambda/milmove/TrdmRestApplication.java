@@ -3,6 +3,7 @@ package com.milmove.trdmlambda.milmove;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -33,17 +34,16 @@ public class TrdmRestApplication {
 	}
 
 	@EventListener(ApplicationReadyEvent.class)
-	public void writeApacheCxfProps() {
-		File file = null;
-		try {
-			file = new File(trdmProps.getPropsPath());
-			if (!file.exists()) {
-				buildFile();
-			}
-		} catch (Exception e) {
-			logger.error(e.getMessage());
+	public void writeApacheCxfProps() throws IOException {
+		File file = new File(trdmProps.getPropsPath());
+		if (!file.exists()) {
+			buildFile();
 		}
-
+		if (file.exists()) {
+			logger.info("File created successfully!");
+		} else {
+			throw new IOException("Failed to create file: " + file.getAbsolutePath());
+		}
 	}
 
 	private void buildFile() {

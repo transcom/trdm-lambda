@@ -8,4 +8,4 @@ springdoc:
         enabled: true
 
 trdm:
-    props-path: src/main/resources/client_sign.properties
+    props-path: /tmp/client_sign.properties
