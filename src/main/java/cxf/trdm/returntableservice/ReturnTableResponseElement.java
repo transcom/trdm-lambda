@@ -1,5 +1,5 @@
 
-package trdm.returntableservice;
+package cxf.trdm.returntableservice;
 
 import jakarta.activation.DataHandler;
 import jakarta.xml.bind.annotation.XmlAccessType;

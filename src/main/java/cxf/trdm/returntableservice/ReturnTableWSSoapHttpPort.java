@@ -1,4 +1,4 @@
-package trdm.returntableservice;
+package cxf.trdm.returntableservice;
 
 import jakarta.jws.WebMethod;
 import jakarta.jws.WebParam;

@@ -1,5 +1,5 @@
 
-package trdm.returntableservice;
+package cxf.trdm.returntableservice;
 
 import java.math.BigInteger;
 import jakarta.xml.bind.annotation.XmlAccessType;

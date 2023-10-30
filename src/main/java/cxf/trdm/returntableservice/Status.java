@@ -1,5 +1,5 @@
 
-package trdm.returntableservice;
+package cxf.trdm.returntableservice;
 
 import java.math.BigInteger;
 import javax.xml.datatype.XMLGregorianCalendar;

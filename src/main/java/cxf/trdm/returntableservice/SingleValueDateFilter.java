@@ -1,5 +1,5 @@
 
-package trdm.returntableservice;
+package cxf.trdm.returntableservice;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 import jakarta.xml.bind.annotation.XmlAccessType;

@@ -1,4 +1,4 @@
-package trdm.returntableservice;
+package cxf.trdm.returntableservice;
 
 import java.net.MalformedURLException;
 import java.net.URL;

@@ -1,5 +1,5 @@
 
-package trdm.returntableservice;
+package cxf.trdm.returntableservice;
 
 import javax.xml.namespace.QName;
 import jakarta.xml.bind.JAXBElement;

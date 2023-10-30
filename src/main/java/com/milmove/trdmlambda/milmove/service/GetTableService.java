@@ -14,12 +14,12 @@ import com.milmove.trdmlambda.milmove.util.SHA512PolicyLoader;
 
 import jakarta.xml.ws.BindingProvider;
 import lombok.Data;
-import trdm.returntableservice.ReturnTable;
-import trdm.returntableservice.ReturnTableInput;
-import trdm.returntableservice.ReturnTableInput.TRDM;
-import trdm.returntableservice.ReturnTableRequestElement;
-import trdm.returntableservice.ReturnTableResponseElement;
-import trdm.returntableservice.ReturnTableWSSoapHttpPort;
+import cxf.trdm.returntableservice.ReturnTable;
+import cxf.trdm.returntableservice.ReturnTableInput;
+import cxf.trdm.returntableservice.ReturnTableInput.TRDM;
+import cxf.trdm.returntableservice.ReturnTableRequestElement;
+import cxf.trdm.returntableservice.ReturnTableResponseElement;
+import cxf.trdm.returntableservice.ReturnTableWSSoapHttpPort;
 
 @Service
 @Data
