@@ -23,7 +23,7 @@ public class DecodeKeystore {
         File file = new File(filepath);
 
         if (file.exists()) {
-            logger.info("File already exists. Not recreating");
+            logger.info("Keystore file already exists. Not recreating");
             return;
         }
 
@@ -32,8 +32,9 @@ public class DecodeKeystore {
             try (FileOutputStream fos = new FileOutputStream(file)) {
                 fos.write(decodedBytes);
             }
+            logger.info("Keystore file created successfully!");
         } catch (Exception e) {
-            logger.error("Failed to decode Base64 keypair into file: " + e.getMessage());
+            logger.error("Failed to decode Base64 keystore into file: " + e.getMessage());
         }
     }
 }

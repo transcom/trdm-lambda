@@ -17,6 +17,7 @@ import org.springframework.context.event.EventListener;
 
 import com.milmove.trdmlambda.milmove.config.ApacheProps;
 import com.milmove.trdmlambda.milmove.config.TrdmProps;
+import com.milmove.trdmlambda.milmove.util.DecodeTruststore;
 
 import ch.qos.logback.classic.Logger;
 
@@ -28,6 +29,9 @@ public class TrdmRestApplication {
 
 	@Autowired
 	TrdmProps trdmProps;
+
+	@Autowired
+    DecodeTruststore decodeTruststore;
 
 	public static void main(String[] args) {
 		SpringApplication.run(TrdmRestApplication.class, args);
