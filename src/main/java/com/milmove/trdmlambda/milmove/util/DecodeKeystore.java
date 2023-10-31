@@ -15,11 +15,12 @@ public class DecodeKeystore {
 
     private String base64Content;
     private String filepath;
+    private String password;
 
     public DecodeKeystore(SecretFetcher secretFetcher) {
         this.base64Content = secretFetcher.getSecret("trdm_lambda_milmove_keypair_base64");
         this.filepath = secretFetcher.getSecret("trdm_lambda_milmove_keypair_filepath");
-
+        this.password = secretFetcher.getSecret("trdm_lambda_milmove_keypair_key");
         File file = new File(filepath);
 
         if (file.exists()) {
@@ -33,6 +34,9 @@ public class DecodeKeystore {
                 fos.write(decodedBytes);
             }
             logger.info("Keystore file created successfully!");
+            System.setProperty("javax.net.ssl.keyStore", filepath);
+            System.setProperty("javax.net.ssl.keyStorePassword", this.password);
+            logger.info("Keystore handshake configured successfully!");
         } catch (Exception e) {
             logger.error("Failed to decode Base64 keystore into file: " + e.getMessage());
         }
