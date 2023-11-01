@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.milmove.trdmlambda.milmove.exceptions.TableRequestException;
 import com.milmove.trdmlambda.milmove.model.gettable.GetTableRequest;
 import com.milmove.trdmlambda.milmove.model.gettable.GetTableResponse;
 import com.milmove.trdmlambda.milmove.service.GetTableService;
@@ -44,6 +45,8 @@ public class GetTableController {
             @ApiResponse(responseCode = "400", description = "Bad Request", content = {
                     @Content(mediaType = "application/json") }),
             @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {
+                    @Content(mediaType = "application/json") }),
+            @ApiResponse(responseCode = "502", description = "Bad TRDM Gateway", content = {
                     @Content(mediaType = "application/json") })
     })
     public ResponseEntity<GetTableResponse> getTable(@Valid @RequestBody GetTableRequest requestBody) {
@@ -55,8 +58,13 @@ public class GetTableController {
             logger.error("Error processing attachment for GetTable request", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         } catch (DatatypeConfigurationException e) {
-            logger.error("Error processing XMLGregorianCalendar type for provided contentUpdatedSinceDateTime value for GetTable request", e);
+            logger.error(
+                    "Error processing XMLGregorianCalendar type for provided contentUpdatedSinceDateTime value for GetTable request",
+                    e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (TableRequestException e) {
+            logger.error("Error retrieving table from TRDM", e);
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
         }
     }
 }

@@ -13,6 +13,7 @@ import org.apache.cxf.frontend.ClientProxy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.milmove.trdmlambda.milmove.config.TrdmProps;
+import com.milmove.trdmlambda.milmove.exceptions.TableRequestException;
 import com.milmove.trdmlambda.milmove.model.gettable.GetTableRequest;
 import com.milmove.trdmlambda.milmove.model.gettable.GetTableResponse;
 import com.milmove.trdmlambda.milmove.util.ClientPasswordCallback;
@@ -36,6 +37,7 @@ import cxf.trdm.returntableservice.ReturnTableWSSoapHttpPort;
 public class GetTableService {
 
     private static final String SUCCESS = "Successful";
+    private static final String FAILURE = "Failure";
 
     private Logger logger = (Logger) LoggerFactory.getLogger(GetTableService.class);
 
@@ -61,10 +63,14 @@ public class GetTableService {
      * 
      * @param request GetTableRequest
      * @return GetTableResponse
-     * @throws IOException attachment processing failure
-     * @throws DatatypeConfigurationException user provided string for contentUpdatedSinceDateTime not valid for XMLGregorianCalendar type
+     * @throws IOException                    attachment processing failure
+     * @throws DatatypeConfigurationException user provided string for
+     *                                        contentUpdatedSinceDateTime not valid
+     *                                        for XMLGregorianCalendar type
+     * @throws TableRequestException
      */
-    public GetTableResponse getTableRequest(GetTableRequest request) throws IOException, DatatypeConfigurationException {
+    public GetTableResponse getTableRequest(GetTableRequest request)
+            throws IOException, DatatypeConfigurationException, TableRequestException {
         return createSoapRequest(request);
     }
 
@@ -75,9 +81,11 @@ public class GetTableService {
      * @return built SOAP XML body with header.
      * @throws IOException
      * @throws DatatypeConfigurationException
+     * @throws TableRequestException
      * @throws XMLStreamException
      */
-    private GetTableResponse createSoapRequest(GetTableRequest request) throws IOException, DatatypeConfigurationException {
+    private GetTableResponse createSoapRequest(GetTableRequest request)
+            throws IOException, DatatypeConfigurationException, TableRequestException {
 
         ReturnTableRequestElement requestElement = new ReturnTableRequestElement();
         ReturnTableInput input = new ReturnTableInput();
@@ -94,24 +102,38 @@ public class GetTableService {
         return makeRequest(requestElement);
     }
 
-    private GetTableResponse makeRequest(ReturnTableRequestElement requestElement) throws IOException {
+    private GetTableResponse makeRequest(ReturnTableRequestElement requestElement)
+            throws IOException, TableRequestException {
         ReturnTableResponseElement responseElement = returnTableWSSoapHttpPort.getTable(requestElement);
         GetTableResponse getTableResponse = new GetTableResponse();
 
-        if (responseElement.getOutput().getTRDM().getStatus().getStatusCode().equals(SUCCESS)) {
-            getTableResponse.setDateTime(responseElement.getOutput().getTRDM().getStatus().getDateTime());
-            getTableResponse.setRowCount(responseElement.getOutput().getTRDM().getStatus().getRowCount());
-            getTableResponse.setStatusCode(responseElement.getOutput().getTRDM().getStatus().getStatusCode());
-            // Convert attachment datahandler to bytes for the response:
-            DataHandler dataHandler = responseElement.getAttachment();
-            try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-                dataHandler.writeTo(output);
-                byte[] bytes = output.toByteArray();
-                getTableResponse.setAttachment(bytes);
-            } catch (IOException e) {
-                logger.error("Error while processing attachment", e);
-                throw e;
-            }
+        String statusCode = responseElement.getOutput().getTRDM().getStatus().getStatusCode();
+
+        switch (statusCode) {
+            case SUCCESS:
+                logger.info("Request to TRDM succeeded");
+                getTableResponse.setDateTime(responseElement.getOutput().getTRDM().getStatus().getDateTime());
+                getTableResponse.setRowCount(responseElement.getOutput().getTRDM().getStatus().getRowCount());
+                getTableResponse.setStatusCode(statusCode);
+                // Convert attachment datahandler to bytes for the response:
+                DataHandler dataHandler = responseElement.getAttachment();
+                try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+                    dataHandler.writeTo(output);
+                    byte[] bytes = output.toByteArray();
+                    getTableResponse.setAttachment(bytes);
+                } catch (IOException e) {
+                    logger.error("Error while processing attachment", e);
+                    throw e;
+                }
+                break;
+            case FAILURE:
+                logger.error("Request to TRDM failed: {}",
+                        responseElement.getOutput().getTRDM().getStatus().getMessage());
+                throw new TableRequestException(responseElement.getOutput().getTRDM().getStatus().getMessage());
+            default:
+                logger.error("Unknown status code: {} {}", statusCode,
+                        responseElement.getOutput().getTRDM().getStatus().getMessage());
+                throw new TableRequestException(responseElement.getOutput().getTRDM().getStatus().getMessage());
         }
         return getTableResponse;
     }

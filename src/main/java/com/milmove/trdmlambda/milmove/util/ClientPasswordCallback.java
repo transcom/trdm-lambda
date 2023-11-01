@@ -5,20 +5,10 @@ import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import org.apache.wss4j.common.ext.WSPasswordCallback;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import com.milmove.trdmlambda.milmove.TrdmRestApplication;
-
-
-import ch.qos.logback.classic.Logger;
-
 
 @Component
 public class ClientPasswordCallback implements CallbackHandler {
-
-    private Logger logger = (Logger) LoggerFactory.getLogger(TrdmRestApplication.class);
 
     private String keyStorePassword;
 
