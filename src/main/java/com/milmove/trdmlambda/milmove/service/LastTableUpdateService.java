@@ -23,7 +23,7 @@ import cxf.trdm.returntableservice.ReturnTableWSSoapHttpPort;
 @Service
 @Data
 public class LastTableUpdateService {
-    private static final String SUCCESS = "Success";
+    private static final String SUCCESS = "Successful";
 
     @Autowired
     private TrdmProps trdmProps;

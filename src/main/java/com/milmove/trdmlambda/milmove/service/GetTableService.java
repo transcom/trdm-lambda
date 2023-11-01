@@ -25,7 +25,7 @@ import cxf.trdm.returntableservice.ReturnTableWSSoapHttpPort;
 @Data
 public class GetTableService {
 
-    private static final String SUCCESS = "Success";
+    private static final String SUCCESS = "Successful";
 
     @Autowired
     private TrdmProps trdmProps;
