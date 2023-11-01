@@ -2,6 +2,9 @@ package com.milmove.trdmlambda.milmove.service;
 
 import java.io.IOException;
 import java.util.Map;
+
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
 import javax.xml.stream.XMLStreamException;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -59,8 +62,9 @@ public class GetTableService {
      * @param request GetTableRequest
      * @return GetTableResponse
      * @throws IOException attachment processing failure
+     * @throws DatatypeConfigurationException user provided string for contentUpdatedSinceDateTime not valid for XMLGregorianCalendar type
      */
-    public GetTableResponse getTableRequest(GetTableRequest request) throws IOException {
+    public GetTableResponse getTableRequest(GetTableRequest request) throws IOException, DatatypeConfigurationException {
         return createSoapRequest(request);
     }
 
@@ -70,16 +74,19 @@ public class GetTableService {
      * @param request - GetTableRequest
      * @return built SOAP XML body with header.
      * @throws IOException
+     * @throws DatatypeConfigurationException
      * @throws XMLStreamException
      */
-    private GetTableResponse createSoapRequest(GetTableRequest request) throws IOException {
+    private GetTableResponse createSoapRequest(GetTableRequest request) throws IOException, DatatypeConfigurationException {
 
         ReturnTableRequestElement requestElement = new ReturnTableRequestElement();
         ReturnTableInput input = new ReturnTableInput();
         TRDM trdm = new TRDM();
         trdm.setPhysicalName(request.getPhysicalName());
         trdm.setReturnContent(request.isReturnContent());
-        trdm.setContentUpdatedSinceDateTime(request.getContentUpdatedSinceDateTime());
+        trdm.setReturnContent(Boolean.valueOf(request.isReturnContent()));
+        trdm.setContentUpdatedSinceDateTime(DatatypeFactory.newInstance()
+                .newXMLGregorianCalendar(request.getContentUpdatedSinceDateTime()));
 
         input.setTRDM(trdm);
         requestElement.setInput(input);

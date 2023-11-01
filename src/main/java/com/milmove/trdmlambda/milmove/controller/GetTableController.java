@@ -16,6 +16,8 @@ import com.milmove.trdmlambda.milmove.service.GetTableService;
 
 import java.io.IOException;
 
+import javax.xml.datatype.DatatypeConfigurationException;
+
 import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Logger;
 
@@ -39,6 +41,8 @@ public class GetTableController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = GetTableResponse.class)) }),
+            @ApiResponse(responseCode = "400", description = "Bad Request", content = {
+                    @Content(mediaType = "application/json") }),
             @ApiResponse(responseCode = "500", description = "Internal Server Error", content = {
                     @Content(mediaType = "application/json") })
     })
@@ -48,8 +52,11 @@ public class GetTableController {
             GetTableResponse response = getTableService.getTableRequest(requestBody);
             return ResponseEntity.ok(response);
         } catch (IOException e) {
-            logger.error("Error processing GetTable request", e);
+            logger.error("Error processing attachment for GetTable request", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (DatatypeConfigurationException e) {
+            logger.error("Error processing XMLGregorianCalendar type for provided contentUpdatedSinceDateTime value for GetTable request", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 }

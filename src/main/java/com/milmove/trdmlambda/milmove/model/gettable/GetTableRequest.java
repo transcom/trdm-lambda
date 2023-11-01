@@ -1,7 +1,5 @@
 package com.milmove.trdmlambda.milmove.model.gettable;
 
-import javax.xml.datatype.XMLGregorianCalendar;
-
 import com.milmove.trdmlambda.milmove.contraints.ContentUpdatedSinceDateTimeConstraint;
 import com.milmove.trdmlambda.milmove.contraints.PhysicalNameConstraint;
 
@@ -12,6 +10,6 @@ public class GetTableRequest {
     @PhysicalNameConstraint
     private String physicalName;
     @ContentUpdatedSinceDateTimeConstraint
-    private XMLGregorianCalendar contentUpdatedSinceDateTime;
+    private String contentUpdatedSinceDateTime; // To be converted to javax.xml.datatype.XMLGregorianCalendar
     private boolean returnContent;
 }
