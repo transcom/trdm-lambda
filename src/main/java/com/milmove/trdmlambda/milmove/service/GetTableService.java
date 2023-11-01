@@ -1,7 +1,10 @@
 package com.milmove.trdmlambda.milmove.service;
 
+import java.io.IOException;
 import java.util.Map;
 import javax.xml.stream.XMLStreamException;
+
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.cxf.endpoint.Client;
 import org.apache.cxf.frontend.ClientProxy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +15,11 @@ import com.milmove.trdmlambda.milmove.model.gettable.GetTableResponse;
 import com.milmove.trdmlambda.milmove.util.ClientPasswordCallback;
 import com.milmove.trdmlambda.milmove.util.SHA512PolicyLoader;
 
+import org.slf4j.LoggerFactory;
+import ch.qos.logback.classic.Logger;
+
 import jakarta.xml.ws.BindingProvider;
+import jakarta.activation.DataHandler;
 import lombok.Data;
 import cxf.trdm.returntableservice.ReturnTable;
 import cxf.trdm.returntableservice.ReturnTableInput;
@@ -26,6 +33,8 @@ import cxf.trdm.returntableservice.ReturnTableWSSoapHttpPort;
 public class GetTableService {
 
     private static final String SUCCESS = "Successful";
+
+    private Logger logger = (Logger) LoggerFactory.getLogger(GetTableService.class);
 
     @Autowired
     private TrdmProps trdmProps;
@@ -81,13 +90,21 @@ public class GetTableService {
         ReturnTableResponseElement responseElement = returnTableWSSoapHttpPort.getTable(requestElement);
         GetTableResponse getTableResponse = new GetTableResponse();
 
-        if (responseElement.getOutput().getTRDM().getStatus().getMessage().equals(SUCCESS)) {
+        if (responseElement.getOutput().getTRDM().getStatus().getStatusCode().equals(SUCCESS)) {
             getTableResponse.setDateTime(responseElement.getOutput().getTRDM().getStatus().getDateTime());
             getTableResponse.setRowCount(responseElement.getOutput().getTRDM().getStatus().getRowCount());
             getTableResponse.setStatusCode(responseElement.getOutput().getTRDM().getStatus().getStatusCode());
-            getTableResponse.setAttachment(null);
+            // Convert attachment datahandler to bytes for the response:
+            DataHandler dataHandler = responseElement.getAttachment();
+            try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+                dataHandler.writeTo(output);
+                byte[] bytes = output.toByteArray();
+                getTableResponse.setAttachment(bytes);
+            } catch (IOException e) {
+                logger.error("Error while processing attachment", e);
+            }
         }
+        //TODO: Improving Spring API response
         return getTableResponse;
-
     }
 }
