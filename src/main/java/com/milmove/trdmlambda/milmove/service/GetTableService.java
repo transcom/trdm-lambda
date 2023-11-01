@@ -78,8 +78,8 @@ public class GetTableService {
         ReturnTableInput input = new ReturnTableInput();
         TRDM trdm = new TRDM();
         trdm.setPhysicalName(request.getPhysicalName());
-        trdm.setReturnContent(Boolean.valueOf(request.getPhysicalName()));
-        trdm.setContentUpdatedSinceDateTime(null);
+        trdm.setReturnContent(request.isReturnContent());
+        trdm.setContentUpdatedSinceDateTime(request.getContentUpdatedSinceDateTime());
 
         input.setTRDM(trdm);
         requestElement.setInput(input);
