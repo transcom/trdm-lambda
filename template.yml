@@ -6,7 +6,7 @@ Globals:
     Timeout: 900
 
 Resources:
-  ProfileApiFunction:
+  SoapProxyFunction:
     Type: AWS::Serverless::Function 
     Properties:
       CodeUri: .
@@ -22,7 +22,7 @@ Resources:
         Variables:
           JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1 
       Events:
-        HelloWorld:
+        SoapProxyApiEvent:
           Type: Api 
           Properties:
             Path: /{proxy+}

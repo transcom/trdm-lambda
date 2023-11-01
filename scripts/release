@@ -4,17 +4,16 @@ set -e -o pipefail
 
 # Setup/how to run
 usage() {
-    echo "Usage: $0 <GITHUB_USER> <GITHUB_REPO> <NEW_TAG> <JAR_NAME>"
+    echo "Usage: $0 <GITHUB_USER> <GITHUB_REPO> <NEW_TAG>"
     exit 1
 }
 
-[[ -z $1 || -z $2 || -z $3 || -z $4 ]] && usage
+[[ -z $1 || -z $2 || -z $3 ]] && usage
 set -u
 
 readonly GITHUB_USER=$1
 readonly GITHUB_REPO=$2
 readonly NEW_TAG=$3
-readonly JAR_NAME=$4
 
-gh release upload --clobber --repo "${GITHUB_USER}/${GITHUB_REPO}" $NEW_TAG $JAR_NAME checksums.txt
-echo "Uploaded zipfile and checksums to GitHub Release with tag ${NEW_TAG}"
+gh release upload --clobber --repo "${GITHUB_USER}/${GITHUB_REPO}" $NEW_TAG deployment-package.stg.zip stg-checksums.txt deployment-package.prd.zip prd-checksums.txt
+echo "Uploaded zipfiles and checksums to GitHub Release with tag ${NEW_TAG}"
