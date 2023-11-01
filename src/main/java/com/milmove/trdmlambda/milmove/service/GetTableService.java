@@ -58,8 +58,9 @@ public class GetTableService {
      * 
      * @param request GetTableRequest
      * @return GetTableResponse
+     * @throws IOException attachment processing failure
      */
-    public GetTableResponse getTableRequest(GetTableRequest request) {
+    public GetTableResponse getTableRequest(GetTableRequest request) throws IOException {
         return createSoapRequest(request);
     }
 
@@ -68,9 +69,10 @@ public class GetTableService {
      * 
      * @param request - GetTableRequest
      * @return built SOAP XML body with header.
+     * @throws IOException
      * @throws XMLStreamException
      */
-    private GetTableResponse createSoapRequest(GetTableRequest request) {
+    private GetTableResponse createSoapRequest(GetTableRequest request) throws IOException {
 
         ReturnTableRequestElement requestElement = new ReturnTableRequestElement();
         ReturnTableInput input = new ReturnTableInput();
@@ -83,10 +85,9 @@ public class GetTableService {
         requestElement.setInput(input);
 
         return makeRequest(requestElement);
-
     }
 
-    private GetTableResponse makeRequest(ReturnTableRequestElement requestElement) {
+    private GetTableResponse makeRequest(ReturnTableRequestElement requestElement) throws IOException {
         ReturnTableResponseElement responseElement = returnTableWSSoapHttpPort.getTable(requestElement);
         GetTableResponse getTableResponse = new GetTableResponse();
 
@@ -102,9 +103,9 @@ public class GetTableService {
                 getTableResponse.setAttachment(bytes);
             } catch (IOException e) {
                 logger.error("Error while processing attachment", e);
+                throw e;
             }
         }
-        //TODO: Improving Spring API response
         return getTableResponse;
     }
 }
