@@ -24,7 +24,7 @@ cp -f .aws-sam/build/SoapProxyFunction/ReturnTableV7.stg.wsdl .aws-sam/build/Soa
 
 # Zip stg
 cd .aws-sam/build/SoapProxyFunction
-zip -r deployment-package.stg.zip .
+zip -r ../../../deployment-package.stg.zip .
 cd ../../../
 
 # Announce and calculate checksum
