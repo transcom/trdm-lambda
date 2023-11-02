@@ -10,9 +10,9 @@
 
 ## Models
 
-[Request Model](src/main/java/com/milmove/trdmlambda/milmove/model/lasttableupdate/LastTableUpdateRequest.java)
+[Request Model](../src/main/java/com/milmove/trdmlambda/milmove/model/lasttableupdate/LastTableUpdateRequest.java)
 
-[Response Model](src/main/java/com/milmove/trdmlambda/milmove/model/lasttableupdate/LastTableUpdateResponse.java)
+[Response Model](../src/main/java/com/milmove/trdmlambda/milmove/model/lasttableupdate/LastTableUpdateResponse.java)
 
 Example
 ```

@@ -11,9 +11,9 @@ It is strongly recommended to provide the contentUpdatedSinceDateTime in your re
 [src/main/java/com/milmove/trdmlambda/milmove/controller/GetTableController.java](../src/main/java/com/milmove/trdmlambda/milmove/controller/GetTableController.java)
 
 ## Models
-[Request Model](src/main/java/com/milmove/trdmlambda/milmove/model/gettable/GetTableRequest.java)
+[Request Model](../src/main/java/com/milmove/trdmlambda/milmove/model/gettable/GetTableRequest.java)
 
-[Response Model](src/main/java/com/milmove/trdmlambda/milmove/model/gettable/GetTableResponse.java)
+[Response Model](../src/main/java/com/milmove/trdmlambda/milmove/model/gettable/GetTableResponse.java)
 
 Example
 ```
