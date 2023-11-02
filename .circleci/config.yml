@@ -25,42 +25,27 @@ jobs:
           command: scripts/build
       - run:
           name: Release
-          command: |
-            ARTIFACT_ID=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout)
-            VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
-            JAR_NAME="target/$ARTIFACT_ID-$VERSION.jar"
-            scripts/release $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME << pipeline.git.tag >> $JAR_NAME
+          command: scripts/release $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME << pipeline.git.tag >>
       - run:
-          name: Move jar and checksum to workspace
+          name: Move zips and checksums to workspace
           command: |
             mkdir -p workspace
-            # Grab jar name
-            ARTIFACT_ID=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.artifactId -q -DforceStdout)
-            VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
-            JAR_NAME="target/$ARTIFACT_ID-$VERSION.jar"
-            # Copy jar to workspace
-            cp $JAR_NAME workspace/
-            # Copy checksums to workspace
-            cp checksums.txt workspace/checksums.txt
+            cp deployment-package.stg.zip workspace/
+            cp stg-checksums.txt workspace/
+            cp deployment-package.prd.zip workspace/
+            cp prd-checksums.txt workspace/
       - persist_to_workspace:
           root: workspace
           paths:
-            - checksums.txt
-            - "*.jar"
-            - "target/*.jar"
+            - "*.zip"
+            - "*.txt"
       - attach_workspace:
-          command: |
-            pwd
-            ls
           at: workspace
       - store_artifacts:
-          path: workspace/checksums.txt
+          path: workspace/*.zip
           destination: artifacts
       - store_artifacts:
-          path: workspace/*.jar
-          destination: artifacts
-      - store_artifacts:
-          path: workspace/target/*.jar
+          path: workspace/*.txt
           destination: artifacts
 workflows:
   version: 2
@@ -68,12 +53,12 @@ workflows:
     jobs:
       - build:
           context:
-          - org-global
+            - org-global
   release:
     jobs:
       - release:
           context:
-          - org-global
+            - org-global
           filters:
             branches:
               ignore: /^.*/
