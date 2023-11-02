@@ -33,7 +33,7 @@ The first step is to download and install [AWS CLI](https://docs.aws.amazon.com/
 Let’s run AWS SAM CLI on the path where the template.yaml is located and execute the command:
 ### Build
 
-To build the application ru `sam build` from the root directory or in the same directory as the `template.yml` file.
+To build the application run `sam build` from the root directory or in the same directory as the `template.yml` file.
 
 ### Run Application Locally
 
