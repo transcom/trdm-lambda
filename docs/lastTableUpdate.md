@@ -6,7 +6,7 @@
 `POST {ApiGatewayURL}/api/v1/lastTableUpdate`
 
 ## Controller
-[src/main/java/com/milmove/trdmlambda/milmove/controller/LastTableUpdateController.java](src/main/java/com/milmove/trdmlambda/milmove/controller/LastTableUpdateController.java)
+[src/main/java/com/milmove/trdmlambda/milmove/controller/LastTableUpdateController.java](../src/main/java/com/milmove/trdmlambda/milmove/controller/LastTableUpdateController.java)
 
 ## Models
 
