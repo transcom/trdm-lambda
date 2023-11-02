@@ -7,11 +7,25 @@ echo "Packaging..."
 
 # Build via sam
 sam build
+
+# Zip requires `cd` because if not it will compile the relative paths
+# which means it will also zip .aws-sam/build/, breaking the deployment.
+# Using -j makes it flat, ignoring .aws-sam/build/ but also
+# ignoring the subdirectories which we need.
+
 # Zip prd
-zip -r deployment-package.prd.zip .aws-sam/build/SoapProxyFunction
-# Overwrite build wsdl and then zip stg
+cd .aws-sam/build/SoapProxyFunction
+zip -r ../../../deployment-package.prd.zip .
+cd ../../../
+
+
+# Overwrite build wsdl
 cp -f .aws-sam/build/SoapProxyFunction/ReturnTableV7.stg.wsdl .aws-sam/build/SoapProxyFunction/ReturnTableV7.wsdl
-zip -r deployment-package.stg.zip .aws-sam/build/SoapProxyFunction
+
+# Zip stg
+cd .aws-sam/build/SoapProxyFunction
+zip -r deployment-package.stg.zip .
+cd ../../../
 
 # Announce and calculate checksum
 echo "Packaging complete, saving as artifact."
