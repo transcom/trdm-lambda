@@ -1,6 +1,9 @@
 # Table of Contents
 - [Table of Contents](#table-of-contents)
 - [API Gateway](#api-gateway)
+- [Apache CXF Code Generation](#apache-cxf-code-generation)
+  - [Plugin](#plugin)
+  - [Known Issue](#known-issue)
 - [trdm-lambda](#trdm-lambda)
   - [Pre-Requisites](#pre-requisites)
     - [Build](#build)
@@ -15,13 +18,66 @@
   - [Endpoints](#endpoints)
     - [lastTableUpdate](#lasttableupdate)
     - [getTable](#gettable)
-- [Apache CXF Code Generation](#apache-cxf-code-generation)
-  - [Plugin](#plugin)
-  - [Known Issue](#known-issue)
 - [TRDM](#trdm)
 
 # API Gateway
 Please see documentation [here](https://dp3.atlassian.net/wiki/spaces/MT/pages/2275573761/TRDM+Soap+Proxy+API+Gateway+Lambda+Function).
+
+# Apache CXF Code Generation
+It is very important to understand the backbone of the SOAP envelope generation. By using the `cxf-codegen-plugin` we can provide a WSDL and it will auto generate us code under `target` that can be used to generate SOAP envelopes.
+
+## Plugin
+
+```
+<plugin>
+    <groupId>org.apache.cxf</groupId>
+    <artifactId>cxf-codegen-plugin</artifactId>
+    <version>4.0.3</version>
+    <executions>
+        <execution>
+            <id>generate-sources</id>
+            <phase>generate-sources</phase>
+            <configuration>
+                <sourceRoot>${project.build.directory}/generated-sources/cxf</sourceRoot>
+                <wsdlOptions>
+                    <wsdlOption>
+                        <wsdl>${project.basedir}/src/main/resources/ReturnTableV7.wsdl</wsdl>
+                    </wsdlOption>
+                </wsdlOptions>
+            </configuration>
+            <goals>
+                <goal>wsdl2java</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
+
+## Known Issue
+We have found that CI/CD does not work well when using Apache CXF code generation. The plugin generates code at build time, and since CircleCI handles our actual build and release this means that it will be generated within CircleCI. This is normally not a problem and actually a good thing; however, this plugin makes hard coded file references to the file system directories it was built inside of. So, when CircleCI builds it and releases it the code will have hard coded *file* references to the WSDL such as (Exaggeration) `CircleCI/resources/`, meaning when deployed in AWS it will always fail. So, the way around that is to generate it locally, modify it as necessary, and store it within GitHub. This is why you can find the ReturnTableV7 code generated with that plugin added to our src manually [here](src/main/java/cxf).
+
+After the code was generated and plugged into `src`, we had to manually modify the WSDL references. See examples when you search that directory and sub directories for `classpath:ReturnTableV7.wsdl` - before these were class paths they were file references with hard coded CircleCI values - hence why when it was hosted into AWS Lambda it couldn't find the CircleCI directories.
+
+Additionally, the following static code was needed to grab the WSDL for the class.
+
+```
+static {
+    URL url = ReturnTable.class.getClassLoader().getResource("ReturnTableV7.wsdl");
+    if (url == null) {
+        java.util.logging.Logger.getLogger(ReturnTable.class.getName())
+            .log(java.util.logging.Level.INFO,
+                "Can not initialize the default wsdl from {0}", "classpath:ReturnTableV7.wsdl");
+    }
+    WSDL_LOCATION = url;
+}
+```
+
+**In short**, we generated the code with that plugin, imported it into the repository, and manually modified the WSDL file refs to be based on the classpath. Additionally, the imports within the services had to be imported like so:
+
+`import cxf.trdm.returntableservice.ReturnTable;` 
+
+Instead of relying on the target that gets auto generated with the plugin.
+
 
 # trdm-lambda
 Provides a serverless Java application to host an internal RESTful interface. This Java application will handle SOAP-based requests toward TRDM on behalf of our Go MilMove server. It will be hosted as an AWS Lambda function for MilMove API requests to TRDM via SOAP.
@@ -109,63 +165,7 @@ Then if you plan on reading them into the application create a `CustomPropProps.
 ### getTable
 [Go here](docs/getTable.md)
 
-# Apache CXF Code Generation
-It is very important to understand the backbone of the SOAP envelope generation. By using the `cxf-codegen-plugin` we can provide a WSDL and it will auto generate us code under `target` that can be used to generate SOAP envelopes.
-
-## Plugin
-
-```
-<plugin>
-    <groupId>org.apache.cxf</groupId>
-    <artifactId>cxf-codegen-plugin</artifactId>
-    <version>4.0.3</version>
-    <executions>
-        <execution>
-            <id>generate-sources</id>
-            <phase>generate-sources</phase>
-            <configuration>
-                <sourceRoot>${project.build.directory}/generated-sources/cxf</sourceRoot>
-                <wsdlOptions>
-                    <wsdlOption>
-                        <wsdl>${project.basedir}/src/main/resources/ReturnTableV7.wsdl</wsdl>
-                    </wsdlOption>
-                </wsdlOptions>
-            </configuration>
-            <goals>
-                <goal>wsdl2java</goal>
-            </goals>
-        </execution>
-    </executions>
-</plugin>
-```
-
-## Known Issue
-The issue with this and why we no longer have the plugin generating code at runtime is that during CI/CD this plugin generates files with hard code file references. This does not play well during compiling as the filenames will use hard coded references to the CircleCI file structure. That is why you can find the ReturnTableV7 code generated and added to our src [here](src/main/java/cxf).
-
-After the code was generated and plugged into `src`, we had to manually modify the WSDL references. See examples when you search that directory and sub directories for `classpath:ReturnTableV7.wsdl` - before these were class paths they were file references with hard coded CircleCI values - hence why when it was hosted into AWS Lambda it couldn't find the CircleCI directories.
-
-Additionally, the following static code was needed to grab the WSDL for the class.
-
-```
-static {
-    URL url = ReturnTable.class.getClassLoader().getResource("ReturnTableV7.wsdl");
-    if (url == null) {
-        java.util.logging.Logger.getLogger(ReturnTable.class.getName())
-            .log(java.util.logging.Level.INFO,
-                "Can not initialize the default wsdl from {0}", "classpath:ReturnTableV7.wsdl");
-    }
-    WSDL_LOCATION = url;
-}
-```
-
-**In short**, we generated the code with that plugin, imported it into the repository, and manually modified the WSDL file refs to be based on the classpath. Additionally, the imports within the services had to be imported like so:
-
-`import cxf.trdm.returntableservice.ReturnTable;` 
-
-Instead of relying on the target that gets auto generated with the plugin.
-
-
 # TRDM
 We are leveraging the `ReturnTableV7` WSDL provided by TRDM. This file has been verified to be unclassified in its entirety, holding no sensitive information and cleared to release into our open source repository by their administrators.
 
-Please see back to the [code generation](#apache-cxf-code-generation) section as to how this WSDL is so important for our function.
+Please refer to the [code generation](#apache-cxf-code-generation) section as to how this WSDL is so important for our function.
