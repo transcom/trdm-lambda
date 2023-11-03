@@ -1,6 +1,8 @@
 # Table of Contents
 - [Table of Contents](#table-of-contents)
 - [API Gateway](#api-gateway)
+- [TRDM](#trdm)
+  - [Whitelisted tables](#whitelisted-tables)
 - [Apache CXF Code Generation](#apache-cxf-code-generation)
   - [Plugin](#plugin)
   - [Known Issue](#known-issue)
@@ -18,10 +20,17 @@
   - [Endpoints](#endpoints)
     - [lastTableUpdate](#lasttableupdate)
     - [getTable](#gettable)
-- [TRDM](#trdm)
 
 # API Gateway
 Please see documentation [here](https://dp3.atlassian.net/wiki/spaces/MT/pages/2275573761/TRDM+Soap+Proxy+API+Gateway+Lambda+Function).
+
+# TRDM
+We are leveraging the `ReturnTableV7` WSDL provided by TRDM. This file has been verified to be unclassified in its entirety, holding no sensitive information and cleared to release into our open source repository by their administrators.
+
+Please refer to the [code generation](#apache-cxf-code-generation) section as to how this WSDL is so important for our function.
+
+## Whitelisted tables
+Read about which tables we are allowed to access [here](https://dp3.atlassian.net/wiki/spaces/MT/pages/2275573761/TRDM+Soap+Proxy+API+Gateway+Lambda+Function#Accessible-Tables).
 
 # Apache CXF Code Generation
 It is very important to understand the backbone of the SOAP envelope generation. By using the `cxf-codegen-plugin` we can provide a WSDL and it will auto generate us code under `target` that can be used to generate SOAP envelopes.
@@ -164,8 +173,3 @@ Then if you plan on reading them into the application create a `CustomPropProps.
 
 ### getTable
 [Go here](docs/getTable.md)
-
-# TRDM
-We are leveraging the `ReturnTableV7` WSDL provided by TRDM. This file has been verified to be unclassified in its entirety, holding no sensitive information and cleared to release into our open source repository by their administrators.
-
-Please refer to the [code generation](#apache-cxf-code-generation) section as to how this WSDL is so important for our function.
