@@ -32,6 +32,8 @@ Please refer to the [code generation](#apache-cxf-code-generation) section as to
 ## Whitelisted tables
 Read about which tables we are allowed to access [here](https://dp3.atlassian.net/wiki/spaces/MT/pages/2275573761/TRDM+Soap+Proxy+API+Gateway+Lambda+Function#Accessible-Tables).
 
+See information about the truststore [here](https://dp3.atlassian.net/wiki/spaces/MT/pages/2290483201/Updating+TRDM+Lambda+Function+Trust+Store).
+
 # Apache CXF Code Generation
 It is very important to understand the backbone of the SOAP envelope generation. By using the `cxf-codegen-plugin` we can provide a WSDL and it will auto generate us code under `target` that can be used to generate SOAP envelopes.
 
