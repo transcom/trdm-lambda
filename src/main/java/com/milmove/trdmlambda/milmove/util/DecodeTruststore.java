@@ -26,6 +26,9 @@ public class DecodeTruststore {
 
         if (file.exists()) {
             logger.info("Truststore file already exists. Not recreating");
+            // Set system properties for truststore
+            System.setProperty("javax.net.ssl.trustStore", filepath);
+            System.setProperty("javax.net.ssl.trustStorePassword", password);
             return;
         }
 

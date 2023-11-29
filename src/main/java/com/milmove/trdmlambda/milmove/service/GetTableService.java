@@ -1,10 +1,13 @@
 package com.milmove.trdmlambda.milmove.service;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.stream.XMLStreamException;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -25,12 +28,17 @@ import ch.qos.logback.classic.Logger;
 import jakarta.xml.ws.BindingProvider;
 import jakarta.activation.DataHandler;
 import lombok.Data;
+import cxf.trdm.returntableservice.ColumnFilter;
+import cxf.trdm.returntableservice.ColumnFilterTypeAndValues;
 import cxf.trdm.returntableservice.ReturnTable;
 import cxf.trdm.returntableservice.ReturnTableInput;
 import cxf.trdm.returntableservice.ReturnTableInput.TRDM;
+import cxf.trdm.returntableservice.ReturnTableInput.TRDM.ColumnFilters;
 import cxf.trdm.returntableservice.ReturnTableRequestElement;
 import cxf.trdm.returntableservice.ReturnTableResponseElement;
 import cxf.trdm.returntableservice.ReturnTableWSSoapHttpPort;
+import cxf.trdm.returntableservice.TwoValueDateTimeFilter;
+import cxf.trdm.returntableservice.TwoValueFilterType;
 
 @Service
 @Data
@@ -87,6 +95,9 @@ public class GetTableService {
     private GetTableResponse createSoapRequest(GetTableRequest request)
             throws IOException, DatatypeConfigurationException, TableRequestException {
 
+        // To better understand this, please review sample payloads for TRDM ReturnTableV7 WSDL endpoints
+        // It makes more sense to imagine each class as a nested XML attribute, all bundled together per WSDL guidelines
+        // See README documentation on how these classes were generated.
         ReturnTableRequestElement requestElement = new ReturnTableRequestElement();
         ReturnTableInput input = new ReturnTableInput();
         TRDM trdm = new TRDM();
@@ -96,6 +107,30 @@ public class GetTableService {
         trdm.setContentUpdatedSinceDateTime(DatatypeFactory.newInstance()
                 .newXMLGregorianCalendar(request.getContentUpdatedSinceDateTime()));
 
+        // Check if the optional fields of date time filters were provided
+        // If so, then apply filters accordingly
+        if (request.getFirstDateTimeFilter() != null && request.getSecondDateTimeFilter() != null) {
+            TwoValueDateTimeFilter twoValueDateTimeFilter = new TwoValueDateTimeFilter();
+            // Add the IS_BETWEEN check between the two dates
+            twoValueDateTimeFilter.setFilterType(TwoValueFilterType.IS_BETWEEN);
+            twoValueDateTimeFilter.getFilterValue().add(request.getFirstDateTimeFilter());
+            twoValueDateTimeFilter.getFilterValue().add(request.getSecondDateTimeFilter());
+            // Add TwoValueDateTimeFilter to ColumnFilterTypes
+            ColumnFilterTypeAndValues columnFilterTypeAndValues = new ColumnFilterTypeAndValues();
+            columnFilterTypeAndValues.getNoValueFilterOrSingleValueFilterOrSingleValueNumericalFilter().add(twoValueDateTimeFilter);
+            ColumnFilter columnFilter = new ColumnFilter();
+            columnFilter.setColumn("LAST_UDP_DT"); // Last update date, this string value comes from TRDM
+            // Add ColumnFilterTypes to ColumnFilter
+            columnFilter.setColumnFilterTypes(columnFilterTypeAndValues);
+
+            // Create the trdm columns filters class so we can add our column filter to it
+            ReturnTableInput.TRDM.ColumnFilters columnFilters = new ReturnTableInput.TRDM.ColumnFilters();
+            columnFilters.getColumnFilter().add(columnFilter);
+        
+            // Set the columnFilters object to the trdm object
+            trdm.setColumnFilters(columnFilters);
+        }
+        // Nest our classes for the XML SOAP body creation per WSDL specifications
         input.setTRDM(trdm);
         requestElement.setInput(input);
 

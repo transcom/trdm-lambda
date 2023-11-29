@@ -25,6 +25,8 @@ public class DecodeKeystore {
 
         if (file.exists()) {
             logger.info("Keystore file already exists. Not recreating");
+            System.setProperty("javax.net.ssl.keyStore", filepath);
+            System.setProperty("javax.net.ssl.keyStorePassword", this.password);
             return;
         }
 
