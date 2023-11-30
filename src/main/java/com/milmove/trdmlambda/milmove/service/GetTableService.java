@@ -102,10 +102,7 @@ public class GetTableService {
         ReturnTableInput input = new ReturnTableInput();
         TRDM trdm = new TRDM();
         trdm.setPhysicalName(request.getPhysicalName());
-        trdm.setReturnContent(request.isReturnContent());
         trdm.setReturnContent(Boolean.valueOf(request.isReturnContent()));
-        trdm.setContentUpdatedSinceDateTime(DatatypeFactory.newInstance()
-                .newXMLGregorianCalendar(request.getContentUpdatedSinceDateTime()));
 
         // Check if the optional fields of date time filters were provided
         // If so, then apply filters accordingly
@@ -129,6 +126,10 @@ public class GetTableService {
         
             // Set the columnFilters object to the trdm object
             trdm.setColumnFilters(columnFilters);
+        } else {
+        // If no dates are provided, return content updated since date time as normal
+        trdm.setContentUpdatedSinceDateTime(DatatypeFactory.newInstance()
+                .newXMLGregorianCalendar(request.getContentUpdatedSinceDateTime()));
         }
         // Nest our classes for the XML SOAP body creation per WSDL specifications
         input.setTRDM(trdm);
