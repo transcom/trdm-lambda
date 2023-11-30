@@ -15,6 +15,8 @@ public class GetTableRequest {
     private String contentUpdatedSinceDateTime; // To be converted to javax.xml.datatype.XMLGregorianCalendar
     private boolean returnContent;
     // Optional date time filters to be used in specific range requests
-    private String firstDateTimeFilter; //XMLGregorianCalendar
-    private String secondDateTimeFilter; //XMLGregorianCalendar
+    private String firstDateTimeFilter; // Optional field: XMLGregorianCalendar
+    private String secondDateTimeFilter; // Optional field: XMLGregorianCalendar
+    private String returnRowStatus; // Optional field: Returns individual row status with request, boolean
+    private String returnLastUpdate; // Optional field: Return last update with request, boolean
 }

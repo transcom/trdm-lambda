@@ -140,6 +140,16 @@ public class GetTableService {
             trdm.setContentUpdatedSinceDateTime(DatatypeFactory.newInstance()
                     .newXMLGregorianCalendar(request.getContentUpdatedSinceDateTime()));
         }
+
+        // Check optional field
+        if (request.getReturnRowStatus() != null) {
+            trdm.setReturnRowStatus(Boolean.valueOf(request.getReturnRowStatus()));
+        }
+        // Check optional field
+        if (request.getReturnLastUpdate() != null) {
+            trdm.setReturnLastUpdate(Boolean.valueOf(request.getReturnLastUpdate()));
+        }
+
         // Nest our classes for the XML SOAP body creation per WSDL specifications
         input.setTRDM(trdm);
         requestElement.setInput(input);
