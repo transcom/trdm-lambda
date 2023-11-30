@@ -95,8 +95,10 @@ public class GetTableService {
     private GetTableResponse createSoapRequest(GetTableRequest request)
             throws IOException, DatatypeConfigurationException, TableRequestException {
 
-        // To better understand this, please review sample payloads for TRDM ReturnTableV7 WSDL endpoints
-        // It makes more sense to imagine each class as a nested XML attribute, all bundled together per WSDL guidelines
+        // To better understand this, please review sample payloads for TRDM
+        // ReturnTableV7 WSDL endpoints
+        // It makes more sense to imagine each class as a nested XML attribute, all
+        // bundled together per WSDL guidelines
         // See README documentation on how these classes were generated.
         ReturnTableRequestElement requestElement = new ReturnTableRequestElement();
         ReturnTableInput input = new ReturnTableInput();
@@ -107,14 +109,21 @@ public class GetTableService {
         // Check if the optional fields of date time filters were provided
         // If so, then apply filters accordingly
         if (request.getFirstDateTimeFilter() != null && request.getSecondDateTimeFilter() != null) {
+            // Convert String to XMLGregorianCalendar
+            XMLGregorianCalendar firstDate = DatatypeFactory.newInstance()
+                    .newXMLGregorianCalendar(request.getFirstDateTimeFilter());
+            XMLGregorianCalendar secondDate = DatatypeFactory.newInstance()
+                    .newXMLGregorianCalendar(request.getSecondDateTimeFilter());
+
             TwoValueDateTimeFilter twoValueDateTimeFilter = new TwoValueDateTimeFilter();
             // Add the IS_BETWEEN check between the two dates
             twoValueDateTimeFilter.setFilterType(TwoValueFilterType.IS_BETWEEN);
-            twoValueDateTimeFilter.getFilterValue().add(request.getFirstDateTimeFilter());
-            twoValueDateTimeFilter.getFilterValue().add(request.getSecondDateTimeFilter());
+            twoValueDateTimeFilter.getFilterValue().add(firstDate);
+            twoValueDateTimeFilter.getFilterValue().add(secondDate);
             // Add TwoValueDateTimeFilter to ColumnFilterTypes
             ColumnFilterTypeAndValues columnFilterTypeAndValues = new ColumnFilterTypeAndValues();
-            columnFilterTypeAndValues.getNoValueFilterOrSingleValueFilterOrSingleValueNumericalFilter().add(twoValueDateTimeFilter);
+            columnFilterTypeAndValues.getNoValueFilterOrSingleValueFilterOrSingleValueNumericalFilter()
+                    .add(twoValueDateTimeFilter);
             ColumnFilter columnFilter = new ColumnFilter();
             columnFilter.setColumn("LAST_UDP_DT"); // Last update date, this string value comes from TRDM
             // Add ColumnFilterTypes to ColumnFilter
@@ -123,13 +132,13 @@ public class GetTableService {
             // Create the trdm columns filters class so we can add our column filter to it
             ReturnTableInput.TRDM.ColumnFilters columnFilters = new ReturnTableInput.TRDM.ColumnFilters();
             columnFilters.getColumnFilter().add(columnFilter);
-        
+
             // Set the columnFilters object to the trdm object
             trdm.setColumnFilters(columnFilters);
         } else {
-        // If no dates are provided, return content updated since date time as normal
-        trdm.setContentUpdatedSinceDateTime(DatatypeFactory.newInstance()
-                .newXMLGregorianCalendar(request.getContentUpdatedSinceDateTime()));
+            // If no dates are provided, return content updated since date time as normal
+            trdm.setContentUpdatedSinceDateTime(DatatypeFactory.newInstance()
+                    .newXMLGregorianCalendar(request.getContentUpdatedSinceDateTime()));
         }
         // Nest our classes for the XML SOAP body creation per WSDL specifications
         input.setTRDM(trdm);
