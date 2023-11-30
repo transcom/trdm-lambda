@@ -157,6 +157,7 @@ public class GetTableService {
 
             // Create the trdm columns filters class so we can add our column filter to it
             ReturnTableInput.TRDM.ColumnFilters columnFilters = new ReturnTableInput.TRDM.ColumnFilters();
+            columnFilters.getColumnFilter().add(isOnOrAfterColumnFilter);
             columnFilters.getColumnFilter().add(isOnOrBeforeColumnFilter);
 
             // Set the columnFilters object to the trdm object
