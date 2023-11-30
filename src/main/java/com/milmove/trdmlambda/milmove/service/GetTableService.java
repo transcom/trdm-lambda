@@ -142,12 +142,12 @@ public class GetTableService {
         }
 
         // Check optional field
-        if (request.getReturnRowStatus() != null) {
-            trdm.setReturnRowStatus(Boolean.valueOf(request.getReturnRowStatus()));
+        if (request.isReturnContent()) {
+            trdm.setReturnRowStatus(Boolean.valueOf(request.isReturnContent()));
         }
         // Check optional field
-        if (request.getReturnLastUpdate() != null) {
-            trdm.setReturnLastUpdate(Boolean.valueOf(request.getReturnLastUpdate()));
+        if (request.isReturnLastUpdate()) {
+            trdm.setReturnLastUpdate(Boolean.valueOf(request.isReturnLastUpdate()));
         }
 
         // Nest our classes for the XML SOAP body creation per WSDL specifications
