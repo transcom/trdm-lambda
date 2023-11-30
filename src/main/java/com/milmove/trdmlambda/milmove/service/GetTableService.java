@@ -138,7 +138,7 @@ public class GetTableService {
             isOnOrAfterColumnFilterTypeAndValues.getNoValueFilterOrSingleValueFilterOrSingleValueNumericalFilter()
                     .add(isOnOrAfterSingleValueDateTimeFilter);
             ColumnFilter isOnOrAfterColumnFilter = new ColumnFilter();
-            isOnOrAfterColumnFilter.setColumn("LAST_UDP_DT"); // Last update date, this string value comes from TRDM
+            isOnOrAfterColumnFilter.setColumn("LAST_UPD_DT"); // Last update date, this string value comes from TRDM
             // Add ColumnFilterTypes to ColumnFilter
             isOnOrAfterColumnFilter.setColumnFilterTypes(isOnOrAfterColumnFilterTypeAndValues);
 
