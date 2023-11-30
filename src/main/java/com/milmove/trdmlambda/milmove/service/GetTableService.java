@@ -117,10 +117,6 @@ public class GetTableService {
         trdm.setPhysicalName(request.getPhysicalName());
         trdm.setReturnContent(Boolean.valueOf(request.isReturnContent()));
 
-        // Use this to set the data pull since time X so as to not always pull all data
-        // every request
-        trdm.setContentUpdatedSinceDateTime(DatatypeFactory.newInstance()
-                .newXMLGregorianCalendar(request.getContentUpdatedSinceDateTime()));
 
         // Check if the optional fields of date time filters were provided
         // If so, then apply filters accordingly
@@ -128,26 +124,48 @@ public class GetTableService {
             // Convert String to XMLGregorianCalendar
             XMLGregorianCalendar contentUpdatedOnOrBeforeDateTime = DatatypeFactory.newInstance()
                     .newXMLGregorianCalendar(request.getContentUpdatedOnOrBeforeDateTime());
-            SingleValueDateTimeFilter singleValueDateTimeFilter = new SingleValueDateTimeFilter();
-            // IS_BETWEEN with TwoValueDateTimeFilter does not behave as expected. Add IS_ON_OR_BEFORE
-            singleValueDateTimeFilter.setFilterType(SingleValueDateTimeFilterType.IS_ON_OR_BEFORE);
-            singleValueDateTimeFilter.setFilterType(SingleValueDateTimeFilterType.IS_ON_OR_BEFORE);
-            singleValueDateTimeFilter.setFilterValue(contentUpdatedOnOrBeforeDateTime);
+            // IS_BETWEEN with TwoValueDateTimeFilter does not behave as expected. Add IS_ON_OR_BEFORE and IS_ON_OR_AFTER
+
+            // Configure IS_ON_OR_AFTER column filter
+            SingleValueDateTimeFilter isOnOrAfterSingleValueDateTimeFilter = new SingleValueDateTimeFilter();
+            isOnOrAfterSingleValueDateTimeFilter.setFilterType(SingleValueDateTimeFilterType.IS_ON_OR_AFTER);
+            // Set value to the contentUpdatedSinceDateTime (So we can reuse it, it means the same logically but is used
+            // for different purposes)
+            isOnOrAfterSingleValueDateTimeFilter.setFilterValue(DatatypeFactory.newInstance()
+                .newXMLGregorianCalendar(request.getContentUpdatedSinceDateTime()));
             // Add SingleValueDateTimeFilter to ColumnFilterTypes
-            ColumnFilterTypeAndValues columnFilterTypeAndValues = new ColumnFilterTypeAndValues();
-            columnFilterTypeAndValues.getNoValueFilterOrSingleValueFilterOrSingleValueNumericalFilter()
-                    .add(singleValueDateTimeFilter);
-            ColumnFilter columnFilter = new ColumnFilter();
-            columnFilter.setColumn("LAST_UDP_DT"); // Last update date, this string value comes from TRDM
+            ColumnFilterTypeAndValues isOnOrAfterColumnFilterTypeAndValues = new ColumnFilterTypeAndValues();
+            isOnOrAfterColumnFilterTypeAndValues.getNoValueFilterOrSingleValueFilterOrSingleValueNumericalFilter()
+                    .add(isOnOrAfterSingleValueDateTimeFilter);
+            ColumnFilter isOnOrAfterColumnFilter = new ColumnFilter();
+            isOnOrAfterColumnFilter.setColumn("LAST_UDP_DT"); // Last update date, this string value comes from TRDM
             // Add ColumnFilterTypes to ColumnFilter
-            columnFilter.setColumnFilterTypes(columnFilterTypeAndValues);
+            isOnOrAfterColumnFilter.setColumnFilterTypes(isOnOrAfterColumnFilterTypeAndValues);
+
+            // Configure IS_ON_OR_BEFORE column filter
+            SingleValueDateTimeFilter isOnOrBeforeSingleValueDateTimeFilter = new SingleValueDateTimeFilter();
+            isOnOrBeforeSingleValueDateTimeFilter.setFilterType(SingleValueDateTimeFilterType.IS_ON_OR_BEFORE);
+            isOnOrBeforeSingleValueDateTimeFilter.setFilterValue(contentUpdatedOnOrBeforeDateTime);
+            // Add SingleValueDateTimeFilter to ColumnFilterTypes
+            ColumnFilterTypeAndValues isOnOrBeforecolumnFilterTypeAndValues = new ColumnFilterTypeAndValues();
+            isOnOrBeforecolumnFilterTypeAndValues.getNoValueFilterOrSingleValueFilterOrSingleValueNumericalFilter()
+                    .add(isOnOrBeforeSingleValueDateTimeFilter);
+            ColumnFilter isOnOrBeforeColumnFilter = new ColumnFilter();
+            isOnOrBeforeColumnFilter.setColumn("LAST_UDP_DT"); // Last update date, this string value comes from TRDM
+            // Add ColumnFilterTypes to ColumnFilter
+            isOnOrBeforeColumnFilter.setColumnFilterTypes(isOnOrBeforecolumnFilterTypeAndValues);
 
             // Create the trdm columns filters class so we can add our column filter to it
             ReturnTableInput.TRDM.ColumnFilters columnFilters = new ReturnTableInput.TRDM.ColumnFilters();
-            columnFilters.getColumnFilter().add(columnFilter);
+            columnFilters.getColumnFilter().add(isOnOrBeforeColumnFilter);
 
             // Set the columnFilters object to the trdm object
             trdm.setColumnFilters(columnFilters);
+        } else {
+        // Use this to set the data pull since time X so as to not always pull all data
+        // every request
+        trdm.setContentUpdatedSinceDateTime(DatatypeFactory.newInstance()
+                .newXMLGregorianCalendar(request.getContentUpdatedSinceDateTime()));
         }
 
         // Check optional field
