@@ -17,6 +17,6 @@ public class GetTableRequest {
     // Optional date time filters to be used in specific range requests
     private String firstDateTimeFilter; // Optional field: XMLGregorianCalendar
     private String secondDateTimeFilter; // Optional field: XMLGregorianCalendar
-    private String returnRowStatus; // Optional field: Returns individual row status with request, boolean
-    private String returnLastUpdate; // Optional field: Return last update with request, boolean
+    private boolean returnRowStatus; // Optional field: Returns individual row status with request, boolean
+    private boolean returnLastUpdate; // Optional field: Return last update with request, boolean
 }
