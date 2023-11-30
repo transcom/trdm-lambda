@@ -1,8 +1,6 @@
 package com.milmove.trdmlambda.milmove.service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -13,6 +11,8 @@ import javax.xml.stream.XMLStreamException;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.cxf.endpoint.Client;
 import org.apache.cxf.frontend.ClientProxy;
+import org.apache.cxf.transport.http.HTTPConduit;
+import org.apache.cxf.transports.http.configuration.HTTPClientPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.milmove.trdmlambda.milmove.config.TrdmProps;
@@ -59,6 +59,14 @@ public class GetTableService {
 
     public GetTableService(TrdmProps trdmProps, ClientPasswordCallback clientPasswordCallback) {
         Client client = ClientProxy.getClient(returnTableWSSoapHttpPort);
+        // Set HTTP policy (Timeout)
+        HTTPConduit httpConduit = (HTTPConduit) client.getConduit();
+        HTTPClientPolicy httpClientPolicy = new HTTPClientPolicy();
+        // Doubling timeout from 30 -> 90
+        httpClientPolicy.setConnectionTimeout(90000);
+        httpClientPolicy.setReceiveTimeout(90000);
+        httpConduit.setClient(httpClientPolicy);
+
         new SHA512PolicyLoader(client.getBus());
         Map<String, Object> ctx = ((BindingProvider) returnTableWSSoapHttpPort).getRequestContext();
         ctx.put("ws-security.callback-handler", clientPasswordCallback);
@@ -106,7 +114,8 @@ public class GetTableService {
         trdm.setPhysicalName(request.getPhysicalName());
         trdm.setReturnContent(Boolean.valueOf(request.isReturnContent()));
 
-        // Use this to set the data pull since time X so as to not always pull all data every request
+        // Use this to set the data pull since time X so as to not always pull all data
+        // every request
         trdm.setContentUpdatedSinceDateTime(DatatypeFactory.newInstance()
                 .newXMLGregorianCalendar(request.getContentUpdatedSinceDateTime()));
 
@@ -140,7 +149,7 @@ public class GetTableService {
             // Set the columnFilters object to the trdm object
             trdm.setColumnFilters(columnFilters);
         }
-        
+
         // Check optional field
         if (request.isReturnContent()) {
             trdm.setReturnRowStatus(Boolean.valueOf(request.isReturnContent()));
