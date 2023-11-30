@@ -106,6 +106,10 @@ public class GetTableService {
         trdm.setPhysicalName(request.getPhysicalName());
         trdm.setReturnContent(Boolean.valueOf(request.isReturnContent()));
 
+        // Use this to set the data pull since time X so as to not always pull all data every request
+        trdm.setContentUpdatedSinceDateTime(DatatypeFactory.newInstance()
+                .newXMLGregorianCalendar(request.getContentUpdatedSinceDateTime()));
+
         // Check if the optional fields of date time filters were provided
         // If so, then apply filters accordingly
         if (request.getFirstDateTimeFilter() != null && request.getSecondDateTimeFilter() != null) {
@@ -135,12 +139,8 @@ public class GetTableService {
 
             // Set the columnFilters object to the trdm object
             trdm.setColumnFilters(columnFilters);
-        } else {
-            // If no dates are provided, return content updated since date time as normal
-            trdm.setContentUpdatedSinceDateTime(DatatypeFactory.newInstance()
-                    .newXMLGregorianCalendar(request.getContentUpdatedSinceDateTime()));
         }
-
+        
         // Check optional field
         if (request.isReturnContent()) {
             trdm.setReturnRowStatus(Boolean.valueOf(request.isReturnContent()));
