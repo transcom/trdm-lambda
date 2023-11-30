@@ -37,6 +37,9 @@ import cxf.trdm.returntableservice.ReturnTableInput.TRDM.ColumnFilters;
 import cxf.trdm.returntableservice.ReturnTableRequestElement;
 import cxf.trdm.returntableservice.ReturnTableResponseElement;
 import cxf.trdm.returntableservice.ReturnTableWSSoapHttpPort;
+import cxf.trdm.returntableservice.SingleValueDateFilterType;
+import cxf.trdm.returntableservice.SingleValueDateTimeFilter;
+import cxf.trdm.returntableservice.SingleValueDateTimeFilterType;
 import cxf.trdm.returntableservice.TwoValueDateTimeFilter;
 import cxf.trdm.returntableservice.TwoValueFilterType;
 
@@ -121,22 +124,19 @@ public class GetTableService {
 
         // Check if the optional fields of date time filters were provided
         // If so, then apply filters accordingly
-        if (request.getFirstDateTimeFilter() != null && request.getSecondDateTimeFilter() != null) {
+        if (request.getContentUpdatedOnOrBeforeDateTime() != null) {
             // Convert String to XMLGregorianCalendar
-            XMLGregorianCalendar firstDate = DatatypeFactory.newInstance()
-                    .newXMLGregorianCalendar(request.getFirstDateTimeFilter());
-            XMLGregorianCalendar secondDate = DatatypeFactory.newInstance()
-                    .newXMLGregorianCalendar(request.getSecondDateTimeFilter());
-
-            TwoValueDateTimeFilter twoValueDateTimeFilter = new TwoValueDateTimeFilter();
-            // Add the IS_BETWEEN check between the two dates
-            twoValueDateTimeFilter.setFilterType(TwoValueFilterType.IS_BETWEEN);
-            twoValueDateTimeFilter.getFilterValue().add(firstDate);
-            twoValueDateTimeFilter.getFilterValue().add(secondDate);
-            // Add TwoValueDateTimeFilter to ColumnFilterTypes
+            XMLGregorianCalendar contentUpdatedOnOrBeforeDateTime = DatatypeFactory.newInstance()
+                    .newXMLGregorianCalendar(request.getContentUpdatedOnOrBeforeDateTime());
+            SingleValueDateTimeFilter singleValueDateTimeFilter = new SingleValueDateTimeFilter();
+            // IS_BETWEEN with TwoValueDateTimeFilter does not behave as expected. Add IS_ON_OR_BEFORE
+            singleValueDateTimeFilter.setFilterType(SingleValueDateTimeFilterType.IS_ON_OR_BEFORE);
+            singleValueDateTimeFilter.setFilterType(SingleValueDateTimeFilterType.IS_ON_OR_BEFORE);
+            singleValueDateTimeFilter.setFilterValue(contentUpdatedOnOrBeforeDateTime);
+            // Add SingleValueDateTimeFilter to ColumnFilterTypes
             ColumnFilterTypeAndValues columnFilterTypeAndValues = new ColumnFilterTypeAndValues();
             columnFilterTypeAndValues.getNoValueFilterOrSingleValueFilterOrSingleValueNumericalFilter()
-                    .add(twoValueDateTimeFilter);
+                    .add(singleValueDateTimeFilter);
             ColumnFilter columnFilter = new ColumnFilter();
             columnFilter.setColumn("LAST_UDP_DT"); // Last update date, this string value comes from TRDM
             // Add ColumnFilterTypes to ColumnFilter
