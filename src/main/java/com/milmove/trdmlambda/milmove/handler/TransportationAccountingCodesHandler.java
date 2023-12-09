@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
+import java.util.TimeZone;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -106,9 +107,10 @@ public class TransportationAccountingCodesHandler {
             Timestamp lastUpdatedTimestamp = rs.getTimestamp("rds_last_updated");
 
             // Convert our last update pulled from the db into XML Gregorian Calendar
-            // friendly format
+            // friendly format ending in "Z" for Zulu. X should auto assume Z
             SimpleDateFormat xmlUnfriendlyLastUpdateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");
-            SimpleDateFormat xmlFriendlyLastUpdateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+            SimpleDateFormat xmlFriendlyLastUpdateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'X'");
+            xmlFriendlyLastUpdateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
             Date date = xmlUnfriendlyLastUpdateFormat.parse(lastUpdatedTimestamp.toString());
             String xmlGregorianCalendarString = xmlFriendlyLastUpdateFormat.format(date);
