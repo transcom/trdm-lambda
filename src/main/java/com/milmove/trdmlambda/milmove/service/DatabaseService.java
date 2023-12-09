@@ -44,7 +44,7 @@ public class DatabaseService {
                 .hostname(hostname)
                 .port(port)
                 .username(username)
-                .region("us-gov-west-1")
+                .region(Region.of("us-gov-west-1"))
                 .build();
 
         String authToken = utilities.generateAuthenticationToken(tokenRequest);
