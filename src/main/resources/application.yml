@@ -1,11 +1,9 @@
 spring:
     profiles.active: local
 ---
-springdoc:
-    api-docs:
-        enabled: true
-    swagger-ui:
-        enabled: true
 
 trdm:
     props-path: /tmp/client_sign.properties
+spring:
+  main:
+    web-application-type: none
