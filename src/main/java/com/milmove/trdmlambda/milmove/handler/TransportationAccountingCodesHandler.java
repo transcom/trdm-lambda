@@ -67,7 +67,8 @@ public class TransportationAccountingCodesHandler {
 
     // This cron job will handle the entirety of ensuring the RDS db
     // is up to date with proper TGET data.
-    public void tacCron() throws SQLException, DatatypeConfigurationException, TableRequestException, IOException, ParseException {
+    public void tacCron()
+            throws SQLException, DatatypeConfigurationException, TableRequestException, IOException, ParseException {
         // Gather the last update from TRDM
         logger.info("getting lastTableUpdate response with physical name TRNSPRTN_ACNT");
         LastTableUpdateResponse response = lastTableUpdate("TRNSPRTN_ACNT");
@@ -104,9 +105,10 @@ public class TransportationAccountingCodesHandler {
         if (rs.next()) {
             Timestamp lastUpdatedTimestamp = rs.getTimestamp("rds_last_updated");
 
-            // Convert our last update pulled from the db into XML Gregorian Calendar friendly format
+            // Convert our last update pulled from the db into XML Gregorian Calendar
+            // friendly format
             SimpleDateFormat xmlUnfriendlyLastUpdateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");
-            SimpleDateFormat xmlFriendlyLastUpdateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+            SimpleDateFormat xmlFriendlyLastUpdateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
             Date date = xmlUnfriendlyLastUpdateFormat.parse(lastUpdatedTimestamp.toString());
             String xmlGregorianCalendarString = xmlFriendlyLastUpdateFormat.format(date);
@@ -126,7 +128,7 @@ public class TransportationAccountingCodesHandler {
 
     private void updateTGETData(XMLGregorianCalendar ourLastUpdate, String trdmTable, String rdsTable)
             throws TableRequestException, DatatypeConfigurationException, IOException, SQLException {
-                logger.info("checking if trdm table name provided is allowed..");
+        logger.info("checking if trdm table name provided is allowed..");
         if (!allowedTrdmTableNames.contains(trdmTable)) {
             throw new IllegalArgumentException("Invalid table name");
         }
