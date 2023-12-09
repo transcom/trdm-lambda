@@ -1,8 +1,0 @@
-spring:
-    profiles.active: staging
----
-springdoc:
-    api-docs:
-        enabled: false
-    swagger-ui:
-        enabled: false

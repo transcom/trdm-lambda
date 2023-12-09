@@ -1,3 +1,6 @@
+# SAM CLI
+.aws-sam/
+
 # Compiled class file
 *.class
 

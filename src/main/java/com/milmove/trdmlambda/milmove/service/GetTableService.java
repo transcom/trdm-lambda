@@ -33,15 +33,11 @@ import cxf.trdm.returntableservice.ColumnFilterTypeAndValues;
 import cxf.trdm.returntableservice.ReturnTable;
 import cxf.trdm.returntableservice.ReturnTableInput;
 import cxf.trdm.returntableservice.ReturnTableInput.TRDM;
-import cxf.trdm.returntableservice.ReturnTableInput.TRDM.ColumnFilters;
 import cxf.trdm.returntableservice.ReturnTableRequestElement;
 import cxf.trdm.returntableservice.ReturnTableResponseElement;
 import cxf.trdm.returntableservice.ReturnTableWSSoapHttpPort;
-import cxf.trdm.returntableservice.SingleValueDateFilterType;
 import cxf.trdm.returntableservice.SingleValueDateTimeFilter;
 import cxf.trdm.returntableservice.SingleValueDateTimeFilterType;
-import cxf.trdm.returntableservice.TwoValueDateTimeFilter;
-import cxf.trdm.returntableservice.TwoValueFilterType;
 
 @Service
 @Data

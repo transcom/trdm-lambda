@@ -11,7 +11,10 @@ import java.nio.charset.StandardCharsets;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 
@@ -21,7 +24,7 @@ import com.milmove.trdmlambda.milmove.util.DecodeTruststore;
 
 import ch.qos.logback.classic.Logger;
 
-@SpringBootApplication()
+@SpringBootApplication(exclude = {ServletWebServerFactoryAutoConfiguration.class, WebMvcAutoConfiguration.class})
 public class TrdmRestApplication {
 	private Logger logger = (Logger) LoggerFactory.getLogger(TrdmRestApplication.class);
 	@Autowired
@@ -34,7 +37,9 @@ public class TrdmRestApplication {
     DecodeTruststore decodeTruststore;
 
 	public static void main(String[] args) {
-		SpringApplication.run(TrdmRestApplication.class, args);
+		    SpringApplication app = new SpringApplication(TrdmRestApplication.class);
+		app.setWebApplicationType(WebApplicationType.NONE);
+		app.run(args);
 	}
 
 	@EventListener(ApplicationReadyEvent.class)

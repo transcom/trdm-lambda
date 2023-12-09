@@ -1,5 +1,6 @@
 # Table of Contents
 - [Table of Contents](#table-of-contents)
+- [Disabled RESTful to SOAP Conversion Capabilities](#disabled-restful-to-soap-conversion-capabilities)
 - [API Gateway](#api-gateway)
 - [TRDM](#trdm)
   - [Whitelisted tables](#whitelisted-tables)
@@ -20,6 +21,11 @@
   - [Endpoints](#endpoints)
     - [lastTableUpdate](#lasttableupdate)
     - [getTable](#gettable)
+
+# Disabled RESTful to SOAP Conversion Capabilities
+This lambda function as of version 1 received an overhaul to function as a cron based lambda function invoked via a timer.
+
+It has the complete capability of providing a REST to SOAP conversion service. This can be of use in the future when other services may need to interface through us. It currently is running as spring boot application which is not necessarily needed for a cron job, but due to time sensitivity it was not phased out when overhauling. It does still offer the future ability to turn back on the RESTful aspects to provide said conversion service, but as of right now it is disabled.
 
 # API Gateway
 Please see documentation [here](https://dp3.atlassian.net/wiki/spaces/MT/pages/2275573761/TRDM+Soap+Proxy+API+Gateway+Lambda+Function).
