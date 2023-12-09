@@ -110,7 +110,7 @@ public class TransportationAccountingCodesHandler {
     }
 
     private void updateTGETData(XMLGregorianCalendar ourLastUpdate, String trdmTable, String rdsTable)
-            throws TableRequestException, DatatypeConfigurationException, IOException {
+            throws TableRequestException, DatatypeConfigurationException, IOException, SQLException {
         if (!allowedTrdmTableNames.contains(trdmTable)) {
             throw new IllegalArgumentException("Invalid table name");
         }
@@ -131,7 +131,6 @@ public class TransportationAccountingCodesHandler {
                 databaseService.insertTransportationAccountingCodes(codes);
                 logger.info("finished inserting TACs into DB");
                 break;
-
             case "lines_of_accounting":
             // TODO:
             default:
