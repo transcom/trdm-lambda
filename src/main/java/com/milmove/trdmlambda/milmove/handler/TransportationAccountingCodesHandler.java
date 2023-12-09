@@ -12,8 +12,12 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -37,84 +41,101 @@ public class TransportationAccountingCodesHandler {
     private final GetTableService getTableService;
     private final DatabaseService databaseService;
     private final TransportationAccountingCodeParser tacParser;
+    private final Connection rdsConnection;
+    // TODO: Static table names
+    private static final Set<String> allowedTableNames = Set.of("transportation_accounting_codes", "lines_of_accounting"); // RDS
+    private static final Set<String> allowedTrdmTableNames = Set.of("TRNSPRTN_ACNT", "LN_OF_ACCT"); // TRDM
+    private static final int yearsToReturnIfOurTableIsEmpty = 3;
 
     public TransportationAccountingCodesHandler(
             LastTableUpdateService lastTableUpdateService,
             GetTableService getTableService,
             DatabaseService databaseService,
-            TransportationAccountingCodeParser tacParser) {
+            TransportationAccountingCodeParser tacParser) throws SQLException {
 
         this.lastTableUpdateService = lastTableUpdateService;
         this.getTableService = getTableService;
         this.databaseService = databaseService;
         this.tacParser = tacParser;
+
+        rdsConnection = databaseService.getConnection();
     }
 
     // This cron job will handle the entirety of ensuring the RDS db
     // is up to date with proper TGET data.
-    public void tacCron() {
-        LastTableUpdateResponse response;
-        // Create our lastTableUpdate body
-        LastTableUpdateRequest requestBody = new LastTableUpdateRequest();
-        requestBody.setPhysicalName("TRNSPRTN_ACNT");
-
-        logger.info("calling TRDM lastTableUpdate with details: {}", requestBody);
-        try {
-            response = lastTableUpdateService.lastTableUpdateRequest(requestBody);
-        } catch (TableRequestException e) {
-            logger.error("error retrieving lastTableUpdate from TRDM in tac cron handler", e);
-            throw new RuntimeException("error retrieving lastTableUpdate from TRDM in tac cron handler", e);
+    public void tacCron() throws SQLException, DatatypeConfigurationException, TableRequestException, IOException {
+        // Gather the last update from TRDM
+        LastTableUpdateResponse response = lastTableUpdate("TRNSPRTN_ACNT");
+        XMLGregorianCalendar ourLastUpdate = getOurLastTGETUpdate("transportation_accounting_codes");
+        boolean tgetOutOfDate = isTGETDataOutOfDate(ourLastUpdate, response.getLastUpdate());
+        if (tgetOutOfDate) {
+            updateTGETData(ourLastUpdate, "TRNSPRTN_ACNT", "transportation_accounting_codes");
+        } else {
+            // The data in RDS is up to date, no need to proceed
+            logger.info("Transportation Accounting Codes RDS Table TGET data already up to date");
         }
-        logger.info("received response without error, proceeding with db check...");
+    }
 
-        // Compare the response from lastTableUpdate to
-        // our most recent TAC code to see if our data is out of date.
-        try (Connection conn = databaseService.getConnection();
-                PreparedStatement pstmt = conn.prepareStatement(
-                        "SELECT MAX(updated_at) AS rds_last_updated FROM transportation_accounting_codes");
-                ResultSet rs = pstmt.executeQuery()) {
+    private LastTableUpdateResponse lastTableUpdate(String physicalName) throws TableRequestException {
+        logger.info(" calling TRDM lastTableUpdate for table {}", physicalName);
+        LastTableUpdateRequest requestBody = new LastTableUpdateRequest();
+        requestBody.setPhysicalName(physicalName);
+        return lastTableUpdateService.lastTableUpdateRequest(requestBody);
+    }
 
-            if (rs.next()) {
-                Timestamp lastUpdatedTimestamp = rs.getTimestamp("rds_last_updated");
-                XMLGregorianCalendar ourLastUpdated = DatatypeFactory.newInstance()
-                        .newXMLGregorianCalendar(lastUpdatedTimestamp.toString());
+    private XMLGregorianCalendar getOurLastTGETUpdate(String tableName)
+            throws SQLException, DatatypeConfigurationException {
+        if (!allowedTableNames.contains(tableName)) {
+            throw new IllegalArgumentException("Invalid table name");
+        }
 
-                if (ourLastUpdated.compare(response.getLastUpdate()) < 0) {
-                    // The data in RDS is older than the last update from TRDM
-                    try {
-                        // Create our lastTableUpdate body
-                        // Request all TGET data since our last update
-                        GetTableRequest getTableRequestBody = new GetTableRequest();
-                        getTableRequestBody.setPhysicalName("TRNSPRTN_ACNT");
-                        getTableRequestBody.setContentUpdatedSinceDateTime(ourLastUpdated.toString());
-                        getTableRequestBody.setReturnContent(true);
-                        GetTableResponse getTableResponse = getTableService.getTableRequest(getTableRequestBody);
+        String query = "SELECT MAX(updated_at) AS rds_last_updated FROM " + tableName;
+        PreparedStatement pstmt = rdsConnection.prepareStatement(query);
+        ResultSet rs = pstmt.executeQuery();
 
-                        // Parse the response attachment to get the codes
-                        List<TransportationAccountingCode> codes = tacParser.parse(getTableResponse.getAttachment());
+        if (rs.next()) {
+            Timestamp lastUpdatedTimestamp = rs.getTimestamp("rds_last_updated");
+            return DatatypeFactory.newInstance()
+                    .newXMLGregorianCalendar(lastUpdatedTimestamp.toString());
+        }
 
-                        // Insert the codes into RDS
-                        // TODO: Logger restructuring
-                        logger.info("inserting TACs into DB");
-                        databaseService.insertTransportationAccountingCodes(codes);
-                        logger.info("finished inserting TACs into DB");
-                    } catch (TableRequestException e) {
-                        logger.error("error retrieving getTable from TRDM in tac cron handler", e);
-                        throw new RuntimeException("error retrieving getTable from TRDM in tac cron handler", e);
-                    } catch (IOException e) {
-                        logger.error("Error processing attachment for GetTable request", e);
-                    } catch (DatatypeConfigurationException e) {
-                        logger.error(
-                                "Error processing XMLGregorianCalendar type for provided contentUpdatedSinceDateTime value for GetTable request",
-                                e);
-                    }
-                } else {
-                    // The data in RDS is up to date, no need to proceed
-                }
-            }
-        } catch (Exception e) {
-            logger.error("Error accessing the database", e);
-            // TODO: Throw exception
+        // If table was empty, return default years to retrieve as we have no TGET data
+        GregorianCalendar calendar = new GregorianCalendar();
+        calendar.add(Calendar.YEAR, yearsToReturnIfOurTableIsEmpty);
+        return DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar);
+    }
+
+    private boolean isTGETDataOutOfDate(XMLGregorianCalendar ourLastUpdate, XMLGregorianCalendar trdmLastUpdate) {
+        return ourLastUpdate.compare(trdmLastUpdate) < 0;
+    }
+
+    private void updateTGETData(XMLGregorianCalendar ourLastUpdate, String trdmTable, String rdsTable)
+            throws TableRequestException, DatatypeConfigurationException, IOException {
+        if (!allowedTrdmTableNames.contains(trdmTable)) {
+            throw new IllegalArgumentException("Invalid table name");
+        }
+        // Request all TGET data from TRDM since our last update
+        GetTableRequest getTableRequestBody = new GetTableRequest();
+        getTableRequestBody.setPhysicalName(trdmTable);
+        getTableRequestBody.setContentUpdatedSinceDateTime(ourLastUpdate.toString());
+        getTableRequestBody.setReturnContent(true);
+        GetTableResponse getTableResponse = getTableService.getTableRequest(getTableRequestBody);
+
+        // Parse the response attachment to get the codes
+        List<TransportationAccountingCode> codes = tacParser.parse(getTableResponse.getAttachment());
+
+        // Insert the codes into RDS
+        logger.info("inserting TACs into DB");
+        switch (rdsTable) {
+            case "transportation_accounting_codes":
+                databaseService.insertTransportationAccountingCodes(codes);
+                logger.info("finished inserting TACs into DB");
+                break;
+
+            case "lines_of_accounting":
+            // TODO:
+            default:
+                throw new IllegalArgumentException("Invalid rds table name");
         }
     }
 }
