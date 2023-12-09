@@ -38,7 +38,7 @@ public class TransportationAccountingCodeParser {
         // Get the column headers from the line
         String[] columnHeaders = scanner.nextLine().split("\\|");
 
-        // TODO: Possibly allow for unexpected column names and proceed with the columns we are familiar with
+        // TODO: Possibly allow for unexpected column names and proceed with the columns we are familiar with. This will be a must for LOA.
         if (!Arrays.equals(expectedColumnNames, columnHeaders)) {
             throw new RuntimeException("Column headers do not match expected format.");
         }
