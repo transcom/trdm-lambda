@@ -107,9 +107,9 @@ public class TransportationAccountingCodesHandler {
             Timestamp lastUpdatedTimestamp = rs.getTimestamp("rds_last_updated");
 
             // Convert our last update pulled from the db into XML Gregorian Calendar
-            // friendly format ending in "Z" for Zulu. X should auto assume Z
+            // friendly format ending in "Z" for Zulu.
             SimpleDateFormat xmlUnfriendlyLastUpdateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");
-            SimpleDateFormat xmlFriendlyLastUpdateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'X'");
+            SimpleDateFormat xmlFriendlyLastUpdateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
             xmlFriendlyLastUpdateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
             Date date = xmlUnfriendlyLastUpdateFormat.parse(lastUpdatedTimestamp.toString());
