@@ -36,12 +36,8 @@ public class TransportationAccountingCodeParser {
         logger.info("beginning to parse TAC TGET data");
         List<TransportationAccountingCode> codes = new ArrayList<>();
         Scanner scanner = new Scanner(new ByteArrayInputStream(fileContent));
-        logger.info("skipping the first line");
-        scanner.nextLine(); // Skip first line
-
-        logger.info("gathering headers");
-        // Get the column headers from the line
-        String[] columnHeaders = scanner.nextLine().split("\\|");
+        logger.info("skipping the first line and then gathering headers");
+        String[] columnHeaders = scanner.nextLine().split("\\|"); // Skip first lie and gather headers immediately
 
         // TODO: Possibly allow for unexpected column names and proceed with the columns
         // we are familiar with. This will be a must for LOA.
