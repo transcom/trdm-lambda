@@ -94,6 +94,7 @@ public class TransportationAccountingCodesHandler {
                         List<TransportationAccountingCode> codes = tacParser.parse(getTableResponse.getAttachment());
 
                         // Insert the codes into RDS
+                        // TODO: Logger restructuring
                         logger.info("inserting TACs into DB");
                         databaseService.insertTransportationAccountingCodes(codes);
                         logger.info("finished inserting TACs into DB");
@@ -113,7 +114,7 @@ public class TransportationAccountingCodesHandler {
             }
         } catch (Exception e) {
             logger.error("Error accessing the database", e);
-            // Handle exception
+            // TODO: Throw exception
         }
     }
 }

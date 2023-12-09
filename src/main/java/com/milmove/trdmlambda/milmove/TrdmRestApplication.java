@@ -24,7 +24,8 @@ import com.milmove.trdmlambda.milmove.util.DecodeTruststore;
 
 import ch.qos.logback.classic.Logger;
 
-@SpringBootApplication(exclude = {ServletWebServerFactoryAutoConfiguration.class, WebMvcAutoConfiguration.class})
+ // Web server dependency removed, this is an extra precaution
+@SpringBootApplication(exclude = { ServletWebServerFactoryAutoConfiguration.class, WebMvcAutoConfiguration.class })
 public class TrdmRestApplication {
 	private Logger logger = (Logger) LoggerFactory.getLogger(TrdmRestApplication.class);
 	@Autowired
@@ -34,10 +35,10 @@ public class TrdmRestApplication {
 	TrdmProps trdmProps;
 
 	@Autowired
-    DecodeTruststore decodeTruststore;
+	DecodeTruststore decodeTruststore;
 
 	public static void main(String[] args) {
-		    SpringApplication app = new SpringApplication(TrdmRestApplication.class);
+		SpringApplication app = new SpringApplication(TrdmRestApplication.class);
 		app.setWebApplicationType(WebApplicationType.NONE);
 		app.run(args);
 	}
