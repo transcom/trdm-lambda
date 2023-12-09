@@ -1,4 +1,5 @@
 package com.milmove.trdmlambda.milmove.util;
+
 import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -24,7 +25,11 @@ public class TransportationAccountingCodeParser {
     Map<String, Integer> columnNamesAndLocations = new HashMap<>();
 
     private static final String[] expectedColumnNames = {
-        "TAC_SYS_ID", "LOA_SYS_ID", "TRNSPRTN_ACNT_CD", "TAC_FY_TXT", "TAC_FN_BL_MOD_CD", "ORG_GRP_DFAS_CD", "TAC_MVT_DSG_ID", "TAC_TY_CD", "TAC_USE_CD", "TAC_MAJ_CLMT_ID", "TAC_BILL_ACT_TXT", "TAC_COST_CTR_NM", "BUIC", "TAC_HIST_CD", "TAC_STAT_CD", "TRNSPRTN_ACNT_TX", "TRNSPRTN_ACNT_BGN_DT", "TRNSPRTN_ACNT_END_DT", "DD_ACTVTY_ADRS_ID", "TAC_BLLD_ADD_FRST_LN_TX", "TAC_BLLD_ADD_SCND_LN_TX", "TAC_BLLD_ADD_THRD_LN_TX", "TAC_BLLD_ADD_FRTH_LN_TX", "TAC_FNCT_POC_NM", "ROW_STS_CD"
+            "TAC_SYS_ID", "LOA_SYS_ID", "TRNSPRTN_ACNT_CD", "TAC_FY_TXT", "TAC_FN_BL_MOD_CD", "ORG_GRP_DFAS_CD",
+            "TAC_MVT_DSG_ID", "TAC_TY_CD", "TAC_USE_CD", "TAC_MAJ_CLMT_ID", "TAC_BILL_ACT_TXT", "TAC_COST_CTR_NM",
+            "BUIC", "TAC_HIST_CD", "TAC_STAT_CD", "TRNSPRTN_ACNT_TX", "TRNSPRTN_ACNT_BGN_DT", "TRNSPRTN_ACNT_END_DT",
+            "DD_ACTVTY_ADRS_ID", "TAC_BLLD_ADD_FRST_LN_TX", "TAC_BLLD_ADD_SCND_LN_TX", "TAC_BLLD_ADD_THRD_LN_TX",
+            "TAC_BLLD_ADD_FRTH_LN_TX", "TAC_FNCT_POC_NM", "ROW_STS_CD"
     };
 
     public List<TransportationAccountingCode> parse(byte[] fileContent) throws RuntimeException {
@@ -38,9 +43,12 @@ public class TransportationAccountingCodeParser {
         // Get the column headers from the line
         String[] columnHeaders = scanner.nextLine().split("\\|");
 
-        // TODO: Possibly allow for unexpected column names and proceed with the columns we are familiar with. This will be a must for LOA.
+        // TODO: Possibly allow for unexpected column names and proceed with the columns
+        // we are familiar with. This will be a must for LOA.
         if (!Arrays.equals(expectedColumnNames, columnHeaders)) {
-            throw new RuntimeException("Column headers do not match expected format.");
+            String message = String.format("Column headers do not match expected format. Received %s and expected %s",
+                    Arrays.toString(columnHeaders), Arrays.toString(expectedColumnNames));
+            throw new RuntimeException(message);
         }
 
         // Map their order for when processing the TAC values properly
