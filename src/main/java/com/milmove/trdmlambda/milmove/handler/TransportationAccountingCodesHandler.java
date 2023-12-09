@@ -69,8 +69,11 @@ public class TransportationAccountingCodesHandler {
     // is up to date with proper TGET data.
     public void tacCron() throws SQLException, DatatypeConfigurationException, TableRequestException, IOException, ParseException {
         // Gather the last update from TRDM
+        logger.info("getting lastTableUpdate response with physical name TRNSPRTN_ACNT");
         LastTableUpdateResponse response = lastTableUpdate("TRNSPRTN_ACNT");
+        logger.info("received LastTableUpdateResponse, getting our latest TGET update now");
         XMLGregorianCalendar ourLastUpdate = getOurLastTGETUpdate("transportation_accounting_codes");
+        logger.info("received out latest TGET update. Comparing the 2 values to see if our TGET data is out of date");
         boolean tgetOutOfDate = isTGETDataOutOfDate(ourLastUpdate, response.getLastUpdate());
         if (tgetOutOfDate) {
             logger.info("TAC TGET data is out of date. Starting updateTGETData flow");

@@ -78,6 +78,7 @@ public class LastTableUpdateService {
      * @throws TableRequestException
      */
     private LastTableUpdateResponse createSoapRequest(LastTableUpdateRequest request) throws TableRequestException {
+        logger.info("LastTableUpdateService received create soap request with body {}", request);
         ReturnTableLastUpdateRequest requestElement = new ReturnTableLastUpdateRequest();
         requestElement.setPhysicalName(request.getPhysicalName());
         return makeRequest(requestElement);
@@ -93,11 +94,11 @@ public class LastTableUpdateService {
 
         switch (statusCode) {
             case SUCCESS:
-                logger.info("Request for last table update succeeded");
+                logger.info("Request for last table update succeeded, setting values and returning now");
                 lastTableUpdateResponse.setDateTime(responseElement.getStatus().getDateTime());
                 lastTableUpdateResponse.setLastUpdate(responseElement.getLastUpdate());
                 lastTableUpdateResponse.setStatusCode(statusCode);
-                break;
+                return lastTableUpdateResponse;
             case FAILURE:
                 logger.error("Request for last table update failed: {}",
                         responseElement.getStatus().getMessage());
@@ -107,6 +108,5 @@ public class LastTableUpdateService {
                         responseElement.getStatus().getMessage());
                 throw new TableRequestException(responseElement.getStatus().getMessage());
         }
-        return lastTableUpdateResponse;
     }
 }
