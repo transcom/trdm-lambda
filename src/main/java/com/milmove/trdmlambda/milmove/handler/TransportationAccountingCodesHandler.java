@@ -14,7 +14,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
@@ -43,7 +46,8 @@ public class TransportationAccountingCodesHandler {
     private final TransportationAccountingCodeParser tacParser;
     private final Connection rdsConnection;
     // TODO: Static table names
-    private static final Set<String> allowedTableNames = Set.of("transportation_accounting_codes", "lines_of_accounting"); // RDS
+    private static final Set<String> allowedTableNames = Set.of("transportation_accounting_codes",
+            "lines_of_accounting"); // RDS
     private static final Set<String> allowedTrdmTableNames = Set.of("TRNSPRTN_ACNT", "LN_OF_ACCT"); // TRDM
     private static final int yearsToReturnIfOurTableIsEmpty = 3;
 
@@ -63,7 +67,7 @@ public class TransportationAccountingCodesHandler {
 
     // This cron job will handle the entirety of ensuring the RDS db
     // is up to date with proper TGET data.
-    public void tacCron() throws SQLException, DatatypeConfigurationException, TableRequestException, IOException {
+    public void tacCron() throws SQLException, DatatypeConfigurationException, TableRequestException, IOException, ParseException {
         // Gather the last update from TRDM
         LastTableUpdateResponse response = lastTableUpdate("TRNSPRTN_ACNT");
         XMLGregorianCalendar ourLastUpdate = getOurLastTGETUpdate("transportation_accounting_codes");
@@ -84,7 +88,7 @@ public class TransportationAccountingCodesHandler {
     }
 
     private XMLGregorianCalendar getOurLastTGETUpdate(String tableName)
-            throws SQLException, DatatypeConfigurationException {
+            throws SQLException, DatatypeConfigurationException, ParseException {
         if (!allowedTableNames.contains(tableName)) {
             throw new IllegalArgumentException("Invalid table name");
         }
@@ -95,13 +99,20 @@ public class TransportationAccountingCodesHandler {
 
         if (rs.next()) {
             Timestamp lastUpdatedTimestamp = rs.getTimestamp("rds_last_updated");
-            return DatatypeFactory.newInstance()
-                    .newXMLGregorianCalendar(lastUpdatedTimestamp.toString());
+
+            // Convert our last update pulled from the db into XML Gregorian Calendar friendly format
+            SimpleDateFormat xmlUnfriendlyLastUpdateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");
+            SimpleDateFormat xmlFriendlyLastUpdateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+
+            Date date = xmlUnfriendlyLastUpdateFormat.parse(lastUpdatedTimestamp.toString());
+            String xmlGregorianCalendarString = xmlFriendlyLastUpdateFormat.format(date);
+
+            return DatatypeFactory.newInstance().newXMLGregorianCalendar(xmlGregorianCalendarString);
         }
 
         // If table was empty, return default years to retrieve as we have no TGET data
         GregorianCalendar calendar = new GregorianCalendar();
-        calendar.add(Calendar.YEAR, yearsToReturnIfOurTableIsEmpty);
+        calendar.add(Calendar.YEAR, -yearsToReturnIfOurTableIsEmpty);
         return DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar);
     }
 
@@ -132,7 +143,7 @@ public class TransportationAccountingCodesHandler {
                 logger.info("finished inserting TACs into DB");
                 break;
             case "lines_of_accounting":
-            // TODO:
+                // TODO:
             default:
                 throw new IllegalArgumentException("Invalid rds table name");
         }
