@@ -73,6 +73,7 @@ public class TransportationAccountingCodesHandler {
         XMLGregorianCalendar ourLastUpdate = getOurLastTGETUpdate("transportation_accounting_codes");
         boolean tgetOutOfDate = isTGETDataOutOfDate(ourLastUpdate, response.getLastUpdate());
         if (tgetOutOfDate) {
+            logger.info("TAC TGET data is out of date. Starting updateTGETData flow");
             updateTGETData(ourLastUpdate, "TRNSPRTN_ACNT", "transportation_accounting_codes");
         } else {
             // The data in RDS is up to date, no need to proceed
@@ -122,16 +123,19 @@ public class TransportationAccountingCodesHandler {
 
     private void updateTGETData(XMLGregorianCalendar ourLastUpdate, String trdmTable, String rdsTable)
             throws TableRequestException, DatatypeConfigurationException, IOException, SQLException {
+                logger.info("checking if trdm table name provided is allowed..");
         if (!allowedTrdmTableNames.contains(trdmTable)) {
             throw new IllegalArgumentException("Invalid table name");
         }
+        logger.info("table {} is allowed, proceeding", trdmTable);
         // Request all TGET data from TRDM since our last update
         GetTableRequest getTableRequestBody = new GetTableRequest();
         getTableRequestBody.setPhysicalName(trdmTable);
         getTableRequestBody.setContentUpdatedSinceDateTime(ourLastUpdate.toString());
         getTableRequestBody.setReturnContent(true);
+        logger.info("calling TRDM getTable with provided body {}", getTableRequestBody);
         GetTableResponse getTableResponse = getTableService.getTableRequest(getTableRequestBody);
-
+        logger.info("received response back from TRDM getTable, beginning to parse..");
         // Parse the response attachment to get the codes
         List<TransportationAccountingCode> codes = tacParser.parse(getTableResponse.getAttachment());
 
