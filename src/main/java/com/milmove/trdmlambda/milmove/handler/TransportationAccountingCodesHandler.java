@@ -124,6 +124,17 @@ public class TransportationAccountingCodesHandler {
         return DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar);
     }
 
+    public static XMLGregorianCalendar addOneWeek(XMLGregorianCalendar originalDate) throws DatatypeConfigurationException {
+        GregorianCalendar calendar = originalDate.toGregorianCalendar();
+        calendar.add(GregorianCalendar.WEEK_OF_YEAR, 1);
+
+        SimpleDateFormat xmlFriendlyLastUpdateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        xmlFriendlyLastUpdateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String xmlGregorianCalendarString = xmlFriendlyLastUpdateFormat.format(calendar.getTime());
+
+        return DatatypeFactory.newInstance().newXMLGregorianCalendar(xmlGregorianCalendarString);
+    }
+
     private boolean isTGETDataOutOfDate(XMLGregorianCalendar ourLastUpdate, XMLGregorianCalendar trdmLastUpdate) {
         return ourLastUpdate.compare(trdmLastUpdate) < 0;
     }
@@ -135,11 +146,15 @@ public class TransportationAccountingCodesHandler {
             throw new IllegalArgumentException("Invalid table name");
         }
         logger.info("table {} is allowed, proceeding", trdmTable);
+
+        XMLGregorianCalendar oneWeekLater = addOneWeek(ourLastUpdate);
+
         // Request all TGET data from TRDM since our last update
         GetTableRequest getTableRequestBody = new GetTableRequest();
         getTableRequestBody.setPhysicalName(trdmTable);
         getTableRequestBody.setContentUpdatedSinceDateTime(ourLastUpdate.toString());
         getTableRequestBody.setReturnContent(true);
+        getTableRequestBody.setContentUpdatedOnOrBeforeDateTime(oneWeekLater.toString());
         logger.info("calling TRDM getTable with provided body {}", getTableRequestBody);
         GetTableResponse getTableResponse = getTableService.getTableRequest(getTableRequestBody);
         logger.info("received response back from TRDM getTable, beginning to parse..");
