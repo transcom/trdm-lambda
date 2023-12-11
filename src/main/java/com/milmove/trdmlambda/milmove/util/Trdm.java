@@ -150,7 +150,7 @@ public class Trdm {
                 // Parse the response attachment to get the codes
                 logger.info("parsing response back from TRDM getTable");
                 List<TransportationAccountingCode> codes = tacParser.parse(getTableResponse.getAttachment(),
-                        getTableResponse.getDateTime());
+                        oneWeekLater);
                 logger.info("inserting TACs into DB");
                 databaseService.insertTransportationAccountingCodes(codes);
                 logger.info("finished inserting TACs into DB");
@@ -159,7 +159,7 @@ public class Trdm {
                 // Parse the response attachment to get the loas
                 logger.info("parsing response back from TRDM getTable");
                 List<LineOfAccounting> loas = loaParser.parse(getTableResponse.getAttachment(),
-                        getTableResponse.getDateTime());
+                        oneWeekLater);
                 logger.info("inserting LOAs into DB");
                 databaseService.insertLinesOfAccounting(loas);
                 logger.info("finished inserting LOAs into DB");
