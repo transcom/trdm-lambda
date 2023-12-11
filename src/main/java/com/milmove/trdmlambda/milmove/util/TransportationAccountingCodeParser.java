@@ -2,14 +2,19 @@ package com.milmove.trdmlambda.milmove.util;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.TimeZone;
+
+import javax.xml.datatype.XMLGregorianCalendar;
 
 import ch.qos.logback.classic.Logger;
 
@@ -21,6 +26,7 @@ import com.milmove.trdmlambda.milmove.model.TransportationAccountingCode;
 @Component
 public class TransportationAccountingCodeParser {
     private Logger logger = (Logger) LoggerFactory.getLogger(TransportationAccountingCodeParser.class);
+
     // Create our map for TGET parsing
     Map<String, Integer> columnNamesAndLocations = new HashMap<>();
 
@@ -32,12 +38,13 @@ public class TransportationAccountingCodeParser {
             "TAC_BLLD_ADD_FRTH_LN_TX", "TAC_FNCT_POC_NM", "ROW_STS_CD"
     };
 
-    public List<TransportationAccountingCode> parse(byte[] fileContent) throws RuntimeException {
+    public List<TransportationAccountingCode> parse(byte[] fileContent, XMLGregorianCalendar trdmLastUpdate)
+            throws RuntimeException {
         logger.info("beginning to parse TAC TGET data");
         List<TransportationAccountingCode> codes = new ArrayList<>();
         Scanner scanner = new Scanner(new ByteArrayInputStream(fileContent));
         logger.info("skipping the first line and then gathering headers");
-        String[] columnHeaders = scanner.nextLine().split("\\|"); // Skip first lie and gather headers immediately
+        String[] columnHeaders = scanner.nextLine().split("\\|"); // Skip first line and gather headers immediately
 
         // TODO: Possibly allow for unexpected column names and proceed with the columns
         // we are familiar with. This will be a must for LOA.
@@ -62,7 +69,7 @@ public class TransportationAccountingCodeParser {
                 break;
             }
             String[] values = line.split("\\|");
-            TransportationAccountingCode code = processLineIntoTAC(values, columnNamesAndLocations);
+            TransportationAccountingCode code = processLineIntoTAC(values, columnNamesAndLocations, trdmLastUpdate);
 
             if (code != null) {
                 codes.add(code);
@@ -75,16 +82,20 @@ public class TransportationAccountingCodeParser {
         return codes;
     }
 
-    private TransportationAccountingCode processLineIntoTAC(String[] values, Map<String, Integer> columnHeaders) throws RuntimeException {
+    private TransportationAccountingCode processLineIntoTAC(String[] values, Map<String, Integer> columnHeaders,
+            XMLGregorianCalendar trdmLastUpdate) throws RuntimeException {
         // Check if TAC is empty or if ROW_STS_CD is "DLT"
-        if (values[columnHeaders.get("TRNSPRTN_ACNT_CD")].isEmpty() || "DLT".equals(values[columnHeaders.get("ROW_STS_CD")])) {
+        if (values[columnHeaders.get("TRNSPRTN_ACNT_CD")].isEmpty()
+                || "DLT".equals(values[columnHeaders.get("ROW_STS_CD")])) {
             return null; // Skip this line
         }
-    
+
         try {
-            LocalDateTime effectiveDate = LocalDateTime.parse(values[columnHeaders.get("TRNSPRTN_ACNT_BGN_DT")], DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            LocalDateTime expiredDate = LocalDateTime.parse(values[columnHeaders.get("TRNSPRTN_ACNT_END_DT")], DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            
+            LocalDateTime effectiveDate = LocalDateTime.parse(values[columnHeaders.get("TRNSPRTN_ACNT_BGN_DT")],
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            LocalDateTime expiredDate = LocalDateTime.parse(values[columnHeaders.get("TRNSPRTN_ACNT_END_DT")],
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
             TransportationAccountingCode code = new TransportationAccountingCode();
             code.setTacSysID(values[columnHeaders.get("TAC_SYS_ID")]);
             code.setLoaSysID(values[columnHeaders.get("LOA_SYS_ID")]);
@@ -110,10 +121,20 @@ public class TransportationAccountingCodeParser {
             code.setTacFnctPocNm(values[columnHeaders.get("TAC_FNCT_POC_NM")]);
             code.setTrnsprtnAcntBgnDt(effectiveDate);
             code.setTrnsprtnAcntEndDt(expiredDate);
-                
+            code.setUpdatedAt(convertXMLGregorianCalendarToLocalDateTime(trdmLastUpdate));
             return code;
         } catch (DateTimeParseException e) {
             throw new RuntimeException("Error parsing dates: " + e.getMessage());
         }
     }
+
+        private LocalDateTime convertXMLGregorianCalendarToLocalDateTime(XMLGregorianCalendar xmlGregorianCalendar) {
+        if (xmlGregorianCalendar == null) {
+            return null;
+        }
+        GregorianCalendar gregorianCalendar = xmlGregorianCalendar.toGregorianCalendar();
+        gregorianCalendar.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return gregorianCalendar.toZonedDateTime().withZoneSameInstant(ZoneId.of("UTC")).toLocalDateTime();
+    }
+
 }

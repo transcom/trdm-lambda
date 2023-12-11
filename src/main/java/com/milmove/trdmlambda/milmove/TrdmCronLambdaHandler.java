@@ -2,6 +2,7 @@ package com.milmove.trdmlambda.milmove;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.milmove.trdmlambda.milmove.handler.LinesOfAccountingHandler;
 import com.milmove.trdmlambda.milmove.handler.TransportationAccountingCodesHandler;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -24,8 +25,13 @@ public class TrdmCronLambdaHandler implements RequestHandler<Object, String> {
             logger.info("trdm cron job triggered, starting TAC handler and TGET flow");
             TransportationAccountingCodesHandler tacHandler = context.getBean(TransportationAccountingCodesHandler.class);
             tacHandler.tacCron();
+            logger.info("finished tac cron handler");
 
             logger.info("starting LOA handler");
+            LinesOfAccountingHandler loaHandler = context.getBean(LinesOfAccountingHandler.class);
+            loaHandler.loaCron();
+            logger.info("finished loa cron handler");
+            
             logger.info("trdm cron job finished execution");
             return "trdm cron job finished execution";
         } catch (Exception e) {

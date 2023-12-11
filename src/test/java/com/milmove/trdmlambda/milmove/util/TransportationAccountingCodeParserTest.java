@@ -10,16 +10,26 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.TimeZone;
+
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 class TransportationAccountingCodeParserTest {
 
     @Test
-    void testTacParser() throws IOException {
+    void testTacParser() throws IOException, DatatypeConfigurationException {
         byte[] bytes = Files.readAllBytes(Paths.get("src/test/resources/Transportation_Account.txt"));
         TransportationAccountingCodeParser parser = new TransportationAccountingCodeParser();
 
-        List<TransportationAccountingCode> result = parser.parse(bytes);
+        GregorianCalendar gregorianCalendar = new GregorianCalendar();
+        XMLGregorianCalendar today = DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar);
+
+        List<TransportationAccountingCode> result = parser.parse(bytes, today);
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
@@ -49,7 +59,17 @@ class TransportationAccountingCodeParserTest {
         expectedCode.setTacBillActTxt("");
         expectedCode.setBuic("");
         expectedCode.setTacHistCd("");
+        expectedCode.setUpdatedAt(convertXMLGregorianCalendarToLocalDateTime(today));
 
         assertEquals(expectedCode, result.get(0));
+    }
+
+    private LocalDateTime convertXMLGregorianCalendarToLocalDateTime(XMLGregorianCalendar xmlGregorianCalendar) {
+        if (xmlGregorianCalendar == null) {
+            return null;
+        }
+        GregorianCalendar gregorianCalendar = xmlGregorianCalendar.toGregorianCalendar();
+        gregorianCalendar.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return gregorianCalendar.toZonedDateTime().withZoneSameInstant(ZoneId.of("UTC")).toLocalDateTime();
     }
 }

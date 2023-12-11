@@ -15,6 +15,8 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -30,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.milmove.trdmlambda.milmove.exceptions.TableRequestException;
+import com.milmove.trdmlambda.milmove.model.LineOfAccounting;
 import com.milmove.trdmlambda.milmove.model.TransportationAccountingCode;
 import com.milmove.trdmlambda.milmove.model.gettable.GetTableRequest;
 import com.milmove.trdmlambda.milmove.model.gettable.GetTableResponse;
@@ -44,6 +47,8 @@ public class Trdm {
     private final GetTableService getTableService;
     private final DatabaseService databaseService;
     private final TransportationAccountingCodeParser tacParser;
+    private final LineOfAccountingParser loaParser;
+
     private final Connection rdsConnection;
     private static final Set<String> allowedTableNames = Set.of("transportation_accounting_codes",
             "lines_of_accounting"); // RDS
@@ -53,12 +58,14 @@ public class Trdm {
     public Trdm(LastTableUpdateService lastTableUpdateService,
             GetTableService getTableService,
             DatabaseService databaseService,
-            TransportationAccountingCodeParser tacParser) throws SQLException {
+            TransportationAccountingCodeParser tacParser,
+            LineOfAccountingParser loaParser) throws SQLException {
 
         this.lastTableUpdateService = lastTableUpdateService;
         this.getTableService = getTableService;
         this.databaseService = databaseService;
         this.tacParser = tacParser;
+        this.loaParser = loaParser;
 
         rdsConnection = databaseService.getConnection();
 
@@ -142,15 +149,24 @@ public class Trdm {
             case "transportation_accounting_codes":
                 // Parse the response attachment to get the codes
                 logger.info("parsing response back from TRDM getTable");
-                List<TransportationAccountingCode> codes = tacParser.parse(getTableResponse.getAttachment());
+                List<TransportationAccountingCode> codes = tacParser.parse(getTableResponse.getAttachment(),
+                        getTableResponse.getDateTime());
                 logger.info("inserting TACs into DB");
                 databaseService.insertTransportationAccountingCodes(codes);
                 logger.info("finished inserting TACs into DB");
                 break;
             case "lines_of_accounting":
-                // TODO:
+                // Parse the response attachment to get the loas
+                logger.info("parsing response back from TRDM getTable");
+                List<LineOfAccounting> loas = loaParser.parse(getTableResponse.getAttachment(),
+                        getTableResponse.getDateTime());
+                logger.info("inserting LOAs into DB");
+                databaseService.insertLinesOfAccounting(loas);
+                logger.info("finished inserting LOAs into DB");
+                break;
             default:
                 throw new IllegalArgumentException("Invalid rds table name");
         }
     }
+
 }
