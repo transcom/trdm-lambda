@@ -66,17 +66,14 @@ public class LineOfAccountingParser {
 
         logger.info("headers received and mapped, beginning to process every other line");
         // Loop until the last line in the file is found
-        int lineCount = 0;
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
-            lineCount++;
             // "Unclassified" will always be the last line in the file
             if (line.equals("Unclassified")) {
                 logger.info("finished parsing TGET data file from TRDM");
                 break;
             }
             String[] values = line.split("\\|");
-            logger.info("Line {} | Values Length: {} | Values: {}", lineCount, values.length, Arrays.toString(values));
             LineOfAccounting code = processLineIntoLOA(values, columnNamesAndLocations, trdmLastUpdate);
 
             if (code != null) {
@@ -93,6 +90,10 @@ public class LineOfAccountingParser {
     private LineOfAccounting processLineIntoLOA(String[] values, Map<String, Integer> columnHeaders,
             XMLGregorianCalendar lastLoaUpdate)
             throws RuntimeException {
+        // Check if value length does not align with columns
+        if (values.length != columnHeaders.size()) {
+            return null; // Skip this line
+        }
         // Check if LOA is empty or if ROW_STS_CD is "DLT"
         if (values[columnHeaders.get("LOA_SYS_ID")].isEmpty()
                 || "DLT".equals(values[columnHeaders.get("ROW_STS_CD")])) {
