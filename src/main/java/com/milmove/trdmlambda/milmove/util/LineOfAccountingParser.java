@@ -66,14 +66,17 @@ public class LineOfAccountingParser {
 
         logger.info("headers received and mapped, beginning to process every other line");
         // Loop until the last line in the file is found
+        int lineCount = 0;
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
+            lineCount++;
             // "Unclassified" will always be the last line in the file
             if (line.equals("Unclassified")) {
                 logger.info("finished parsing TGET data file from TRDM");
                 break;
             }
             String[] values = line.split("\\|");
+            logger.info("Line {} | Values Length: {} | Values: {}", lineCount, values.length, Arrays.toString(values));
             LineOfAccounting code = processLineIntoLOA(values, columnNamesAndLocations, trdmLastUpdate);
 
             if (code != null) {
