@@ -51,14 +51,19 @@ public class LineOfAccountingParser {
         logger.info("skipping the first line and then gathering headers");
         String[] columnHeaders = scanner.nextLine().split("\\|"); // Skip first line and gather headers immediately
         logger.info("parsed these column headers from LOA attachment {}", Arrays.toString(columnHeaders));
-        // TODO: Possibly allow for unexpected column names and proceed with the columns
-        // we are familiar with. This will be a must for LOA.
-        if (!Arrays.equals(expectedColumnNames, columnHeaders)) {
+        
+        // Sort both the expectedColumnNames and columnHeaders before comparing
+        String[] sortedExpectedColumnNames = Arrays.copyOf(expectedColumnNames, expectedColumnNames.length);
+        String[] sortedColumnHeaders = Arrays.copyOf(columnHeaders, columnHeaders.length);
+        Arrays.sort(sortedExpectedColumnNames);
+        Arrays.sort(sortedColumnHeaders);
+
+        if (!Arrays.equals(sortedExpectedColumnNames, sortedColumnHeaders)) {
             String message = String.format("Column headers do not match expected format. Received %s and expected %s",
                     Arrays.toString(columnHeaders), Arrays.toString(expectedColumnNames));
             throw new RuntimeException(message);
         }
-
+        
         // Map their order for when processing the LOA values properly
         for (int i = 0; i < columnHeaders.length; i++) {
             columnNamesAndLocations.put(columnHeaders[i], i);
