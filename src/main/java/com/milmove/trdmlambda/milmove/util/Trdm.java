@@ -137,7 +137,7 @@ public class Trdm {
 
         while (ourLastUpdate.compare(trdmLastUpdate) <= 0 && !receivedData) {
             XMLGregorianCalendar oneWeekLater = AddOneWeek(ourLastUpdate);
-            // Add check that our "On week later" addition doesn't go past the TRDM last
+            // Add check that our "One week later" addition doesn't go past the TRDM last
             // update. If it does, then just set the filter to their last update
             if (oneWeekLater.compare(trdmLastUpdate) > 0) {
                 oneWeekLater = trdmLastUpdate;
