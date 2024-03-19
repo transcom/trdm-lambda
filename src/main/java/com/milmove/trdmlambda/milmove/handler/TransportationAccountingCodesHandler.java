@@ -34,13 +34,14 @@ public class TransportationAccountingCodesHandler {
         // Gather the last update from TRDM
         logger.info("getting lastTableUpdate response with physical name TRNSPRTN_ACNT");
         LastTableUpdateResponse response = trdmUtil.LastTableUpdate("TRNSPRTN_ACNT");
+        XMLGregorianCalendar trdmLastUpdate = response.getLastUpdate();
         logger.info("received LastTableUpdateResponse, getting our latest TGET update now");
         XMLGregorianCalendar ourLastUpdate = trdmUtil.GetOurLastTGETUpdate("transportation_accounting_codes");
         logger.info("received out latest TGET update. Comparing the 2 values to see if our TGET data is out of date");
-        boolean tgetOutOfDate = trdmUtil.IsTGETDataOutOfDate(ourLastUpdate, response.getLastUpdate());
+        boolean tgetOutOfDate = trdmUtil.IsTGETDataOutOfDate(ourLastUpdate, trdmLastUpdate);
         if (tgetOutOfDate) {
             logger.info("TAC TGET data is out of date. Starting updateTGETData flow");
-            trdmUtil.UpdateTGETData(ourLastUpdate, "TRNSPRTN_ACNT", "transportation_accounting_codes");
+            trdmUtil.UpdateTGETData(ourLastUpdate, "TRNSPRTN_ACNT", "transportation_accounting_codes", trdmLastUpdate);
             logger.info("finished updating TAC TGET data");
         } else {
             // The data in RDS is up to date, no need to proceed
