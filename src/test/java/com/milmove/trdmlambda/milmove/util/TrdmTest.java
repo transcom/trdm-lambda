@@ -65,7 +65,6 @@ class TrdmTest {
     // these test both TAC and LOA at the same time, essentially.
     @Test
     void testUpdateTGETDataReceivesData() throws Exception {
-        // Mock setup to simulate receiving some data from the TRDM service
         // Setup TRDM mock to respond with rowCount of 1 when getTable is called
         GetTableResponse mockResponse = mock(GetTableResponse.class);
         when(mockResponse.getRowCount()).thenReturn(BigInteger.ONE);
