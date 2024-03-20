@@ -179,6 +179,8 @@ public class Trdm {
                     default:
                         throw new IllegalArgumentException("Data insertion for this table has not been configured");
                 }
+                // Exit the while loop
+                break;
             } else if (oneWeekLater.equals(trdmLastUpdate)) {
                 // We have reached the trdm last update and data was not found
                 logger.info("reached TRDM last update date without finding any new data for {}", rdsTable);
