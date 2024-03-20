@@ -1,5 +1,6 @@
 package com.milmove.trdmlambda.milmove.util;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.mock;
@@ -9,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigInteger;
+import java.util.List;
 
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -16,10 +18,13 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.milmove.trdmlambda.milmove.model.gettable.GetTableRequest;
 import com.milmove.trdmlambda.milmove.model.gettable.GetTableResponse;
 import com.milmove.trdmlambda.milmove.service.DatabaseService;
 import com.milmove.trdmlambda.milmove.service.GetTableService;
@@ -45,6 +50,9 @@ class TrdmTest {
 
     @InjectMocks
     private Trdm trdm;
+
+    @Captor
+    private ArgumentCaptor<GetTableRequest> getTableRequestCaptor;
 
     @BeforeEach
     void setTestDates() throws Exception {
@@ -131,5 +139,41 @@ class TrdmTest {
 
         // Verify that data insertion was never attempted
         verify(databaseService, times(0)).insertTransportationAccountingCodes(anyList());
+    }
+
+    // Test that we can explicitly ask for a half week on the second request
+    @Test
+    void testUpdateTGETDataSecondWeekHalfWeekParameter() throws Exception {
+        // First response returns nothing, second response returns data.
+        GetTableResponse firstResponse = mock(GetTableResponse.class);
+        when(firstResponse.getRowCount()).thenReturn(BigInteger.ZERO);
+        GetTableResponse secondResponse = mock(GetTableResponse.class);
+        when(secondResponse.getRowCount()).thenReturn(BigInteger.ONE);
+
+        when(getTableService.getTableRequest(any(GetTableRequest.class))).thenReturn(firstResponse,
+                secondResponse);
+
+        XMLGregorianCalendar updatedAtAfterFilter = DatatypeFactory.newInstance().newXMLGregorianCalendarDate(2024, 3,
+                1, 0);
+        XMLGregorianCalendar updatedAtBeforeFilter = DatatypeFactory.newInstance().newXMLGregorianCalendarDate(2024, 3,
+                11, 0);
+        trdm.UpdateTGETData(updatedAtAfterFilter, trdmTacTable, rdsTacTable,
+                updatedAtBeforeFilter);
+
+        verify(getTableService, times(2)).getTableRequest(getTableRequestCaptor.capture());
+
+        // Capture getTable requests
+        List<GetTableRequest> allRequests = getTableRequestCaptor.getAllValues();
+        // Make sure there are 2 requests
+        assertEquals(2, allRequests.size());
+
+        GetTableRequest secondRequest = allRequests.get(1);
+        String contentUpdatedSinceDateTime = secondRequest.getContentUpdatedSinceDateTime();
+        String contentUpdatedOnOrBeforeDateTime = secondRequest.getContentUpdatedOnOrBeforeDateTime();
+        // Add a week to our original updatedAtAfterFilter
+        XMLGregorianCalendar oneWeekLater = Trdm.AddOneWeek(updatedAtAfterFilter);
+        // Now we should be explicitly asking for half a week of data
+        assertEquals(oneWeekLater.toString(), contentUpdatedSinceDateTime);
+        assertEquals(updatedAtBeforeFilter.toString(), contentUpdatedOnOrBeforeDateTime);
     }
 }
