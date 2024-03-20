@@ -8,6 +8,7 @@ import com.milmove.trdmlambda.milmove.service.DatabaseService;
 import com.milmove.trdmlambda.milmove.service.GetTableService;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,8 +16,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -125,7 +124,8 @@ public class Trdm {
         return ourLastUpdate.compare(trdmLastUpdate) < 0;
     }
 
-    public void UpdateTGETData(XMLGregorianCalendar ourLastUpdate, String trdmTable, String rdsTable)
+    public void UpdateTGETData(XMLGregorianCalendar ourLastUpdate, String trdmTable, String rdsTable,
+            XMLGregorianCalendar trdmLastUpdate)
             throws TableRequestException, DatatypeConfigurationException, IOException, SQLException {
         logger.info("checking if trdm table name provided is allowed..");
         if (!allowedTrdmTableNames.contains(trdmTable)) {
@@ -133,40 +133,65 @@ public class Trdm {
         }
         logger.info("table {} is allowed, proceeding", trdmTable);
 
-        XMLGregorianCalendar oneWeekLater = AddOneWeek(ourLastUpdate);
+        boolean receivedData = false;
 
-        // Request all TGET data from TRDM since our last update
-        GetTableRequest getTableRequestBody = new GetTableRequest();
-        getTableRequestBody.setPhysicalName(trdmTable);
-        getTableRequestBody.setContentUpdatedSinceDateTime(ourLastUpdate.toString());
-        getTableRequestBody.setReturnContent(true);
-        getTableRequestBody.setContentUpdatedOnOrBeforeDateTime(oneWeekLater.toString());
-        logger.info("calling TRDM getTable with provided body {}", getTableRequestBody);
-        GetTableResponse getTableResponse = getTableService.getTableRequest(getTableRequestBody);
+        while (ourLastUpdate.compare(trdmLastUpdate) <= 0 && !receivedData) {
+            XMLGregorianCalendar oneWeekLater = AddOneWeek(ourLastUpdate);
+            // Add check that our "One week later" addition doesn't go past the TRDM last
+            // update. If it does, then just set the filter to their last update
+            if (oneWeekLater.compare(trdmLastUpdate) > 0) {
+                oneWeekLater = trdmLastUpdate;
+            }
+            // Request all TGET data from TRDM since our last update
+            GetTableRequest getTableRequestBody = new GetTableRequest();
+            getTableRequestBody.setPhysicalName(trdmTable);
+            getTableRequestBody.setContentUpdatedSinceDateTime(ourLastUpdate.toString());
+            getTableRequestBody.setReturnContent(true);
+            getTableRequestBody.setContentUpdatedOnOrBeforeDateTime(oneWeekLater.toString());
+            logger.info("calling TRDM getTable with provided body {}", getTableRequestBody);
+            GetTableResponse getTableResponse = getTableService.getTableRequest(getTableRequestBody);
 
-        // Insert the codes into RDS
-        switch (rdsTable) {
-            case "transportation_accounting_codes":
-                // Parse the response attachment to get the codes
-                logger.info("parsing response back from TRDM getTable");
-                List<TransportationAccountingCode> codes = tacParser.parse(getTableResponse.getAttachment(),
-                        oneWeekLater);
-                logger.info("inserting TACs into DB");
-                databaseService.insertTransportationAccountingCodes(codes);
-                logger.info("finished inserting TACs into DB");
+            // Check if the attachment has 0 rows.
+            BigInteger rows = getTableResponse.getRowCount();
+            if (rows.compareTo(BigInteger.ZERO) > 0) {
+                // We received rows from the getTable request
+                receivedData = true;
+                // Insert the codes into RDS
+                switch (rdsTable) {
+                    case "transportation_accounting_codes":
+                        // Parse the response attachment to get the codes
+                        logger.info("parsing response back from TRDM getTable");
+                        List<TransportationAccountingCode> codes = tacParser.parse(getTableResponse.getAttachment(),
+                                oneWeekLater);
+                        logger.info("inserting TACs into DB");
+                        databaseService.insertTransportationAccountingCodes(codes);
+                        logger.info("finished inserting TACs into DB");
+                        break;
+                    case "lines_of_accounting":
+                        // Parse the response attachment to get the loas
+                        logger.info("parsing response back from TRDM getTable");
+                        List<LineOfAccounting> loas = loaParser.parse(getTableResponse.getAttachment(),
+                                oneWeekLater);
+                        logger.info("inserting LOAs into DB");
+                        databaseService.insertLinesOfAccounting(loas);
+                        logger.info("finished inserting LOAs into DB");
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Data insertion for this table has not been configured");
+                }
+            } else if (oneWeekLater.equals(trdmLastUpdate)) {
+                // We have reached the trdm last update and data was not found
+                logger.info("reached TRDM last update date without finding any new data for {}", rdsTable);
                 break;
-            case "lines_of_accounting":
-                // Parse the response attachment to get the loas
-                logger.info("parsing response back from TRDM getTable");
-                List<LineOfAccounting> loas = loaParser.parse(getTableResponse.getAttachment(),
-                        oneWeekLater);
-                logger.info("inserting LOAs into DB");
-                databaseService.insertLinesOfAccounting(loas);
-                logger.info("finished inserting LOAs into DB");
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid rds table name");
+            }
+            // No data was found and oneWeekLater is not equal to TRDM's last update, loop
+            // again and look for next week's data
+            logger.info(
+                    "no rows returned in the file attachment from TRDM for date range {} thru {}. Looping again, adding a week up to TRDM last table update",
+                    ourLastUpdate, oneWeekLater);
+            ourLastUpdate = oneWeekLater;
         }
+
     }
 
 }
