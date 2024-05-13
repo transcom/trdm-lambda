@@ -185,3 +185,12 @@ Then if you plan on reading them into the application create a `CustomPropProps.
 
 ### getTable
 [Go here](docs/getTable.md)
+
+### Running Tests
+
+Before running tests first run the following commands in the mymove repo to set up the test_db if it is not already set up.:
+- In mymove repo
+1. make db_test_create
+2. make db_test_migrate_standalone
+
+After running the commands mentioned above in the mymove repo, run `mvn test` in the trdm-lambda repo to run the tests.
