@@ -7,6 +7,14 @@ jobs:
         auth:
           password: $DOCKER_PASSWORD
           username: $DOCKER_USERNAME
+        environment:
+          TEST_DB_HOST: localhost
+          TEST_DB_NAME: test_db
+          TEST_DB_USER: postgres
+          TEST_DB_PORT: 5433
+          TEST_DB_PASSWORD: mysecretpassword
+          TEST_DB_URL: jdbc:postgresql://localhost:5433/test_db?user=postgres&password=mysecretpassword
+
     steps:
       - checkout
       - run:
