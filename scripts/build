@@ -6,7 +6,8 @@ set -eu -o pipefail
 echo "Packaging..."
 
 # Build via sam
-sam build
+# sam build --no-tests
+MAVEN_OPTS="-DskipTests=true" sam build
 
 # Zip requires `cd` because if not it will compile the relative paths
 # which means it will also zip .aws-sam/build/, breaking the deployment.
