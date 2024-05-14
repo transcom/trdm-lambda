@@ -6,7 +6,8 @@ set -eu -o pipefail
 echo "Packaging..."
 
 # Build via sam
-# sam build --no-tests
+# Tests have been disabled during the build because more work needs to be completed to automate the pipelines for trdm
+# sam build // This should be reinstated in B-20145 under E-05306
 MAVEN_OPTS="-DskipTests=true" sam build
 
 # Zip requires `cd` because if not it will compile the relative paths
