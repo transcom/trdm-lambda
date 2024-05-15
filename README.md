@@ -40,9 +40,7 @@ This repository relies on the Transcom [mymove repository](https://github.com/tr
 
 # How to Deploy
 
-To deploy the application to AWS, download the latest release, upload it into the bucket under lambda builds -> trdm-soap-proxy -> Make a new version folder -> upload with proper encryption keys set.
-
-After it has been uploaded into the bucket please update the `trdm_soap_proxy_version` variable in terraform [here](https://github.com/transcom/terraform-aws-app-environment) under `variables.tf`.
+See [this Confluence article](https://dp3.atlassian.net/wiki/spaces/MT/pages/2485911554/How+to+manually+deploy+the+TRDM+Lambda+Function).
 
 # History
 This section of the README is dedicated to the past history of this repository. It will provide a high-level of the previous version of this repository which was to serve as an API gateway from Transcom's MyMove to Transcom Relational Database Management's (TRDM) servers. This approach was abandoned and switched to a cron job for the sake of time sensitivity and a vastly already out-of-scope feature approach. It can be previewed via the git history prior to release `v1.0.0.0`. The release and its changelog can be found [here](https://github.com/transcom/trdm-lambda/releases/tag/v1.0.0.0). There are still some deprecated files remaining within this repository.
