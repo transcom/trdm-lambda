@@ -71,6 +71,8 @@ public class LineOfAccountingParser {
 
         logger.info("headers received and mapped, beginning to process every other line");
         // Loop until the last line in the file is found
+
+        int row = 1;
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
             // "Unclassified" will always be the last line in the file
@@ -83,7 +85,10 @@ public class LineOfAccountingParser {
 
             if (code != null) {
                 codes.add(code);
+            } else {
+                logger.info("failed to parse TGET LOA data row: " + row);
             }
+            row++;
         }
         logger.info("finished parsing every single line");
 
@@ -97,6 +102,7 @@ public class LineOfAccountingParser {
             throws RuntimeException {
         // Check if value length does not align with columns
         if (values.length != columnHeaders.size()) {
+            logger.info("TGET file row is malformed. This row of LOA data will not be parsed.");
             return null; // Skip this line
         }
         // Check if LOA is empty or if ROW_STS_CD is "DLT"

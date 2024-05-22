@@ -65,6 +65,8 @@ public class TransportationAccountingCodeParser {
 
         logger.info("headers received and mapped, beginning to process every other line");
         // Loop until the last line in the file is found
+
+        int row = 1;
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
             // "Unclassified" will always be the last line in the file
@@ -77,7 +79,10 @@ public class TransportationAccountingCodeParser {
 
             if (code != null) {
                 codes.add(code);
+            } else {
+                logger.info("failed to parse TGET TAC data row: " + row);
             }
+            row++;
         }
         logger.info("finished parsing every single line");
 
@@ -91,6 +96,7 @@ public class TransportationAccountingCodeParser {
 
          // Check if value length does not align with columns
          if (values.length != columnHeaders.size()) {
+            logger.info("TGET file row is malfomred. This row of TAC data will not be parsed.");
             return null; // Skip this line
         }
 
