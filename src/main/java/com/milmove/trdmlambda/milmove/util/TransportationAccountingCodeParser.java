@@ -88,6 +88,12 @@ public class TransportationAccountingCodeParser {
 
     private TransportationAccountingCode processLineIntoTAC(String[] values, Map<String, Integer> columnHeaders,
             XMLGregorianCalendar trdmLastUpdate) throws RuntimeException {
+
+         // Check if value length does not align with columns
+         if (values.length != columnHeaders.size()) {
+            return null; // Skip this line
+        }
+
         // Check if TAC is empty or if ROW_STS_CD is "DLT"
         if (values[columnHeaders.get("TRNSPRTN_ACNT_CD")].isEmpty()
                 || "DLT".equals(values[columnHeaders.get("ROW_STS_CD")])) {
