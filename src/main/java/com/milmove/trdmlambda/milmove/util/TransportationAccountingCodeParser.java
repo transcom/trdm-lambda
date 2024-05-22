@@ -96,7 +96,7 @@ public class TransportationAccountingCodeParser {
 
          // Check if value length does not align with columns
          if (values.length != columnHeaders.size()) {
-            logger.info("TGET file row is malfomred. This row of TAC data will not be parsed.");
+            logger.info("TGET file row is malformed. This row of TAC data will not be parsed.");
             return null; // Skip this line
         }
 

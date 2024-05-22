@@ -64,7 +64,7 @@ class TransportationAccountingCodeParserTest {
         assertEquals(expectedCode, result.get(0));
     }
 
-     // Test to make sure the parser does not fail when recieinvg malfomred pipe data and does not add the malformed data to the codes array that will be inserted into the DB
+     // Test to make sure the parser does not fail when receiving malformed pipe data and does not add the malformed data to the codes array that will be inserted into the DB
     @Test
     void testTacParserWithMissingPipeData() throws IOException, DatatypeConfigurationException {
         // This test file has one row that is missing a column
