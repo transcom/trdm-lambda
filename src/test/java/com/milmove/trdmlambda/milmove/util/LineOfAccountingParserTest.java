@@ -97,7 +97,26 @@ class LineOfAccountingParserTest {
         assertEquals(expectedCode, result.get(0));
     }
 
-        private LocalDateTime convertXMLGregorianCalendarToLocalDateTime(XMLGregorianCalendar xmlGregorianCalendar) {
+    // Test to make sure the parser does not fail when recieinvg malformed pipe data and does not add the malformed data to the codes array that will be inserted into the DB
+    @Test
+    void testLoaParserWithMissingPipeData() throws IOException, DatatypeConfigurationException {
+        // This test file has one row that is missing a column
+        byte[] bytes = Files.readAllBytes(Paths.get("src/test/resources/Line_Of_Accounting_Missing_Pipes.txt"));
+        final LineOfAccountingParser lineOfAccountingParser = new LineOfAccountingParser();
+            
+        GregorianCalendar gregorianCalendar = new GregorianCalendar();
+        XMLGregorianCalendar today = DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar);
+
+        List<LineOfAccounting> result = lineOfAccountingParser.parse(bytes, today);
+
+        // The parser in the case of parsing an incomplete pipe row will return the array of codes without the incomplete row
+        assertNotNull(result);
+
+        // The Array that is returned is an array of codes. In this case it is empty because the one row in the LOA pipe file was malformed
+        assertTrue(result.isEmpty());
+    }
+
+    private LocalDateTime convertXMLGregorianCalendarToLocalDateTime(XMLGregorianCalendar xmlGregorianCalendar) {
         if (xmlGregorianCalendar == null) {
             return null;
         }

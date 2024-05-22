@@ -64,6 +64,26 @@ class TransportationAccountingCodeParserTest {
         assertEquals(expectedCode, result.get(0));
     }
 
+     // Test to make sure the parser does not fail when receiving malformed pipe data and does not add the malformed data to the codes array that will be inserted into the DB
+    @Test
+    void testTacParserWithMissingPipeData() throws IOException, DatatypeConfigurationException {
+        // This test file has one row that is missing a column
+        byte[] bytes = Files.readAllBytes(Paths.get("src/test/resources/Transportation_Account_Missing_Pipes.txt"));
+
+        TransportationAccountingCodeParser parser = new TransportationAccountingCodeParser();
+            
+        GregorianCalendar gregorianCalendar = new GregorianCalendar();
+        XMLGregorianCalendar today = DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar);
+
+        List<TransportationAccountingCode> result = parser.parse(bytes, today);
+
+        // The parser in the case of parsing an incomplete pipe row will return the array of codes without the incomplete row
+        assertNotNull(result);
+
+        // The Array that is returned is an array of codes. In this case it is empty because the one row in the TAC pipe file was malformed
+        assertTrue(result.isEmpty());
+    }
+
     private LocalDateTime convertXMLGregorianCalendarToLocalDateTime(XMLGregorianCalendar xmlGregorianCalendar) {
         if (xmlGregorianCalendar == null) {
             return null;
