@@ -1,6 +1,7 @@
 package com.milmove.trdmlambda.milmove.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doReturn;
@@ -14,11 +15,13 @@ import static org.mockito.Mockito.when;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 import java.sql.DriverManager;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 
 import javax.xml.datatype.DatatypeFactory;
@@ -189,104 +192,117 @@ class TrdmTest {
         assertEquals(updatedAtBeforeFilter.toString(), contentUpdatedOnOrBeforeDateTime);
     }
 
-    // Test that we can insert TAC codes using DatabaseService.insertTransportationAccountingCodes()
-    @Test
-    void testInsertTransportationAccountingCodes() throws Exception {
+    @Test // Test that we can identify TACs needing to be updated
+    void identifyTacsToUpdateTest() throws SQLException {
+        ArrayList<TransportationAccountingCode> newTacs = createMockTacs(3);
+        newTacs.get(0).setTacSysID("TAC1");
+        newTacs.get(1).setTacSysID("TAC2");
+        newTacs.get(2).setTacSysID("TAC4");
 
-        // Create a test TAC(s)
-        TransportationAccountingCode mockTac = new TransportationAccountingCode();
+        ArrayList<TransportationAccountingCode> currentTacs = createMockTacs(3);
+        currentTacs.get(0).setTacSysID("TAC1");
+        currentTacs.get(1).setTacSysID("TAC3");
+        currentTacs.get(2).setTacSysID("TAC5");
 
-        UUID testUUID = UUID.randomUUID();
-
-        mockTac.setId(testUUID);
-        mockTac.setTac("0000");
-        mockTac.setTacSysID("20000");
-        mockTac.setLoaSysID("10002");
-        mockTac.setTacSysID("2017");
-        mockTac.setTacFnBlModCd("W");
-        mockTac.setOrgGrpDfasCd("HS");
-        mockTac.setTacMvtDsgID("test");
-        mockTac.setTacTyCd("O");
-        mockTac.setTacUseCd("N");
-        mockTac.setTacMajClmtID("12345");
-        mockTac.setTacBillActTxt("123456");
-        mockTac.setTacCostCtrNm("12345");
-        mockTac.setBuic("A");
-        mockTac.setTacHistCd("A");
-        mockTac.setTacStatCd("I");
-        mockTac.setTrnsprtnAcntTx("TEST HOUSING 1");
-        mockTac.setDdActvtyAdrsID("test");
-        mockTac.setTacBlldAddFrstLnTx("test");
-        mockTac.setTacBlldAddScndLnTx("test");
-        mockTac.setTacBlldAddThrdLnTx("test");
-        mockTac.setTacBlldAddFrthLnTx("test");
-        mockTac.setTacFnctPocNm("test");
-        mockTac.setTrnsprtnAcntBgnDt(LocalDateTime.now());
-        mockTac.setTrnsprtnAcntEndDt(LocalDateTime.now());
-        mockTac.setUpdatedAt(LocalDateTime.now());
-
-        // Create a list of TAC(s)
-        List<TransportationAccountingCode> testTacs = new ArrayList<TransportationAccountingCode>();
-        testTacs.add(mockTac);
-
-        // Mock Seceret Fetcher and its DB connections
-        SecretFetcher mockSeceretFetcher = mock(SecretFetcher.class);
-        when(mockSeceretFetcher.getSecret("rds_hostname")).thenReturn(System.getenv("TEST_DB_HOST"));
-        when(mockSeceretFetcher.getSecret("rds_port")).thenReturn(System.getenv("TEST_DB_PORT"));
-        when(mockSeceretFetcher.getSecret("rds_db_name")).thenReturn(System.getenv("TEST_DB_NAME"));
-        when(mockSeceretFetcher.getSecret("rds_username")).thenReturn(System.getenv("TEST_DB_USER"));
-
-        // Create a test Database Service Instance for testing
-        DatabaseService testDatabaseService = new DatabaseService(mockSeceretFetcher);
-
-        // Create a SPY on the test Database Instance
-        DatabaseService spyDatabaseService = spy(testDatabaseService);
-
-        // Create test_db connection
-        Connection testDbConn = DriverManager.getConnection(testDbUrl);
-
-        // Mock the DatabaseService.getConnection() to return the test_db connection
-        doReturn(testDbConn).when(spyDatabaseService).getConnection();
-
-        // Make sure the test_db connection is returned when .getConnection is called
-        assertEquals(testDbConn, spyDatabaseService.getConnection());
-
-        // Invoke insertTransportationAccountingCodes() with test TAC(s)
-        spyDatabaseService.insertTransportationAccountingCodes(testTacs);
-
-        // Verfiy test TAC(s) made it to the test_db
-        try {
-            // Select the TAC record with the UUID added through invoking spyDatabaseService.insertTransportationAccountingCodes(testTacs)
-            String sql = "select * from transportation_accounting_codes where id =" + testUUID;
-
-            Connection conn = DriverManager.getConnection(testDbUrl);
-            if (testDbConn != null) {
-                PreparedStatement pstmt = conn.prepareStatement(sql);
-                ResultSet myRs= pstmt.executeQuery();
-                String uuid = myRs.getString("id");
-
-                // Verify the UUIDs match to prove a successful insert using insertTransportationAccountingCodes()
-                assertEquals(uuid, mockTac.getId());
-            }
-
-            conn.close();
-        } catch (Exception e){
-            System.out.println("Database connection error to test_db");
-            System.out.println(e);
-        }
+        List<TransportationAccountingCode> updateTacs = trdm.identifyTacsToUpdate(newTacs, currentTacs);
+      
+        assertEquals(updateTacs.size(), 1);
+        assertEquals(updateTacs.get(0).getTacSysID(), newTacs.get(0).getTacSysID());
     }
 
-    // Test that we can insert LOA(s) using DatabaseService.insertLinesOfAccounting()
-    @Test
-    void testInsertLinesOfAccounting() throws Exception {
+    @Test // Test that we can identify TACs needing to be created
+    void identifyTacsToCreateTest() throws SQLException {
+        ArrayList<TransportationAccountingCode> newTacs = createMockTacs(3);
+        newTacs.get(0).setTacSysID("TAC1");
+        newTacs.get(1).setTacSysID("TAC2");
+        newTacs.get(2).setTacSysID("TAC3");
 
-        // Create a test TAC(s)
+        ArrayList<TransportationAccountingCode> updatedTacs = createMockTacs(3);
+        updatedTacs.get(0).setTacSysID("TAC1");
+
+        List<TransportationAccountingCode> createTacs = trdm.identifyTacsToCreate(newTacs, updatedTacs);
+      
+        assertEquals(createTacs.size(), 2);
+        assertEquals(createTacs.get(0).getTacSysID(), newTacs.get(1).getTacSysID());
+        assertEquals(createTacs.get(1).getTacSysID(), newTacs.get(2).getTacSysID());
+    }
+
+    @Test // Test that we can identify Loas needing to be updated
+    void identifyLoasToUpdateTest() throws SQLException {
+        ArrayList<LineOfAccounting> newLoas = createMockLoas(3);
+        newLoas.get(0).setLoaSysID("LOA1");
+        newLoas.get(1).setLoaSysID("LOA2");
+        newLoas.get(2).setLoaSysID("LOA4");
+
+        ArrayList<LineOfAccounting> currentLoas = createMockLoas(3);
+        currentLoas.get(0).setLoaSysID("LOA1");
+        currentLoas.get(1).setLoaSysID("LOA3");
+        currentLoas.get(2).setLoaSysID("LOA5");
+
+        List<LineOfAccounting> updateLoas = trdm.identifyLoasToUpdate(newLoas, currentLoas);
+      
+        assertEquals(updateLoas.size(), 1);
+        assertEquals(updateLoas.get(0).getLoaSysID(), newLoas.get(0).getLoaSysID());
+    }
+
+    @Test // Test that we can identify Loas needing to be created
+    void identifyLoasToCreateTest() throws SQLException {
+        ArrayList<LineOfAccounting> newLoas = createMockLoas(3);
+        newLoas.get(0).setLoaSysID("TAC1");
+        newLoas.get(1).setLoaSysID("TAC2");
+        newLoas.get(2).setLoaSysID("TAC3");
+
+        ArrayList<LineOfAccounting> updateLoas = createMockLoas(3);
+        updateLoas.get(0).setLoaSysID("TAC1");
+
+        List<LineOfAccounting> createLoas = trdm.identifyLoasToCreate(newLoas, updateLoas);
+      
+        assertEquals(createLoas.size(), 2);
+        assertEquals(createLoas.get(0).getLoaSysID(), newLoas.get(1).getLoaSysID());
+        assertEquals(createLoas.get(1).getLoaSysID(), newLoas.get(2).getLoaSysID());
+    }
+
+
+    @Test // Test that we can identify duplicate LOA codes from a list of LOAS
+    void identifyDuplicateLoaCodesTest() throws SQLException {
+        Random rand = new Random();
+        
+        // Create mock loas for test
+        ArrayList<LineOfAccounting> testLoas = createMockLoas(6);
+        testLoas.get(0).setLoaSysID("DUPLICATEFORTESTING");
+        testLoas.get(1).setLoaSysID("DUPLICATEFORTESTING");
+        testLoas.get(2).setLoaSysID("DUPLICATEFORTESTING2");
+        testLoas.get(3).setLoaSysID("DUPLICATEFORTESTING2");
+        testLoas.get(4).setLoaSysID("NoDupe" + rand.nextInt(1000) + rand.nextInt(1000));
+        testLoas.get(5).setLoaSysID("NoDupe" + rand.nextInt(1000) + rand.nextInt(1000));
+
+        ArrayList<String> duplicates = trdm.identifyDuplicateLinesOfAccounting(testLoas);
+        
+        assertTrue(duplicates.contains("DUPLICATEFORTESTING"));
+        assertTrue(duplicates.contains("DUPLICATEFORTESTING2"));
+        assertTrue(duplicates.size() == 2);
+    }
+
+     // Create mock loas
+     public ArrayList<LineOfAccounting> createMockLoas(int amount) {
+        ArrayList<LineOfAccounting> mockLoas = new ArrayList<LineOfAccounting>();
+
+        for (int index = 0; index != amount; index++) {
+            LineOfAccounting mockLoa = createMockLoa();
+            mockLoas.add(mockLoa);
+        }
+
+        return mockLoas;
+    }
+
+    // Create a mock loa
+    public LineOfAccounting createMockLoa() {
         LineOfAccounting mockLoa = new LineOfAccounting();
 
         UUID testUUID = UUID.randomUUID();
 
         mockLoa.setId(testUUID);
-        mockLoa.setLoaSysID("0000");
+        mockLoa.setLoaSysID("TESTFAKE");
         mockLoa.setLoaDptID("1");
         mockLoa.setLoaTnsfrDptNm("0000");
         mockLoa.setLoaBafID("0000");
@@ -343,54 +359,55 @@ class TrdmTest {
         mockLoa.setLoaBgtSubActCd("A");
         mockLoa.setUpdatedAt(LocalDateTime.now());
 
-        // Create a list of TAC(s)
-        List<LineOfAccounting> testLoas = new ArrayList<LineOfAccounting>();
-        testLoas.add(mockLoa);
+        return mockLoa;
+    }
 
-        // Mock Seceret Fetcher and its DB connections
-        SecretFetcher mockSeceretFetcher = mock(SecretFetcher.class);
-        when(mockSeceretFetcher.getSecret("rds_hostname")).thenReturn(System.getenv("TEST_DB_HOST"));
-        when(mockSeceretFetcher.getSecret("rds_port")).thenReturn(System.getenv("TEST_DB_PORT"));
-        when(mockSeceretFetcher.getSecret("rds_db_name")).thenReturn(System.getenv("TEST_DB_NAME"));
-        when(mockSeceretFetcher.getSecret("rds_username")).thenReturn(System.getenv("TEST_DB_USER"));
+    // Create mock tacs
+    public ArrayList<TransportationAccountingCode> createMockTacs(int amount) {
+        ArrayList<TransportationAccountingCode> mockTacs = new ArrayList<TransportationAccountingCode>();
 
-        // Create a test Database Service Instance for testing
-        DatabaseService testDatabaseService = new DatabaseService(mockSeceretFetcher);
-
-        // Create a SPY on the test Database Instance
-        DatabaseService spyDatabaseService = spy(testDatabaseService);
-
-        // Create test_db connection
-        Connection testDbConn = DriverManager.getConnection(testDbUrl);
-
-        // Mock the DatabaseService.getConnection() to return the test_db connection
-        doReturn(testDbConn).when(spyDatabaseService).getConnection();
-
-        // Make sure the test_db connection is returned when .getConnection is called
-        assertEquals(testDbConn, spyDatabaseService.getConnection());
-
-        // Invoke insertLinesOfAccounting() with test TAC(s)
-        spyDatabaseService.insertLinesOfAccounting(testLoas);
-
-        // Verfiy test TAC(s) made it to the test_db
-        try {
-            // Select the TAC record with the UUID added through invoking spyDatabaseService.insertLinesOfAccounting(testLoas)
-            String sql = "select * from lines_of_accounting where id =" + testUUID;
-
-            Connection conn = DriverManager.getConnection(testDbUrl);
-            if (testDbConn != null) {
-                PreparedStatement pstmt = conn.prepareStatement(sql);
-                ResultSet myRs= pstmt.executeQuery();
-                String uuid = myRs.getString("id");
-
-                // Verify the UUIDs match to prove a successful insert using insertLinesOfAccounting()
-                assertEquals(uuid, mockLoa.getId());
-            }
-
-            conn.close();
-        } catch (Exception e){
-            System.out.println("Database connection error to test_db");
-            System.out.println(e);
+        for (int index = 0; index != amount; index++) {
+            TransportationAccountingCode mockTac = createMockTac();
+            mockTacs.add(mockTac);
         }
+
+        return mockTacs;
+    }
+
+    // Create a mock tac
+    public TransportationAccountingCode createMockTac() {
+        // Create a test TAC(s)
+        TransportationAccountingCode mockTac = new TransportationAccountingCode();
+
+        UUID testUUID = UUID.randomUUID();
+
+        mockTac.setId(testUUID);
+        mockTac.setTac("0000");
+        mockTac.setTacSysID("20000");
+        mockTac.setLoaSysID("10002");
+        mockTac.setTacSysID("2017");
+        mockTac.setTacFnBlModCd("W");
+        mockTac.setOrgGrpDfasCd("HS");
+        mockTac.setTacMvtDsgID("test");
+        mockTac.setTacTyCd("O");
+        mockTac.setTacUseCd("N");
+        mockTac.setTacMajClmtID("12345");
+        mockTac.setTacBillActTxt("123456");
+        mockTac.setTacCostCtrNm("12345");
+        mockTac.setBuic("A");
+        mockTac.setTacHistCd("A");
+        mockTac.setTacStatCd("I");
+        mockTac.setTrnsprtnAcntTx("TEST HOUSING 1");
+        mockTac.setDdActvtyAdrsID("test");
+        mockTac.setTacBlldAddFrstLnTx("test");
+        mockTac.setTacBlldAddScndLnTx("test");
+        mockTac.setTacBlldAddThrdLnTx("test");
+        mockTac.setTacBlldAddFrthLnTx("test");
+        mockTac.setTacFnctPocNm("test");
+        mockTac.setTrnsprtnAcntBgnDt(LocalDateTime.now());
+        mockTac.setTrnsprtnAcntEndDt(LocalDateTime.now());
+        mockTac.setUpdatedAt(LocalDateTime.now());
+
+        return mockTac;
     }
 }
