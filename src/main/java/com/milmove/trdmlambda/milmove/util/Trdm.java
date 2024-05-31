@@ -16,12 +16,14 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -163,8 +165,23 @@ public class Trdm {
                         logger.info("parsing response back from TRDM getTable");
                         List<TransportationAccountingCode> codes = tacParser.parse(getTableResponse.getAttachment(),
                                 oneWeekLater);
+                        // Get all Tacs
+                        ArrayList<TransportationAccountingCode> currentTacs = databaseService.getAllTacs();
+
+                        // Generate list of TACs that needs to be updated. If TAC is in curentTacs then the
+                        // TAC will be in updateTacs list because the TAC already exist
+                        List<TransportationAccountingCode> updateTacs = identifyTacsToUpdate(codes, currentTacs);
+
+                        // Generate list of TACs that needs to be created. If the TAC is not in updateTacs then it
+                        // will be in createTacs because it does not exist and needs to be created.
+                        List<TransportationAccountingCode> createTacs = identifyTacsToCreate(codes, updateTacs);
+
+                        logger.info("updating TACs in DB");
+                        databaseService.updateTransportationAccountingCodes(updateTacs);
+                        logger.info("finished updating TACs in DB");
+
                         logger.info("inserting TACs into DB");
-                        databaseService.insertTransportationAccountingCodes(codes);
+                        databaseService.insertTransportationAccountingCodes(createTacs);
                         logger.info("finished inserting TACs into DB");
                         break;
                     case "lines_of_accounting":
@@ -172,8 +189,27 @@ public class Trdm {
                         logger.info("parsing response back from TRDM getTable");
                         List<LineOfAccounting> loas = loaParser.parse(getTableResponse.getAttachment(),
                                 oneWeekLater);
+
+                        // Remove unneeded duplicates based on having a non unique loa_sys_id and a id
+                        // not referenced as a loa_id in the transportation_accounting_codes table
+                        databaseService.deleteDuplicateLoas();
+
+                        // Get all loas
+                        ArrayList<LineOfAccounting> currentLoas = databaseService.getAllLoas();
+
+                        // Generate list of loas that needs to be updated. If loas are in curentLoas then the
+                        // loa will be in updateLoas list because the loa already exist
+                        List<LineOfAccounting> updateLoas = identifyLoasToUpdate(loas, currentLoas);
+
+                        // Build TAC codes needed to create. If the code is not in updateTacs then it
+                        // will be in createTacs because it does not exist and needs to be created.
+                        List<LineOfAccounting> createLoas = identifyLoasToCreate(loas, updateLoas);
+
+                        logger.info("updating LOAs in DB");
+                        databaseService.updateLinesOfAccountingCodes(updateLoas);
+                        logger.info("finished updating LOAs in DB");
                         logger.info("inserting LOAs into DB");
-                        databaseService.insertLinesOfAccounting(loas);
+                        databaseService.insertLinesOfAccounting(createLoas);
                         logger.info("finished inserting LOAs into DB");
                         break;
                     default:
@@ -194,6 +230,57 @@ public class Trdm {
             ourLastUpdate = oneWeekLater;
         }
 
+    }
+
+    // Identify TACS to update. If their tacSysId already exist then w eneed to
+    // update it
+    public List<TransportationAccountingCode> identifyTacsToUpdate(List<TransportationAccountingCode> newTacs,
+            ArrayList<TransportationAccountingCode> currentTacs) {
+        return newTacs.stream().filter(newTac -> currentTacs.stream().map(currentTac -> currentTac.getTacSysID())
+                .collect(Collectors.toList()).contains(newTac.getTacSysID())).collect(Collectors.toList());
+    }
+
+    // Identify TACS to create. If the tacSysId is not in the update list then it it
+    // doesnt exist and needs to be created.
+    public List<TransportationAccountingCode> identifyTacsToCreate(List<TransportationAccountingCode> newTacs,
+            List<TransportationAccountingCode> updatedTacs) {
+        logger.info("identifying TACS to create");
+        return newTacs.stream().filter(newTac -> !updatedTacs.stream().map(updatedTac -> updatedTac.getTacSysID())
+                .collect(Collectors.toList()).contains(newTac.getTacSysID())).collect(Collectors.toList());
+    }
+
+    public List<LineOfAccounting> identifyLoasToUpdate(List<LineOfAccounting> newLoas,
+            ArrayList<LineOfAccounting> currentLoas) {
+        logger.info("identifying Loas to update");
+        return newLoas.stream().filter(newLoa -> currentLoas.stream().map(currentLoa -> currentLoa.getLoaSysID())
+                .collect(Collectors.toList()).contains(newLoa.getLoaSysID())).collect(Collectors.toList());
+    }
+
+    public List<LineOfAccounting> identifyLoasToCreate(List<LineOfAccounting> newLoas,
+            List<LineOfAccounting> updatedLoas) {
+        logger.info("identifying Loas to create");
+        return newLoas.stream().filter(newLoa -> !updatedLoas.stream().map(updatedLoa -> updatedLoa.getLoaSysID())
+                .collect(Collectors.toList()).contains(newLoa.getLoaSysID())).collect(Collectors.toList());
+    }
+
+    // Identify unneeded Loas based on their loaSysId being non unique in the loa DB
+    // table and their ID not referenced in TAC table loa_id.
+    public ArrayList<String> identifyDuplicateLinesOfAccounting(ArrayList<LineOfAccounting> loas) throws SQLException {
+        logger.info("identifying duplicate LOAs");
+
+        ArrayList<String> temp = new ArrayList<String>();
+        ArrayList<String> duplicateLoaSysIds = new ArrayList<String>();
+
+        for (LineOfAccounting currentLoa : loas) {
+            if (!temp.contains(currentLoa.getLoaSysID())) {
+                temp.add(currentLoa.getLoaSysID());
+            } else {
+                duplicateLoaSysIds.add(currentLoa.getLoaSysID());
+            }
+        }
+
+        logger.info("finished identifying duplicate loaSysIds");
+        return duplicateLoaSysIds;
     }
 
 }
