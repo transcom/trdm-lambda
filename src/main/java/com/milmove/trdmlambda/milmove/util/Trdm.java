@@ -158,6 +158,19 @@ public class Trdm {
             if (rows.compareTo(BigInteger.ZERO) > 0) {
                 // We received rows from the getTable request
                 receivedData = true;
+
+                // Get all Tacs
+                ArrayList<TransportationAccountingCode> currentTacs = databaseService.getAllTacs();
+
+                // Get all loas
+                ArrayList<LineOfAccounting> currentLoas = databaseService.getAllLoas();
+
+                // Identify Loas to delete based on if their loaSysId is not unique, their id/primary key is not refeenced in TACS loa_id and the loa is the latest
+                ArrayList<LineOfAccounting> loasToDelete = identifyDuplicateLoasToDelete(currentLoas, currentTacs);
+
+               // Delete duplicate Loas
+                databaseService.deleteLoas(loasToDelete);
+
                 // Insert the codes into RDS
                 switch (rdsTable) {
                     case "transportation_accounting_codes":
@@ -165,15 +178,13 @@ public class Trdm {
                         logger.info("parsing response back from TRDM getTable");
                         List<TransportationAccountingCode> codes = tacParser.parse(getTableResponse.getAttachment(),
                                 oneWeekLater);
-                        // Get all Tacs
-                        ArrayList<TransportationAccountingCode> currentTacs = databaseService.getAllTacs();
 
-                        // Generate list of TACs that needs to be updated. If TAC is in curentTacs then the
+                        // Generate list of TACs that needs to be updated. If TAC is in currentTacs then the
                         // TAC will be in updateTacs list because the TAC already exist
                         List<TransportationAccountingCode> updateTacs = identifyTacsToUpdate(codes, currentTacs);
 
-                        // Generate list of TACs that needs to be created. If the TAC is not in updateTacs then it
-                        // will be in createTacs because it does not exist and needs to be created.
+                        // Generate list of TACs that needs to be created. If the TAC is not in
+                        // updateTacs then it will be in createTacs because it does not exist and needs to be created.
                         List<TransportationAccountingCode> createTacs = identifyTacsToCreate(codes, updateTacs);
 
                         logger.info("updating TACs in DB");
@@ -190,19 +201,12 @@ public class Trdm {
                         List<LineOfAccounting> loas = loaParser.parse(getTableResponse.getAttachment(),
                                 oneWeekLater);
 
-                        // Remove unneeded duplicates based on having a non unique loa_sys_id and a id
-                        // not referenced as a loa_id in the transportation_accounting_codes table
-                        databaseService.deleteDuplicateLoas();
-
-                        // Get all loas
-                        ArrayList<LineOfAccounting> currentLoas = databaseService.getAllLoas();
-
-                        // Generate list of loas that needs to be updated. If loas are in curentLoas then the
-                        // loa will be in updateLoas list because the loa already exist
+                        // Generate list of loas that needs to be updated. If loas are in curentLoas
+                        // then the loa will be in updateLoas list because the loa already exist
                         List<LineOfAccounting> updateLoas = identifyLoasToUpdate(loas, currentLoas);
 
-                        // Build TAC codes needed to create. If the code is not in updateTacs then it
-                        // will be in createTacs because it does not exist and needs to be created.
+                        // Build Loa codes needed to create. If the code is not in updateLoas then it
+                        // will be in createLoas because it does not exist and needs to be created.
                         List<LineOfAccounting> createLoas = identifyLoasToCreate(loas, updateLoas);
 
                         logger.info("updating LOAs in DB");
@@ -263,24 +267,71 @@ public class Trdm {
                 .collect(Collectors.toList()).contains(newLoa.getLoaSysID())).collect(Collectors.toList());
     }
 
-    // Identify unneeded Loas based on their loaSysId being non unique in the loa DB
-    // table and their ID not referenced in TAC table loa_id.
-    public ArrayList<String> identifyDuplicateLinesOfAccounting(ArrayList<LineOfAccounting> loas) throws SQLException {
-        logger.info("identifying duplicate LOAs");
 
-        ArrayList<String> temp = new ArrayList<String>();
+    // Identify Loas to delete based on if their loaSysId is not unique, their id/primary key is not referenced in TACS loa_id and the loa created_at is the latest
+    public ArrayList<LineOfAccounting> identifyDuplicateLoasToDelete(ArrayList<LineOfAccounting> loas, ArrayList<TransportationAccountingCode> tacs) throws SQLException {
+        logger.info("identifying duplicate Line of Accounting codes to delete");
+
+        // Store loas that needs to be checked for deletion
+        ArrayList<LineOfAccounting> duplicateLoas = new ArrayList<LineOfAccounting>();
+
+        // Store duplicate loa_sys_id
         ArrayList<String> duplicateLoaSysIds = new ArrayList<String>();
 
-        for (LineOfAccounting currentLoa : loas) {
-            if (!temp.contains(currentLoa.getLoaSysID())) {
-                temp.add(currentLoa.getLoaSysID());
-            } else {
-                duplicateLoaSysIds.add(currentLoa.getLoaSysID());
+        for (LineOfAccounting loa : loas) {
+
+            // If already confimred a duplicate then no need to check if it is
+            boolean alreadyConfirmedDupe = false;
+            if (duplicateLoaSysIds.contains(loa.getLoaSysID())) {
+                alreadyConfirmedDupe = true;
+                duplicateLoas.add(loa);
+            }
+
+            // If not already confirmed a duplicate check to see if it is a duplicate
+            if (!alreadyConfirmedDupe) {
+
+                // Check if there are more than 1 loa with this loa_sys_id if so enter if logic
+                List<LineOfAccounting> l1 = loas.stream().filter(l -> l.getLoaSysID().equals(loa.getLoaSysID())).collect(Collectors.toList());
+                if (l1.size() > 1) {
+
+                    // Add loaSysId to duplicateLoaSysIds another loa with the same sysId is being checked it will not have to run through this logic
+                    duplicateLoaSysIds.add(loa.getLoaSysID());
+                    duplicateLoas.add(loa);
+                }
             }
         }
 
-        logger.info("finished identifying duplicate loaSysIds");
-        return duplicateLoaSysIds;
-    }
+        // Duplicate loas not referenced in TACS
+        ArrayList<LineOfAccounting> duplicateUnreferencedLoas = new ArrayList<LineOfAccounting>();
 
+        // Check if duplicateLoas ID, Primary Key, are being referenced in TACS
+        for (LineOfAccounting loa : duplicateLoas) {
+
+            List<TransportationAccountingCode> tacsReferencingLoa = tacs.stream()
+            .filter(tac -> tac.getLoaID() == loa.getId()).collect(Collectors.toList());
+
+            // If no tac is found then the loa id is not referenced and moves on for the last check for deletion
+            if (tacsReferencingLoa.isEmpty()) {
+                duplicateUnreferencedLoas.add(loa);
+            }
+        }
+
+       // Get a set of loaSysIds made from the list of unrefrenced duplicate loas to loop through to find the latest loa for deletion
+        Set<String> setOfLoaSysIds = duplicateUnreferencedLoas.stream().map(loa -> loa.getLoaSysID()).collect(Collectors.toSet());
+        ArrayList<LineOfAccounting> loasToDelete = new ArrayList<LineOfAccounting>();
+
+        for (String loaSysId : setOfLoaSysIds) {
+
+            // Get a sorted by date list of loas with same sysId in duplicateUnreferencedLoas
+            List<LineOfAccounting> sortedLoasByCreatedAt = duplicateUnreferencedLoas.stream()
+            .filter(loa -> loa.getLoaSysID().equals(loaSysId))
+            .sorted((l1, l2) -> l1.getCreatedAt().compareTo(l2.getCreatedAt()))
+            .collect(Collectors.toList());
+
+            loasToDelete.add(sortedLoasByCreatedAt.get(0));
+        }
+
+        logger.info("finished identfying duplicate Line of Accounting codes to delete");
+        return loasToDelete;
+    }
 }

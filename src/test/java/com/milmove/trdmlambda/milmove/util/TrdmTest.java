@@ -1,13 +1,12 @@
 package com.milmove.trdmlambda.milmove.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -17,10 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
-import java.sql.DriverManager;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.util.stream.Collectors;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 
@@ -263,24 +259,53 @@ class TrdmTest {
     }
 
 
-    @Test // Test that we can identify duplicate LOA codes from a list of LOAS
-    void identifyDuplicateLoaCodesTest() throws SQLException {
-        Random rand = new Random();
-        
-        // Create mock loas for test
-        ArrayList<LineOfAccounting> testLoas = createMockLoas(6);
-        testLoas.get(0).setLoaSysID("DUPLICATEFORTESTING");
-        testLoas.get(1).setLoaSysID("DUPLICATEFORTESTING");
-        testLoas.get(2).setLoaSysID("DUPLICATEFORTESTING2");
-        testLoas.get(3).setLoaSysID("DUPLICATEFORTESTING2");
-        testLoas.get(4).setLoaSysID("NoDupe" + rand.nextInt(1000) + rand.nextInt(1000));
-        testLoas.get(5).setLoaSysID("NoDupe" + rand.nextInt(1000) + rand.nextInt(1000));
+    @Test
+    void identifyDuplicateLoasToDeleteTest() throws SQLException {
 
-        ArrayList<String> duplicates = trdm.identifyDuplicateLinesOfAccounting(testLoas);
-        
-        assertTrue(duplicates.contains("DUPLICATEFORTESTING"));
-        assertTrue(duplicates.contains("DUPLICATEFORTESTING2"));
-        assertTrue(duplicates.size() == 2);
+        Random rand = new Random();
+
+        ArrayList<TransportationAccountingCode> currentTacs = createMockTacs(3);
+        ArrayList<LineOfAccounting> currentLoas = createMockLoas(7);
+
+        // This loa is a duplicate and referenced by TACS. This should not be in the loasToDelete. No Delete
+        currentLoas.get(0).setLoaSysID("DUPE1");
+        currentTacs.get(0).setLoaID(currentLoas.get(0).getId());
+
+        // This loa is a duplicate and not referenced in TACS but is not the oldest. Should not be in loas to delete. No Delete
+        currentLoas.get(1).setLoaSysID("DUPE1");
+        currentLoas.get(1).setCreatedAt(currentLoas.get(0).getCreatedAt().plusMinutes(5));
+
+        // This loa is a duplicate but not referenced in TACS and is the oldest. This should be in loasToDelete. Yes Delete
+        currentLoas.get(2).setLoaSysID("DUPE1");
+        currentLoas.get(2).setCreatedAt(currentLoas.get(0).getCreatedAt().plusMinutes(3));
+
+        // Dupe2 will have duplicates not referenced in TACs and oldest. This should be in loasToDelete. Yes Delete
+        currentLoas.get(3).setLoaSysID("DUPE2");
+        currentLoas.get(3).setCreatedAt(currentLoas.get(2).getCreatedAt().plusMinutes(1));
+
+        // This loa is a duplicate, not referenced in TACs but is not the oldest. Should not be in loasToDelete. No Delete
+        currentLoas.get(4).setLoaSysID("DUPE2");
+        currentLoas.get(4).setCreatedAt(currentLoas.get(2).getCreatedAt().plusMinutes(2));
+
+
+        // Not duplicates so these should not be in the loasToDeleteList
+        currentLoas.get(5).setLoaSysID("NoDupe" + rand.nextInt(1000) + rand.nextInt(1000)); // No delete
+        currentLoas.get(6).setLoaSysID("NoDupe" + rand.nextInt(1000) + rand.nextInt(1000)); // No Delete
+
+
+        ArrayList<LineOfAccounting> loasToDelete = trdm.identifyDuplicateLoasToDelete(currentLoas, currentTacs);
+        List<UUID> loaIds = loasToDelete.stream().map(loa -> loa.getId()).collect(Collectors.toList());
+
+        // Loas that should be deleted should be returned for deletetion
+        assertTrue(loaIds.contains(currentLoas.get(2).getId()));
+        assertTrue(loaIds.contains(currentLoas.get(3).getId()));
+
+        // Loas that should not be deleted should not be returned for deletion
+        assertFalse(loaIds.contains(currentLoas.get(0).getId()));
+        assertFalse(loaIds.contains(currentLoas.get(1).getId()));
+        assertFalse(loaIds.contains(currentLoas.get(4).getId()));
+        assertFalse(loaIds.contains(currentLoas.get(5).getId()));
+        assertFalse(loaIds.contains(currentLoas.get(6).getId()));
     }
 
      // Create mock loas
@@ -358,6 +383,7 @@ class TrdmTest {
         mockLoa.setLoaBgtRstrCd("A");
         mockLoa.setLoaBgtSubActCd("A");
         mockLoa.setUpdatedAt(LocalDateTime.now());
+        mockLoa.setCreatedAt(LocalDateTime.now());
 
         return mockLoa;
     }

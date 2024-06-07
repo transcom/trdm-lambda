@@ -1,6 +1,7 @@
 package com.milmove.trdmlambda.milmove.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -56,72 +57,6 @@ public class DatabaseServiceTest {
 
         // Make sure the test_db connection is returned when .getConnection is called
         assertEquals(testDbConn, spyDatabaseService.getConnection());
-    }
-
-    // TESTS
-    @Test // Test that we can identify duplicate LOA codes from a list of LOAS
-    void deleteDuplicateLoasTest() throws SQLException {
-
-        SecretFetcher mockSeceretFetcher = mock(SecretFetcher.class);
-        when(mockSeceretFetcher.getSecret("rds_hostname")).thenReturn(System.getenv("TEST_DB_HOST"));
-        when(mockSeceretFetcher.getSecret("rds_port")).thenReturn(System.getenv("TEST_DB_PORT"));
-        when(mockSeceretFetcher.getSecret("rds_db_name")).thenReturn(System.getenv("TEST_DB_NAME"));
-        when(mockSeceretFetcher.getSecret("rds_username")).thenReturn(System.getenv("TEST_DB_USER"));
-        DatabaseService databaseService = new DatabaseService(mockSeceretFetcher);
-        spyDatabaseService = spy(databaseService);
-
-        // Create test_db connection
-        testDbConn = DriverManager.getConnection(testDbUrl);
-
-        // Mock the DatabaseService.getConnection() to return the test_db connection
-        doReturn(testDbConn).when(spyDatabaseService).getConnection();
-
-        // Make sure the test_db connection is returned when .getConnection is called
-        assertEquals(testDbConn, spyDatabaseService.getConnection());
-
-        ArrayList<LineOfAccounting> loas = spyDatabaseService.getAllLoas();
-
-        Connection conn2 = createTestDbConnection();
-
-        // Mock the DatabaseService.getConnection() to return the test_db connection
-        doReturn(conn2).when(spyDatabaseService).getConnection();
-
-        // Make sure the test_db connection is returned when .getConnection is called
-        assertEquals(conn2, spyDatabaseService.getConnection());
-
-        ArrayList<TransportationAccountingCode> tacs = spyDatabaseService.getAllTacs();
-
-        assertTrue(loas.size() > 0);
-        assertTrue(tacs.size() > 0);
-
-        Connection conn3 = createTestDbConnection();
-
-        // Mock the DatabaseService.getConnection() to return the test_db connection
-        doReturn(conn3).when(spyDatabaseService).getConnection();
-
-        // Make sure the test_db connection is returned when .getConnection is called
-        assertEquals(conn3, spyDatabaseService.getConnection());
-
-        ArrayList<LineOfAccounting> unneededLoas = spyDatabaseService.getDuplicateLoasToDelete();
-
-        Connection conn4 = createTestDbConnection();
-
-        // Mock the DatabaseService.getConnection() to return the test_db connection
-        doReturn(conn4).when(spyDatabaseService).getConnection();
-
-        // Make sure the test_db connection is returned when .getConnection is called
-        assertEquals(conn4, spyDatabaseService.getConnection());
-
-        spyDatabaseService.deleteDuplicateLoas();
-
-        Connection conn5 = createTestDbConnection();
-
-        // Mock the DatabaseService.getConnection() to return the test_db connection
-        doReturn(conn5).when(spyDatabaseService).getConnection();
-
-        ArrayList<LineOfAccounting> loasAfterDelete = spyDatabaseService.getAllLoas();
-
-        assertTrue(loasAfterDelete.size() == loas.size() - unneededLoas.size());
     }
 
     @Test // Test that we can retrieve all LOA codes from database table
@@ -325,6 +260,48 @@ public class DatabaseServiceTest {
                 .filter(tac -> tac.getId().equals(testTacs.get(0).getId())).collect(Collectors.toList());
 
         assertEquals(testTacs.get(0).getTac(), codes.get(0).getTac());
+    }
+
+    // Test that we can delete a list of loas
+    // DatabaseService.deleteLoas()
+    @Test
+    void testDeleteLoas() throws Exception {
+        
+        setUpTests();
+
+        // Create mock loas for test
+        ArrayList<LineOfAccounting> testLoas = createMockLoas(3);
+        testLoas.get(0).setLoaSysID("DELETE1");
+        testLoas.get(1).setLoaSysID("DELETE2");
+        testLoas.get(2).setLoaSysID("DELETE3");
+
+        // Invoke insertLinesOfAccounting() with test TAC(s)
+        spyDatabaseService.insertLinesOfAccounting(testLoas);
+
+        Connection conn1 = createTestDbConnection();
+
+        // Mock the DatabaseService.getConnection() to return the test_db connection
+        doReturn(conn1).when(spyDatabaseService).getConnection();
+
+        // Make sure the test_db connection is returned when .getConnection is called
+        assertEquals(conn1, spyDatabaseService.getConnection());
+
+        spyDatabaseService.deleteLoas(testLoas);
+
+        Connection conn2 = createTestDbConnection();
+
+        // Mock the DatabaseService.getConnection() to return the test_db connection
+        doReturn(conn2).when(spyDatabaseService).getConnection();
+
+        // Make sure the test_db connection is returned when .getConnection is called
+        assertEquals(conn2, spyDatabaseService.getConnection());
+
+        ArrayList<LineOfAccounting> loasList = spyDatabaseService.getAllLoas();
+        List<UUID> loaIds = loasList.stream().map(loa -> loa.getId()).collect(Collectors.toList());
+
+        assertFalse(loaIds.contains(testLoas.get(0).getId()));
+        assertFalse(loaIds.contains(testLoas.get(1).getId()));
+        assertFalse(loaIds.contains(testLoas.get(2).getId()));
     }
 
     // TEST HELPER FUNCTIONS

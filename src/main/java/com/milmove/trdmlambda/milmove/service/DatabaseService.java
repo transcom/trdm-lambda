@@ -13,6 +13,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -378,16 +380,24 @@ public class DatabaseService {
         return loas;
     }
 
-    public void deleteDuplicateLoas() throws SQLException {
+    public void deleteLoas(ArrayList<LineOfAccounting> loasToDelete) throws SQLException {
+        logger.info("deleting LOAs");
 
-        logger.info(
-                "deleting LOAs with no unique loa_sys_id and not referenced in the transportation_accounting_codes table");
-
-        // Select all loas
-        String sql = "Delete From lines_of_accounting Where id in (Select id From lines_of_accounting Where loa_sys_id in (SELECT loa_sys_id FROM lines_of_accounting GROUP BY loa_sys_id HAVING COUNT(*) > 1) AND id NOT IN (SELECT loa_id FROM transportation_accounting_codes where loa_id is not NULL))";
+        String sql = "DELETE FROM lines_of_accounting WHERE id=?";
 
         try (Connection conn = this.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql);) {
-            pstmt.execute();
+
+            int count = 0;
+
+            for (LineOfAccounting lineOfAccounting : loasToDelete) {
+                pstmt.setObject(1, lineOfAccounting.getId());
+                pstmt.addBatch();
+            }
+
+            // Execute every 10000 rows or when finished with the provided LOAs
+            if (count++ % 10000 == 0 || count == loasToDelete.size()) {
+                pstmt.executeBatch();
+            }
         }
 
         logger.info("finished deleting LOAs");
@@ -396,6 +406,10 @@ public class DatabaseService {
     public ArrayList<LineOfAccounting> dbLoasToModel(ResultSet rs) throws SQLException {
 
         ArrayList<LineOfAccounting> loas = new ArrayList<LineOfAccounting>();
+
+        // Loas created times are in 2 different formats. some have 25 characters and some have 26. Based on their character length will choose the formatter
+        DateTimeFormatter timeFormatterLen25 = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSS");
+        DateTimeFormatter timeFormatterLen26 = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");
 
         while (rs.next()) {
             LineOfAccounting loa = new LineOfAccounting();
@@ -455,6 +469,13 @@ public class DatabaseService {
             loa.setLoaBgFyTx(Integer.valueOf(rs.getString(LinesOfAccountingDatabaseColumns.loaBgFyTx)));
             loa.setLoaBgtRstrCd(rs.getString(LinesOfAccountingDatabaseColumns.loaBgtRstrCd));
             loa.setLoaBgtSubActCd(rs.getString(LinesOfAccountingDatabaseColumns.loaBgtSubActCd));
+
+            if (rs.getString(LinesOfAccountingDatabaseColumns.createdAt).length() == 25) {
+                loa.setCreatedAt(LocalDateTime.parse(rs.getString(LinesOfAccountingDatabaseColumns.createdAt), timeFormatterLen25));
+            } else if (rs.getString(LinesOfAccountingDatabaseColumns.createdAt).length() == 26) {
+                loa.setCreatedAt(LocalDateTime.parse(rs.getString(LinesOfAccountingDatabaseColumns.createdAt), timeFormatterLen26));
+            }
+
             loas.add(loa);
         }
 
