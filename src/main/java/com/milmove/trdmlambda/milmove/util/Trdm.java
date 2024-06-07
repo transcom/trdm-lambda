@@ -253,18 +253,28 @@ public class Trdm {
                 .collect(Collectors.toList()).contains(newTac.getTacSysID())).collect(Collectors.toList());
     }
 
+    // Identify loas to update based on checking if the new loa loa_sys_id is in a list of loa_sys_ids made from mapping out loa_sys_ids from a list of currentLoas in the database
     public List<LineOfAccounting> identifyLoasToUpdate(List<LineOfAccounting> newLoas,
             ArrayList<LineOfAccounting> currentLoas) {
         logger.info("identifying Loas to update");
-        return newLoas.stream().filter(newLoa -> currentLoas.stream().map(currentLoa -> currentLoa.getLoaSysID())
-                .collect(Collectors.toList()).contains(newLoa.getLoaSysID())).collect(Collectors.toList());
+        return newLoas.stream()
+        .filter(newLoa -> currentLoas.stream()
+        .map(currentLoa -> currentLoa.getLoaSysID()) // Map out loa_sys_ids from a list of current loas in the database
+                .collect(Collectors.toList())
+                .contains(newLoa.getLoaSysID())) // Does the new LOA loaSysId exist in a list of loa_sys_ids
+                .collect(Collectors.toList());
     }
 
+    // This method identifys loas to create based on filtering the newLoas by whic loa has a loaSysId that is in the update list
     public List<LineOfAccounting> identifyLoasToCreate(List<LineOfAccounting> newLoas,
             List<LineOfAccounting> updatedLoas) {
         logger.info("identifying Loas to create");
-        return newLoas.stream().filter(newLoa -> !updatedLoas.stream().map(updatedLoa -> updatedLoa.getLoaSysID())
-                .collect(Collectors.toList()).contains(newLoa.getLoaSysID())).collect(Collectors.toList());
+        return newLoas.stream()
+        .filter(newLoa -> !updatedLoas.stream() // If the newLoa loaSysId is not in the list of loaSysIds to be updated then include it because it needs to be created
+        .map(updatedLoa -> updatedLoa.getLoaSysID()) // Map out loa_sys_ids that are going to be updated
+        .collect(Collectors.toList())
+        .contains(newLoa.getLoaSysID())) // Does the newLoa loa_sys_id exist in a list of loa_sys_ids
+        .collect(Collectors.toList());
     }
 
 
