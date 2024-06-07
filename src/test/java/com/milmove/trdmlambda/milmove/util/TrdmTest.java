@@ -273,19 +273,19 @@ class TrdmTest {
 
         // This loa is a duplicate and not referenced in TACS but is not the oldest. Should not be in loas to delete. No Delete
         currentLoas.get(1).setLoaSysID("DUPE1");
-        currentLoas.get(1).setCreatedAt(currentLoas.get(0).getCreatedAt().plusMinutes(5));
+        currentLoas.get(1).setUpdatedAt(currentLoas.get(0).getUpdatedAt().plusMinutes(5));
 
         // This loa is a duplicate but not referenced in TACS and is the oldest. This should be in loasToDelete. Yes Delete
         currentLoas.get(2).setLoaSysID("DUPE1");
-        currentLoas.get(2).setCreatedAt(currentLoas.get(0).getCreatedAt().plusMinutes(3));
+        currentLoas.get(2).setUpdatedAt(currentLoas.get(0).getUpdatedAt().plusMinutes(3));
 
         // Dupe2 will have duplicates not referenced in TACs and oldest. This should be in loasToDelete. Yes Delete
         currentLoas.get(3).setLoaSysID("DUPE2");
-        currentLoas.get(3).setCreatedAt(currentLoas.get(2).getCreatedAt().plusMinutes(1));
+        currentLoas.get(3).setUpdatedAt(currentLoas.get(2).getUpdatedAt().plusMinutes(1));
 
         // This loa is a duplicate, not referenced in TACs but is not the oldest. Should not be in loasToDelete. No Delete
         currentLoas.get(4).setLoaSysID("DUPE2");
-        currentLoas.get(4).setCreatedAt(currentLoas.get(2).getCreatedAt().plusMinutes(2));
+        currentLoas.get(4).setUpdatedAt(currentLoas.get(2).getUpdatedAt().plusMinutes(2));
 
 
         // Not duplicates so these should not be in the loasToDeleteList

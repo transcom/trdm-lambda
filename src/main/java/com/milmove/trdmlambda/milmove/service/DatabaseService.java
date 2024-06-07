@@ -77,7 +77,7 @@ public class DatabaseService {
         logger.info(codes.toString());
 
 
-        String sql = "UPDATE transportation_accounting_codes SET tac=?, loa_id=?, loa_sys_id=?, tac_fy_txt=?, tac_fn_bl_mod_cd=?, org_grp_dfas_cd=?, tac_mvt_dsg_id=?, tac_ty_cd=?, tac_use_cd=?, tac_maj_clmt_id=?, tac_bill_act_txt=?, tac_cost_ctr_nm=?, buic=?, tac_hist_cd=?, tac_stat_cd=?, trnsprtn_acnt_tx=?, trnsprtn_acnt_bgn_dt=?, trnsprtn_acnt_end_dt=?, dd_actvty_adrs_id=?, tac_blld_add_frst_ln_tx=?, tac_blld_add_scnd_ln_tx=?, tac_blld_add_thrd_ln_tx=?, tac_blld_add_frth_ln_tx=?, tac_fnct_poc_nm=? WHERE id=?";
+        String sql = "UPDATE transportation_accounting_codes SET tac=?, loa_id=?, loa_sys_id=?, tac_fy_txt=?, tac_fn_bl_mod_cd=?, org_grp_dfas_cd=?, tac_mvt_dsg_id=?, tac_ty_cd=?, tac_use_cd=?, tac_maj_clmt_id=?, tac_bill_act_txt=?, tac_cost_ctr_nm=?, buic=?, tac_hist_cd=?, tac_stat_cd=?, trnsprtn_acnt_tx=?, trnsprtn_acnt_bgn_dt=?, trnsprtn_acnt_end_dt=?, dd_actvty_adrs_id=?, tac_blld_add_frst_ln_tx=?, tac_blld_add_scnd_ln_tx=?, tac_blld_add_thrd_ln_tx=?, tac_blld_add_frth_ln_tx=?, tac_fnct_poc_nm=?, updated_at=? WHERE id=?";
 
         Connection conn = this.getConnection();
         conn.setAutoCommit(false);
@@ -112,7 +112,8 @@ public class DatabaseService {
                 pstmt.setObject(22, code.getTacBlldAddThrdLnTx());
                 pstmt.setObject(23, code.getTacBlldAddFrthLnTx());
                 pstmt.setObject(24, code.getTacFnctPocNm());
-                pstmt.setObject(25, code.getId());
+                pstmt.setTimestamp(25, java.sql.Timestamp.valueOf(LocalDateTime.now()));
+                pstmt.setObject(26, code.getId());
                 pstmt.addBatch();
 
                 // Execute every 10000 rows or when finished with the provided TACs
@@ -187,7 +188,7 @@ public class DatabaseService {
     public void updateLinesOfAccountingCodes(List<LineOfAccounting> codes) throws SQLException {
         logger.info("updating Lines of Accounting Codes...");
 
-        String sql = "UPDATE lines_of_accounting SET loa_dpt_id=?, loa_tnsfr_dpt_nm=?, loa_baf_id=?, loa_trsy_sfx_tx=?, loa_maj_clm_nm=?, loa_op_agncy_id=?, loa_allt_sn_id=?, loa_pgm_elmnt_id=?, loa_tsk_bdgt_sbln_tx=?, loa_df_agncy_alctn_rcpnt_id=?, loa_jb_ord_nm=?, loa_sbaltmt_rcpnt_id=?, loa_wk_cntr_rcpnt_nm=?, loa_maj_rmbsmt_src_id=?, loa_dtl_rmbsmt_src_id=?, loa_cust_nm=?, loa_obj_cls_id=?, loa_srv_src_id=?, loa_spcl_intr_id=?, loa_bdgt_acnt_cls_nm=?, loa_doc_id=?, loa_cls_ref_id=?, loa_instl_acntg_act_id=?, loa_lcl_instl_id=?, loa_fms_trnsactn_id=?, loa_dsc_tx=?,loa_bgn_dt=?, loa_end_dt=?, loa_fnct_prs_nm=?, loa_stat_cd=?, loa_hist_stat_cd=?, loa_hs_gds_cd=?, org_grp_dfas_cd=?, loa_uic=?, loa_trnsn_id=?, loa_sub_acnt_id=?, loa_bet_cd=?, loa_fnd_ty_fg_cd=?, loa_bgt_ln_itm_id=?, loa_scrty_coop_impl_agnc_cd=?, loa_scrty_coop_dsgntr_cd=?, loa_scrty_coop_ln_itm_id=?, loa_agnc_dsbr_cd=?, loa_agnc_acntng_cd=?, loa_fnd_cntr_id=?, loa_cst_cntr_id=?, loa_prj_id=?, loa_actvty_id=?, loa_cst_cd=?, loa_wrk_ord_id=?, loa_fncl_ar_id=?, loa_scrty_coop_cust_cd=?, loa_end_fy_tx=?, loa_bg_fy_tx=?, loa_bgt_rstr_cd=?, loa_bgt_sub_act_cd=? WHERE id=?";
+        String sql = "UPDATE lines_of_accounting SET loa_dpt_id=?, loa_tnsfr_dpt_nm=?, loa_baf_id=?, loa_trsy_sfx_tx=?, loa_maj_clm_nm=?, loa_op_agncy_id=?, loa_allt_sn_id=?, loa_pgm_elmnt_id=?, loa_tsk_bdgt_sbln_tx=?, loa_df_agncy_alctn_rcpnt_id=?, loa_jb_ord_nm=?, loa_sbaltmt_rcpnt_id=?, loa_wk_cntr_rcpnt_nm=?, loa_maj_rmbsmt_src_id=?, loa_dtl_rmbsmt_src_id=?, loa_cust_nm=?, loa_obj_cls_id=?, loa_srv_src_id=?, loa_spcl_intr_id=?, loa_bdgt_acnt_cls_nm=?, loa_doc_id=?, loa_cls_ref_id=?, loa_instl_acntg_act_id=?, loa_lcl_instl_id=?, loa_fms_trnsactn_id=?, loa_dsc_tx=?,loa_bgn_dt=?, loa_end_dt=?, loa_fnct_prs_nm=?, loa_stat_cd=?, loa_hist_stat_cd=?, loa_hs_gds_cd=?, org_grp_dfas_cd=?, loa_uic=?, loa_trnsn_id=?, loa_sub_acnt_id=?, loa_bet_cd=?, loa_fnd_ty_fg_cd=?, loa_bgt_ln_itm_id=?, loa_scrty_coop_impl_agnc_cd=?, loa_scrty_coop_dsgntr_cd=?, loa_scrty_coop_ln_itm_id=?, loa_agnc_dsbr_cd=?, loa_agnc_acntng_cd=?, loa_fnd_cntr_id=?, loa_cst_cntr_id=?, loa_prj_id=?, loa_actvty_id=?, loa_cst_cd=?, loa_wrk_ord_id=?, loa_fncl_ar_id=?, loa_scrty_coop_cust_cd=?, loa_end_fy_tx=?, loa_bg_fy_tx=?, loa_bgt_rstr_cd=?, loa_bgt_sub_act_cd=?, updated_at=? WHERE id=?";
 
         Connection conn = this.getConnection();
         conn.setAutoCommit(false);
@@ -254,7 +255,9 @@ public class DatabaseService {
                 pstmt.setObject(54, code.getLoaBgFyTx());
                 pstmt.setObject(55, code.getLoaBgtRstrCd());
                 pstmt.setObject(56, code.getLoaBgtSubActCd());
-                pstmt.setObject(57, code.getId());
+                pstmt.setTimestamp(57, java.sql.Timestamp.valueOf(LocalDateTime.now()));
+                pstmt.setObject(58, code.getId());
+
 
                 pstmt.addBatch();
 
@@ -470,10 +473,10 @@ public class DatabaseService {
             loa.setLoaBgtRstrCd(rs.getString(LinesOfAccountingDatabaseColumns.loaBgtRstrCd));
             loa.setLoaBgtSubActCd(rs.getString(LinesOfAccountingDatabaseColumns.loaBgtSubActCd));
 
-            if (rs.getString(LinesOfAccountingDatabaseColumns.createdAt).length() == 25) {
-                loa.setCreatedAt(LocalDateTime.parse(rs.getString(LinesOfAccountingDatabaseColumns.createdAt), timeFormatterLen25));
-            } else if (rs.getString(LinesOfAccountingDatabaseColumns.createdAt).length() == 26) {
-                loa.setCreatedAt(LocalDateTime.parse(rs.getString(LinesOfAccountingDatabaseColumns.createdAt), timeFormatterLen26));
+            if (rs.getString(LinesOfAccountingDatabaseColumns.updatedAt).length() == 25) {
+                loa.setUpdatedAt(LocalDateTime.parse(rs.getString(LinesOfAccountingDatabaseColumns.updatedAt), timeFormatterLen25));
+            } else if (rs.getString(LinesOfAccountingDatabaseColumns.updatedAt).length() == 26) {
+                loa.setUpdatedAt(LocalDateTime.parse(rs.getString(LinesOfAccountingDatabaseColumns.updatedAt), timeFormatterLen26));
             }
 
             loas.add(loa);
