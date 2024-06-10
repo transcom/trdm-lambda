@@ -87,7 +87,7 @@ public class DatabaseServiceTest {
         // Invoke insertLinesOfAccounting() with test TAC(s)
         spyDatabaseService.insertLinesOfAccounting(testLoas);
 
-        // Verfiy test LOAs made it to the test_db
+        // Verify test LOAs made it to the test_db
         try {
             // Select the LOA record with the UUID added through invoking
             // spyDatabaseService.insertLinesOfAccounting(testLoas)
@@ -181,7 +181,7 @@ public class DatabaseServiceTest {
         // Invoke insertTransportationAccountingCodes() with test TAC(s)
         spyDatabaseService.insertTransportationAccountingCodes(testTacs);
 
-        // Verfiy test TAC(s) made it to the test_db
+        // Verify test TAC(s) made it to the test_db
         try {
             // Select the TAC record with the UUID added through invoking
             spyDatabaseService.insertTransportationAccountingCodes(testTacs);
