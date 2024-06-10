@@ -165,7 +165,7 @@ public class Trdm {
                 // Get all loas
                 ArrayList<LineOfAccounting> currentLoas = databaseService.getAllLoas();
 
-                // Identify Loas to delete based on if their loaSysId is not unique, their id/primary key is not refeenced in TACS loa_id and the loa is the latest
+                // Identify Loas to delete based on if their loaSysId is not unique, their id/primary key is not referenced in TACS loa_id and the loa is the latest
                 ArrayList<LineOfAccounting> loasToDelete = identifyDuplicateLoasToDelete(currentLoas, currentTacs);
 
                // Delete duplicate Loas
@@ -236,7 +236,7 @@ public class Trdm {
 
     }
 
-    // Identify TACS to update. If their tacSysId already exist then w eneed to
+    // Identify TACS to update. If their tacSysId already exist then we need to
     // update it
     public List<TransportationAccountingCode> identifyTacsToUpdate(List<TransportationAccountingCode> newTacs,
             ArrayList<TransportationAccountingCode> currentTacs) {
@@ -245,7 +245,7 @@ public class Trdm {
     }
 
     // Identify TACS to create. If the tacSysId is not in the update list then it it
-    // doesnt exist and needs to be created.
+    // doesn't exist and needs to be created.
     public List<TransportationAccountingCode> identifyTacsToCreate(List<TransportationAccountingCode> newTacs,
             List<TransportationAccountingCode> updatedTacs) {
         logger.info("identifying TACS to create");
@@ -265,7 +265,7 @@ public class Trdm {
                 .collect(Collectors.toList());
     }
 
-    // This method identifys loas to create based on filtering the newLoas by whic loa has a loaSysId that is in the update list
+    // This method identifies loas to create based on filtering the newLoas by which loa has a loaSysId that is in the update list
     public List<LineOfAccounting> identifyLoasToCreate(List<LineOfAccounting> newLoas,
             List<LineOfAccounting> updatedLoas) {
         logger.info("identifying Loas to create");
@@ -290,7 +290,7 @@ public class Trdm {
 
         for (LineOfAccounting loa : loas) {
 
-            // If already confimred a duplicate then no need to check if it is
+            // If already confirmed a duplicate then no need to check if it is
             boolean alreadyConfirmedDupe = false;
             if (duplicateLoaSysIds.contains(loa.getLoaSysID())) {
                 alreadyConfirmedDupe = true;
@@ -341,7 +341,7 @@ public class Trdm {
             loasToDelete.add(sortedLoasByCreatedAt.get(0));
         }
 
-        logger.info("finished identfying duplicate Line of Accounting codes to delete");
+        logger.info("finished identifying duplicate Line of Accounting codes to delete");
         return loasToDelete;
     }
 }
