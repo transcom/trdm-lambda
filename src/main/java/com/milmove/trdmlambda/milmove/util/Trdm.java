@@ -160,10 +160,10 @@ public class Trdm {
                 receivedData = true;
 
                 // Get all Tacs
-                ArrayList<TransportationAccountingCode> currentTacs = databaseService.getAllTacs();
+                ArrayList<TransportationAccountingCode> currentTacs = databaseService.getCurrentTacInformation();
 
                 // Get all loas
-                ArrayList<LineOfAccounting> currentLoas = databaseService.getAllLoas();
+                ArrayList<LineOfAccounting> currentLoas = databaseService.getCurrentLoaInformation();
 
                 // Identify Loas to delete based on if their loaSysId is not unique, their id/primary key is not referenced in TACS loa_id and the loa is the latest
                 ArrayList<LineOfAccounting> loasToDelete = identifyDuplicateLoasToDelete(currentLoas, currentTacs);

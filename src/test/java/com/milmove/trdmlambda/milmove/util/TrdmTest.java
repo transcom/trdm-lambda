@@ -406,8 +406,10 @@ class TrdmTest {
         TransportationAccountingCode mockTac = new TransportationAccountingCode();
 
         UUID testUUID = UUID.randomUUID();
+        UUID testLoaUUID = UUID.randomUUID();
 
         mockTac.setId(testUUID);
+        mockTac.setLoaID(testLoaUUID);
         mockTac.setTac("0000");
         mockTac.setTacSysID("20000");
         mockTac.setLoaSysID("10002");

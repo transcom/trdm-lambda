@@ -365,14 +365,15 @@ public class DatabaseService {
         }
     }
 
-    public ArrayList<LineOfAccounting> getAllLoas() throws SQLException {
+    // Only query for needed data for performance reasons
+    public ArrayList<LineOfAccounting> getCurrentLoaInformation() throws SQLException {
 
         logger.info("retrieving all LOAs");
 
         ArrayList<LineOfAccounting> loas;
 
         // Select all loas
-        String sql = "SELECT * FROM lines_of_accounting";
+        String sql = "SELECT id, loa_sys_id, loa_dpt_id, updated_at FROM lines_of_accounting";
 
         try (Connection conn = this.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql);) {
             ResultSet rs = pstmt.executeQuery();
@@ -419,59 +420,6 @@ public class DatabaseService {
             loa.setId(UUID.fromString(rs.getString(LinesOfAccountingDatabaseColumns.id)));
             loa.setLoaSysID(rs.getString(LinesOfAccountingDatabaseColumns.loaSysId));
             loa.setLoaDptID(rs.getString(LinesOfAccountingDatabaseColumns.loaDptId));
-            loa.setLoaTnsfrDptNm(rs.getString(LinesOfAccountingDatabaseColumns.loaTnsfrDptNm));
-            loa.setLoaBafID(rs.getString(LinesOfAccountingDatabaseColumns.loaBafId));
-            loa.setLoaTrsySfxTx(rs.getString(LinesOfAccountingDatabaseColumns.loaTrsySfxTx));
-            loa.setLoaMajClmNm(rs.getString(LinesOfAccountingDatabaseColumns.loaMajClmNm));
-            loa.setLoaOpAgncyID(rs.getString(LinesOfAccountingDatabaseColumns.loaOpAgncy_id));
-            loa.setLoaAlltSnID(rs.getString(LinesOfAccountingDatabaseColumns.loaAlltSnId));
-            loa.setLoaPgmElmntID(rs.getString(LinesOfAccountingDatabaseColumns.loaPgmElmntId));
-            loa.setLoaTskBdgtSblnTx(rs.getString(LinesOfAccountingDatabaseColumns.loaTskBdgtSblnTx));
-            loa.setLoaDfAgncyAlctnRcpntID(rs.getString(LinesOfAccountingDatabaseColumns.loaDfAgncyAlctnRcpntId));
-            loa.setLoaJbOrdNm(rs.getString(LinesOfAccountingDatabaseColumns.loaJbOrdNm));
-            loa.setLoaSbaltmtRcpntID(rs.getString(LinesOfAccountingDatabaseColumns.loaSbaltmtRcpntId));
-            loa.setLoaWkCntrRcpntNm(rs.getString(LinesOfAccountingDatabaseColumns.loaWkCntrRcpntNm));
-            loa.setLoaMajRmbsmtSrcID(rs.getString(LinesOfAccountingDatabaseColumns.loaMajRmbsmtSrcId));
-            loa.setLoaDtlRmbsmtSrcID(rs.getString(LinesOfAccountingDatabaseColumns.loaDtlRmbsmtSrcId));
-            loa.setLoaCustNm(rs.getString(LinesOfAccountingDatabaseColumns.loaCustNm));
-            loa.setLoaObjClsID(rs.getString(LinesOfAccountingDatabaseColumns.loaObjClsId));
-            loa.setLoaSrvSrcID(rs.getString(LinesOfAccountingDatabaseColumns.loaSrvSrcId));
-            loa.setLoaSpclIntrID(rs.getString(LinesOfAccountingDatabaseColumns.loaSpclIntrId));
-            loa.setLoaBdgtAcntClsNm(rs.getString(LinesOfAccountingDatabaseColumns.loaBdgtAcntClsNm));
-            loa.setLoaDocID(rs.getString(LinesOfAccountingDatabaseColumns.loaDocId));
-            loa.setLoaClsRefID(rs.getString(LinesOfAccountingDatabaseColumns.loaClsRefId));
-            loa.setLoaInstlAcntgActID(rs.getString(LinesOfAccountingDatabaseColumns.loaInstlAcntgActId));
-            loa.setLoaLclInstlID(rs.getString(LinesOfAccountingDatabaseColumns.loaLclInstlId));
-            loa.setLoaFmsTrnsactnID(rs.getString(LinesOfAccountingDatabaseColumns.loaFmsTrnsactnId));
-            loa.setLoaDscTx(rs.getString(LinesOfAccountingDatabaseColumns.loaDscTx));
-            loa.setLoaFnctPrsNm(rs.getString(LinesOfAccountingDatabaseColumns.loaFnctPrsNm));
-            loa.setLoaStatCd(rs.getString(LinesOfAccountingDatabaseColumns.loaStatCd));
-            loa.setLoaHistStatCd(rs.getString(LinesOfAccountingDatabaseColumns.loaHistStatCd));
-            loa.setLoaHsGdsCd(rs.getString(LinesOfAccountingDatabaseColumns.loaHsGdsCd));
-            loa.setOrgGrpDfasCd(rs.getString(LinesOfAccountingDatabaseColumns.orgGrpDfasCd));
-            loa.setLoaUic(rs.getString(LinesOfAccountingDatabaseColumns.loaUic));
-            loa.setLoaTrnsnID(rs.getString(LinesOfAccountingDatabaseColumns.loaTrnsnId));
-            loa.setLoaSubAcntID(rs.getString(LinesOfAccountingDatabaseColumns.loaSubAcntId));
-            loa.setLoaBetCd(rs.getString(LinesOfAccountingDatabaseColumns.loaBetCd));
-            loa.setLoaFndTyFgCd(rs.getString(LinesOfAccountingDatabaseColumns.loaFndTyFgCd));
-            loa.setLoaBgtLnItmID(rs.getString(LinesOfAccountingDatabaseColumns.loaBgtLnItmId));
-            loa.setLoaScrtyCoopImplAgncCd(rs.getString(LinesOfAccountingDatabaseColumns.loaScrtyCoopImplAgncCd));
-            loa.setLoaScrtyCoopDsgntrCd(rs.getString(LinesOfAccountingDatabaseColumns.loaScrtyCoopDsgntrCd));
-            loa.setLoaScrtyCoopLnItmID(rs.getString(LinesOfAccountingDatabaseColumns.loaScrtyCoopLnItmId));
-            loa.setLoaAgncDsbrCd(rs.getString(LinesOfAccountingDatabaseColumns.loaAgncDsbrCd));
-            loa.setLoaAgncAcntngCd(rs.getString(LinesOfAccountingDatabaseColumns.loaAgncAcntngCd));
-            loa.setLoaFndCntrID(rs.getString(LinesOfAccountingDatabaseColumns.loaFndCntrId));
-            loa.setLoaCstCntrID(rs.getString(LinesOfAccountingDatabaseColumns.loaCstCntrId));
-            loa.setLoaPrjID(rs.getString(LinesOfAccountingDatabaseColumns.loaPrjId));
-            loa.setLoaActvtyID(rs.getString(LinesOfAccountingDatabaseColumns.loaActvtyId));
-            loa.setLoaCstCd(rs.getString(LinesOfAccountingDatabaseColumns.loaCstCd));
-            loa.setLoaWrkOrdID(rs.getString(LinesOfAccountingDatabaseColumns.loaWrkOrdId));
-            loa.setLoaFnclArID(rs.getString(LinesOfAccountingDatabaseColumns.loaFnclArId));
-            loa.setLoaScrtyCoopCustCd(rs.getString(LinesOfAccountingDatabaseColumns.loaScrtyCoopCustCd));
-            loa.setLoaEndFyTx(Integer.valueOf(rs.getString(LinesOfAccountingDatabaseColumns.loaEndFyTx)));
-            loa.setLoaBgFyTx(Integer.valueOf(rs.getString(LinesOfAccountingDatabaseColumns.loaBgFyTx)));
-            loa.setLoaBgtRstrCd(rs.getString(LinesOfAccountingDatabaseColumns.loaBgtRstrCd));
-            loa.setLoaBgtSubActCd(rs.getString(LinesOfAccountingDatabaseColumns.loaBgtSubActCd));
 
             if (rs.getString(LinesOfAccountingDatabaseColumns.updatedAt).length() == 25) {
                 loa.setUpdatedAt(LocalDateTime.parse(rs.getString(LinesOfAccountingDatabaseColumns.updatedAt), timeFormatterLen25));
@@ -485,47 +433,29 @@ public class DatabaseService {
         return loas;
     }
 
-    public ArrayList<TransportationAccountingCode> getAllTacs() throws SQLException {
+    // Only query for needed data for performance reasons
+    public ArrayList<TransportationAccountingCode> getCurrentTacInformation() throws SQLException {
 
         logger.info("retrieving all TACs");
 
         ArrayList<TransportationAccountingCode> tacs = new ArrayList<TransportationAccountingCode>();
 
         // Select all TACs
-        String sql = "SELECT * FROM transportation_accounting_codes;";
+        String sql = "SELECT id, tac, loa_id FROM transportation_accounting_codes;";
 
         try (Connection conn = this.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 TransportationAccountingCode tac = new TransportationAccountingCode();
                 tac.setId(UUID.fromString(rs.getString(TransportationAccountingCodesDatabaseColumns.id)));
-                tac.setTacSysID(rs.getString(TransportationAccountingCodesDatabaseColumns.tacSysId));
-                tac.setLoaSysID(rs.getString(TransportationAccountingCodesDatabaseColumns.loaSysId));
+                if (rs.getString(TransportationAccountingCodesDatabaseColumns.loaId) != null
+                && rs.getString(TransportationAccountingCodesDatabaseColumns.loaId) != "null") {
+                    tac.setLoaID(UUID.fromString(rs.getString(TransportationAccountingCodesDatabaseColumns.loaId)));
+                } else {
+                    UUID nilUUID = new UUID(0,0); // represents a nil UUID
+                    tac.setLoaID(nilUUID);
+                }
                 tac.setTac(rs.getString(TransportationAccountingCodesDatabaseColumns.tac));
-                tac.setTacFyTxt(rs.getString(TransportationAccountingCodesDatabaseColumns.tacFnBlModCd));
-                tac.setTacFnBlModCd(rs.getString(TransportationAccountingCodesDatabaseColumns.tacFnBlModCd));
-                tac.setOrgGrpDfasCd(rs.getString(TransportationAccountingCodesDatabaseColumns.orgGrpDfasCd));
-                tac.setTacTyCd(rs.getString(TransportationAccountingCodesDatabaseColumns.tacTyCd));
-                tac.setTacUseCd(rs.getString(TransportationAccountingCodesDatabaseColumns.tacUseCd));
-                tac.setTacMajClmtID(rs.getString(TransportationAccountingCodesDatabaseColumns.tacMajClmtId));
-                tac.setTacCostCtrNm(rs.getString(TransportationAccountingCodesDatabaseColumns.tacCostCtrNm));
-                tac.setTacStatCd(rs.getString(TransportationAccountingCodesDatabaseColumns.tacStatCd));
-                tac.setTrnsprtnAcntTx(rs.getString(TransportationAccountingCodesDatabaseColumns.trnsprtnAcntTx));
-                tac.setDdActvtyAdrsID(rs.getString(TransportationAccountingCodesDatabaseColumns.ddActvtyAdrsId));
-                tac.setTacBlldAddFrstLnTx(
-                        rs.getString(TransportationAccountingCodesDatabaseColumns.tacBlldAddFrstLnTx));
-                tac.setTacBlldAddScndLnTx(
-                        rs.getString(TransportationAccountingCodesDatabaseColumns.tacBlldAddScndLnTx));
-                tac.setTacBlldAddThrdLnTx(
-                        rs.getString(TransportationAccountingCodesDatabaseColumns.tacBlldAddThrdLnTx));
-                tac.setTacBlldAddFrthLnTx(
-                        rs.getString(TransportationAccountingCodesDatabaseColumns.tacBlldAddFrthLnTx));
-                tac.setTacFnctPocNm(rs.getString(TransportationAccountingCodesDatabaseColumns.tacFnctPocNm));
-                tac.setTacMvtDsgID(rs.getString(TransportationAccountingCodesDatabaseColumns.tacMvtDsgId));
-                tac.setTacBillActTxt(rs.getString(TransportationAccountingCodesDatabaseColumns.tacBillActTxt));
-                tac.setBuic(rs.getString(TransportationAccountingCodesDatabaseColumns.buic));
-                tac.setTacHistCd(rs.getString(TransportationAccountingCodesDatabaseColumns.tacHistCd));
-
                 tacs.add(tac);
             }
 
@@ -533,25 +463,5 @@ public class DatabaseService {
             return tacs;
         }
 
-    }
-
-    // Identify duplicate LOA.loaSysIds
-    public ArrayList<LineOfAccounting> getDuplicateLoasToDelete() throws SQLException {
-
-        logger.info(
-                "identifying LOAs to delete based on loa records with a non unique loa_sys_id and not referenced in the transportation_accounting_codes table");
-
-        // Select all duplicate loa_sys_id
-        String sql = "Select * From lines_of_accounting Where loa_sys_id in (SELECT loa_sys_id FROM lines_of_accounting GROUP BY loa_sys_id HAVING COUNT(*) > 1) AND id NOT IN (SELECT loa_id FROM transportation_accounting_codes WHERE loa_id is NOT NULL)";
-
-        try (Connection conn = this.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            ResultSet rs = pstmt.executeQuery();
-
-            ArrayList<LineOfAccounting> loas;
-            loas = dbLoasToModel(rs);
-
-            logger.info("finished identifying LOAs to delete");
-            return loas;
-        }
     }
 }

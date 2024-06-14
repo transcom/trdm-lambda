@@ -63,7 +63,7 @@ public class DatabaseServiceTest {
           // line_of_accounting
     void getAllLoasTest() throws SQLException {
         setUpTests();
-        ArrayList<LineOfAccounting> loas = spyDatabaseService.getAllLoas();
+        ArrayList<LineOfAccounting> loas = spyDatabaseService.getCurrentLoaInformation();
         assertTrue(loas.size() > 0);
     }
 
@@ -71,7 +71,7 @@ public class DatabaseServiceTest {
           // transportation_accounting_codes
     void getAllTacsTest() throws Exception {
         setUpTests();
-        ArrayList<TransportationAccountingCode> tacs = spyDatabaseService.getAllTacs();
+        ArrayList<TransportationAccountingCode> tacs = spyDatabaseService.getCurrentTacInformation();
         assertTrue(tacs.size() > 0);
     }
 
@@ -160,7 +160,7 @@ public class DatabaseServiceTest {
         // Make sure the test_db connection is returned when .getConnection is called
         assertEquals(conn2, spyDatabaseService.getConnection());
 
-        ArrayList<LineOfAccounting> dbTacs = spyDatabaseService.getAllLoas();
+        ArrayList<LineOfAccounting> dbTacs = spyDatabaseService.getCurrentLoaInformation();
 
         List<LineOfAccounting> codes = dbTacs.stream().filter(tac -> tac.getId().equals(testLoas.get(0).getId()))
                 .collect(Collectors.toList());
@@ -254,7 +254,7 @@ public class DatabaseServiceTest {
         // Make sure the test_db connection is returned when .getConnection is called
         assertEquals(conn2, spyDatabaseService.getConnection());
 
-        ArrayList<TransportationAccountingCode> dbTacs = spyDatabaseService.getAllTacs();
+        ArrayList<TransportationAccountingCode> dbTacs = spyDatabaseService.getCurrentTacInformation();
 
         List<TransportationAccountingCode> codes = dbTacs.stream()
                 .filter(tac -> tac.getId().equals(testTacs.get(0).getId())).collect(Collectors.toList());
@@ -296,7 +296,7 @@ public class DatabaseServiceTest {
         // Make sure the test_db connection is returned when .getConnection is called
         assertEquals(conn2, spyDatabaseService.getConnection());
 
-        ArrayList<LineOfAccounting> loasList = spyDatabaseService.getAllLoas();
+        ArrayList<LineOfAccounting> loasList = spyDatabaseService.getCurrentLoaInformation();
         List<UUID> loaIds = loasList.stream().map(loa -> loa.getId()).collect(Collectors.toList());
 
         assertFalse(loaIds.contains(testLoas.get(0).getId()));
