@@ -23,6 +23,7 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -281,6 +282,8 @@ public class Trdm {
     // Identify Loas to delete based on if their loaSysId is not unique, their id/primary key is not referenced in TACS loa_id and the loa created_at is the latest
     public ArrayList<LineOfAccounting> identifyDuplicateLoasToDelete(ArrayList<LineOfAccounting> loas, ArrayList<TransportationAccountingCode> tacs) throws SQLException {
         logger.info("identifying duplicate Line of Accounting codes to delete");
+        logger.info("LOA codes count: " + loas.size());
+        logger.info("TAC codes count: " + tacs.size());
 
         // Store loas that needs to be checked for deletion
         ArrayList<LineOfAccounting> duplicateLoas = new ArrayList<LineOfAccounting>();
@@ -288,6 +291,7 @@ public class Trdm {
         // Store duplicate loa_sys_id
         ArrayList<String> duplicateLoaSysIds = new ArrayList<String>();
 
+        logger.info("starting to identify LOA codes with non unique loa_sys_ids");
         for (LineOfAccounting loa : loas) {
 
             // If already confirmed a duplicate then no need to check if it is
@@ -311,25 +315,30 @@ public class Trdm {
             }
         }
 
+        logger.info("finished identifying LOA codes with non unique loa_sys_ids. Count: " + duplicateLoas.size());
+
+        logger.info("starting to identify duplicate LOA codes that are not referenced by a TAC code");
         // Duplicate loas not referenced in TACS
         ArrayList<LineOfAccounting> duplicateUnreferencedLoas = new ArrayList<LineOfAccounting>();
 
+        // Map all TAC loa_id and eliminate duplicates by putting them in a Set. This will help speed up lookups
+        Set<UUID> tacLoaIdList = tacs.stream().map(tac -> tac.getLoaID()).collect(Collectors.toSet());
+
         // Check if duplicateLoas ID, Primary Key, are being referenced in TACS
         for (LineOfAccounting loa : duplicateLoas) {
-
-            List<TransportationAccountingCode> tacsReferencingLoa = tacs.stream()
-            .filter(tac -> tac.getLoaID() == loa.getId()).collect(Collectors.toList());
-
-            // If no tac is found then the loa id is not referenced and moves on for the last check for deletion
-            if (tacsReferencingLoa.isEmpty()) {
+            if (!tacLoaIdList.contains(loa.getId())) {
                 duplicateUnreferencedLoas.add(loa);
             }
         }
 
+        logger.info("finished identifying duplicate LOA codes that are not referenced by a TAC code. Count: " + duplicateUnreferencedLoas.size());
+
+
        // Get a set of loaSysIds made from the list of unreferenced duplicate loas to loop through to find the latest loa for deletion
         Set<String> setOfLoaSysIds = duplicateUnreferencedLoas.stream().map(loa -> loa.getLoaSysID()).collect(Collectors.toSet());
-        ArrayList<LineOfAccounting> loasToDelete = new ArrayList<LineOfAccounting>();
 
+        logger.info("starting to identify which duplicate unreferenced LOA codes to delete based on updated_at value");
+        ArrayList<LineOfAccounting> loasToDelete = new ArrayList<LineOfAccounting>();
         for (String loaSysId : setOfLoaSysIds) {
 
             // Get a sorted by date list of loas with same sysId in duplicateUnreferencedLoas
@@ -341,6 +350,8 @@ public class Trdm {
             loasToDelete.add(sortedLoasByCreatedAt.get(0));
         }
 
+        logger.info("finished identifying which duplicate unreferenced LOA codes to delete based on updated_at value");
+        logger.info("Amount of LOA codes to be deleted: " + loasToDelete.size());
         logger.info("finished identifying duplicate Line of Accounting codes to delete");
         return loasToDelete;
     }
