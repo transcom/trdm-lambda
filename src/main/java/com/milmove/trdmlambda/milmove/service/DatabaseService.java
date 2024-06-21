@@ -76,12 +76,10 @@ public class DatabaseService {
         logger.info("updating " + codes.size() + " TAC(s)...");
         logger.info(codes.toString());
 
-
         String sql = "UPDATE transportation_accounting_codes SET tac=?, loa_id=?, loa_sys_id=?, tac_fy_txt=?, tac_fn_bl_mod_cd=?, org_grp_dfas_cd=?, tac_mvt_dsg_id=?, tac_ty_cd=?, tac_use_cd=?, tac_maj_clmt_id=?, tac_bill_act_txt=?, tac_cost_ctr_nm=?, buic=?, tac_hist_cd=?, tac_stat_cd=?, trnsprtn_acnt_tx=?, trnsprtn_acnt_bgn_dt=?, trnsprtn_acnt_end_dt=?, dd_actvty_adrs_id=?, tac_blld_add_frst_ln_tx=?, tac_blld_add_scnd_ln_tx=?, tac_blld_add_thrd_ln_tx=?, tac_blld_add_frth_ln_tx=?, tac_fnct_poc_nm=?, updated_at=? WHERE id=?";
 
         Connection conn = this.getConnection();
         conn.setAutoCommit(false);
-        
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             int count = 0;
@@ -258,7 +256,6 @@ public class DatabaseService {
                 pstmt.setTimestamp(57, java.sql.Timestamp.valueOf(LocalDateTime.now()));
                 pstmt.setObject(58, code.getId());
 
-
                 pstmt.addBatch();
 
                 // Execute every 10000 rows or when finished with the provided LOAs
@@ -411,7 +408,8 @@ public class DatabaseService {
 
         ArrayList<LineOfAccounting> loas = new ArrayList<LineOfAccounting>();
 
-        // Loas created times are in 2 different formats. some have 25 characters and some have 26. Based on their character length will choose the formatter
+        // Loas created times are in 2 different formats. some have 25 characters and
+        // some have 26. Based on their character length will choose the formatter
         DateTimeFormatter timeFormatterLen25 = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSS");
         DateTimeFormatter timeFormatterLen26 = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");
 
@@ -422,9 +420,11 @@ public class DatabaseService {
             loa.setLoaDptID(rs.getString(LinesOfAccountingDatabaseColumns.loaDptId));
 
             if (rs.getString(LinesOfAccountingDatabaseColumns.updatedAt).length() == 25) {
-                loa.setUpdatedAt(LocalDateTime.parse(rs.getString(LinesOfAccountingDatabaseColumns.updatedAt), timeFormatterLen25));
+                loa.setUpdatedAt(LocalDateTime.parse(rs.getString(LinesOfAccountingDatabaseColumns.updatedAt),
+                        timeFormatterLen25));
             } else if (rs.getString(LinesOfAccountingDatabaseColumns.updatedAt).length() == 26) {
-                loa.setUpdatedAt(LocalDateTime.parse(rs.getString(LinesOfAccountingDatabaseColumns.updatedAt), timeFormatterLen26));
+                loa.setUpdatedAt(LocalDateTime.parse(rs.getString(LinesOfAccountingDatabaseColumns.updatedAt),
+                        timeFormatterLen26));
             }
 
             loas.add(loa);
@@ -449,10 +449,10 @@ public class DatabaseService {
                 TransportationAccountingCode tac = new TransportationAccountingCode();
                 tac.setId(UUID.fromString(rs.getString(TransportationAccountingCodesDatabaseColumns.id)));
                 if (rs.getString(TransportationAccountingCodesDatabaseColumns.loaId) != null
-                && rs.getString(TransportationAccountingCodesDatabaseColumns.loaId) != "null") {
+                        && rs.getString(TransportationAccountingCodesDatabaseColumns.loaId) != "null") {
                     tac.setLoaID(UUID.fromString(rs.getString(TransportationAccountingCodesDatabaseColumns.loaId)));
                 } else {
-                    UUID nilUUID = new UUID(0,0); // represents a nil UUID
+                    UUID nilUUID = new UUID(0, 0); // represents a nil UUID
                     tac.setLoaID(nilUUID);
                 }
                 tac.setTac(rs.getString(TransportationAccountingCodesDatabaseColumns.tac));
@@ -461,6 +461,30 @@ public class DatabaseService {
 
             logger.info("finished retrieving all TACs");
             return tacs;
+        }
+
+    }
+
+    // Get LOA loa_sys_ids with a count greater than 1
+    public ArrayList<String> getLoaSysIdCountGreaterThan1() throws SQLException {
+
+        logger.info("retrieving loa_sys_ids with a count greater than 1");
+
+        ArrayList<String> loaSysIds = new ArrayList<String>();
+
+        // Select loa_sys_ids with a count greater than 1
+        String sql = "SELECT loa_sys_id, COUNT(*) FROM lines_of_accounting GROUP BY loa_sys_id HAVING count(loa_sys_id) > 1";
+
+        try (Connection conn = this.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                loaSysIds.add(rs.getString(LinesOfAccountingDatabaseColumns.loaSysId));
+            }
+
+            logger.info("finished retrieving loa_sys_ids with a count greater than 1. " + loaSysIds.size()
+                    + " non-unique loaSysIds.");
+
+            return loaSysIds;
         }
 
     }

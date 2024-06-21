@@ -262,6 +262,49 @@ public class DatabaseServiceTest {
         assertEquals(testTacs.get(0).getTac(), codes.get(0).getTac());
     }
 
+     // Test that we get a list of loa_sys_ids that occur more than once
+    // DatabaseService.getLoaSysIdCountGreaterThan1()
+    @Test
+    void testGetLoaSysIdCountGreaterThan1() throws Exception {
+
+        setUpTests();
+
+        LocalDateTime time = LocalDateTime.now();
+        int mo = time.getMonthValue();
+        int day = time.getDayOfMonth();
+        int year = time.getYear();
+        int hr = time.getHour();
+        int min = time.getMinute();
+        int sec = time.getSecond();
+
+        String dayTime = Integer.toString(mo) + Integer.toString(day) + Integer.toString(year) + Integer.toString(hr) + Integer.toString(hr) + Integer.toString(min) + Integer.toString(sec);
+
+        String testLoaSysId = "dum" + dayTime;
+        String nonDupLoaSysId = testLoaSysId + "a";
+
+        ArrayList<LineOfAccounting> testLoas = createMockLoas(3);
+
+        testLoas.get(0).setLoaSysID(testLoaSysId);
+        testLoas.get(1).setLoaSysID(testLoaSysId);
+        testLoas.get(2).setLoaSysID(nonDupLoaSysId);
+
+        // Invoke insertLineOfAccountingCodes() with test LOA(s)
+        spyDatabaseService.insertLinesOfAccounting(testLoas);
+
+        Connection conn1 = createTestDbConnection();
+
+        // Mock the DatabaseService.getConnection() to return the test_db connection
+        doReturn(conn1).when(spyDatabaseService).getConnection();
+
+        // Make sure the test_db connection is returned when .getConnection is called
+        assertEquals(conn1, spyDatabaseService.getConnection());
+
+        ArrayList<String> loaSysIds = spyDatabaseService.getLoaSysIdCountGreaterThan1();
+
+        assertTrue(loaSysIds.contains(testLoaSysId));
+        assertFalse(loaSysIds.contains(nonDupLoaSysId));
+    }
+
     // Test that we can delete a list of loas
     // DatabaseService.deleteLoas()
     @Test
