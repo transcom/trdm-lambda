@@ -166,8 +166,11 @@ public class Trdm {
                 // Get all loas
                 ArrayList<LineOfAccounting> currentLoas = databaseService.getCurrentLoaInformation();
 
+                // Get all loasSysIds that occur more than once
+                ArrayList<String> duplicateLoaSysIds = databaseService.getLoaSysIdCountGreaterThan1();
+
                 // Identify Loas to delete based on if their loaSysId is not unique, their id/primary key is not referenced in TACS loa_id and the loa is the latest
-                ArrayList<LineOfAccounting> loasToDelete = identifyDuplicateLoasToDelete(currentLoas, currentTacs);
+                ArrayList<LineOfAccounting> loasToDelete = identifyDuplicateLoasToDelete(currentLoas, currentTacs, duplicateLoaSysIds);
 
                // Delete duplicate Loas
                 databaseService.deleteLoas(loasToDelete);
@@ -280,42 +283,22 @@ public class Trdm {
 
 
     // Identify Loas to delete based on if their loaSysId is not unique, their id/primary key is not referenced in TACS loa_id and the loa created_at is the latest
-    public ArrayList<LineOfAccounting> identifyDuplicateLoasToDelete(ArrayList<LineOfAccounting> loas, ArrayList<TransportationAccountingCode> tacs) throws SQLException {
+    public ArrayList<LineOfAccounting> identifyDuplicateLoasToDelete(ArrayList<LineOfAccounting> loas, ArrayList<TransportationAccountingCode> tacs, ArrayList<String> duplicateLoaSysIds) throws SQLException {
         logger.info("identifying duplicate Line of Accounting codes to delete");
         logger.info("LOA codes count: " + loas.size());
         logger.info("TAC codes count: " + tacs.size());
+        logger.info("Duplicate LOA codes loa_sys_ids count: " + duplicateLoaSysIds.size());
 
         // Store loas that needs to be checked for deletion
         ArrayList<LineOfAccounting> duplicateLoas = new ArrayList<LineOfAccounting>();
 
-        // Store duplicate loa_sys_id
-        ArrayList<String> duplicateLoaSysIds = new ArrayList<String>();
-
-        logger.info("starting to identify LOA codes with non unique loa_sys_ids");
+        logger.info("starting to identify duplicate LOA codes");
         for (LineOfAccounting loa : loas) {
-
-            // If already confirmed a duplicate then no need to check if it is
-            boolean alreadyConfirmedDupe = false;
             if (duplicateLoaSysIds.contains(loa.getLoaSysID())) {
-                alreadyConfirmedDupe = true;
                 duplicateLoas.add(loa);
             }
-
-            // If not already confirmed a duplicate check to see if it is a duplicate
-            if (!alreadyConfirmedDupe) {
-
-                // Check if there are more than 1 loa with this loa_sys_id if so enter if logic
-                List<LineOfAccounting> l1 = loas.stream().filter(l -> l.getLoaSysID().equals(loa.getLoaSysID())).collect(Collectors.toList());
-                if (l1.size() > 1) {
-
-                    // Add loaSysId to duplicateLoaSysIds another loa with the same sysId is being checked it will not have to run through this logic
-                    duplicateLoaSysIds.add(loa.getLoaSysID());
-                    duplicateLoas.add(loa);
-                }
-            }
         }
-
-        logger.info("finished identifying LOA codes with non unique loa_sys_ids. Count: " + duplicateLoas.size());
+        logger.info("finished identifying duplicate LOA codes. Count: " + duplicateLoas.size());
 
         logger.info("starting to identify duplicate LOA codes that are not referenced by a TAC code");
         // Duplicate loas not referenced in TACS

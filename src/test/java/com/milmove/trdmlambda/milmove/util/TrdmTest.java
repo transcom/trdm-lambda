@@ -292,11 +292,19 @@ class TrdmTest {
         currentLoas.get(5).setLoaSysID("NoDupe" + rand.nextInt(1000) + rand.nextInt(1000)); // No delete
         currentLoas.get(6).setLoaSysID("NoDupe" + rand.nextInt(1000) + rand.nextInt(1000)); // No Delete
 
+        // List of duplicateLoas
+        ArrayList<String> duplicateLoaSysIds = new ArrayList<String>();
+        duplicateLoaSysIds.add(currentLoas.get(0).getLoaSysID());
+        duplicateLoaSysIds.add(currentLoas.get(1).getLoaSysID());
+        duplicateLoaSysIds.add(currentLoas.get(2).getLoaSysID());
+        duplicateLoaSysIds.add(currentLoas.get(3).getLoaSysID());
+        duplicateLoaSysIds.add(currentLoas.get(4).getLoaSysID());
 
-        ArrayList<LineOfAccounting> loasToDelete = trdm.identifyDuplicateLoasToDelete(currentLoas, currentTacs);
+
+        ArrayList<LineOfAccounting> loasToDelete = trdm.identifyDuplicateLoasToDelete(currentLoas, currentTacs, duplicateLoaSysIds);
         List<UUID> loaIds = loasToDelete.stream().map(loa -> loa.getId()).collect(Collectors.toList());
 
-        // Loas that should be deleted should be returned for deletetion
+        // Loas that should be deleted should be returned for deletion
         assertTrue(loaIds.contains(currentLoas.get(2).getId()));
         assertTrue(loaIds.contains(currentLoas.get(3).getId()));
 
