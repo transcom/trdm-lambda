@@ -419,15 +419,19 @@ public class DatabaseService {
             loa.setLoaSysID(rs.getString(LinesOfAccountingDatabaseColumns.loaSysId));
             loa.setLoaDptID(rs.getString(LinesOfAccountingDatabaseColumns.loaDptId));
 
-            if (rs.getString(LinesOfAccountingDatabaseColumns.updatedAt).length() == 25) {
-                loa.setUpdatedAt(LocalDateTime.parse(rs.getString(LinesOfAccountingDatabaseColumns.updatedAt),
-                        timeFormatterLen25));
-            } else if (rs.getString(LinesOfAccountingDatabaseColumns.updatedAt).length() == 26) {
-                loa.setUpdatedAt(LocalDateTime.parse(rs.getString(LinesOfAccountingDatabaseColumns.updatedAt),
-                        timeFormatterLen26));
-            }
+            if (rs.getString(LinesOfAccountingDatabaseColumns.updatedAt) != null) {
+                if (rs.getString(LinesOfAccountingDatabaseColumns.updatedAt).length() == 25) {
+                    loa.setUpdatedAt(LocalDateTime.parse(rs.getString(LinesOfAccountingDatabaseColumns.updatedAt),
+                            timeFormatterLen25));
+                } else if (rs.getString(LinesOfAccountingDatabaseColumns.updatedAt).length() == 26) {
+                    loa.setUpdatedAt(LocalDateTime.parse(rs.getString(LinesOfAccountingDatabaseColumns.updatedAt),
+                            timeFormatterLen26));
+                }
 
-            loas.add(loa);
+                loas.add(loa);
+            } else {
+                logger.info("Excluding LOA with ID: " + loa.getId() + " because updated_at is null");
+            }
         }
 
         return loas;
