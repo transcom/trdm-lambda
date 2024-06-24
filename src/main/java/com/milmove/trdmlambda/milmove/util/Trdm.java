@@ -289,11 +289,14 @@ public class Trdm {
         logger.info("TAC codes count: " + tacs.size());
         logger.info("Duplicate LOA codes loa_sys_ids count: " + duplicateLoaSysIds.size());
 
+        // Remove any LOA with a null updated_at value from consideration for deletion.
+        List<LineOfAccounting> loasNoNulls = loas.stream().filter(loa -> loa.getUpdatedAt() != null).toList();
+
         // Store loas that needs to be checked for deletion
         ArrayList<LineOfAccounting> duplicateLoas = new ArrayList<LineOfAccounting>();
 
         logger.info("starting to identify duplicate LOA codes");
-        for (LineOfAccounting loa : loas) {
+        for (LineOfAccounting loa : loasNoNulls) {
             if (duplicateLoaSysIds.contains(loa.getLoaSysID())) {
                 duplicateLoas.add(loa);
             }
@@ -320,20 +323,17 @@ public class Trdm {
        // Get a set of loaSysIds made from the list of unreferenced duplicate loas to loop through to find the latest loa for deletion
         Set<String> setOfLoaSysIds = duplicateUnreferencedLoas.stream().map(loa -> loa.getLoaSysID()).collect(Collectors.toSet());
 
-        // Remove any LOA with a null updated_at value from consideration for deletion.
-        List<LineOfAccounting> duplicateUnreferencedLoasNoNulls = duplicateUnreferencedLoas.stream().filter(loa -> loa.getUpdatedAt() != null).toList();
-
         logger.info("starting to identify which duplicate unreferenced LOA codes to delete based on updated_at value");
         ArrayList<LineOfAccounting> loasToDelete = new ArrayList<LineOfAccounting>();
         for (String loaSysId : setOfLoaSysIds) {
 
             // Get a sorted by date list of loas with same sysId in duplicateUnreferencedLoas
-            List<LineOfAccounting> sortedLoasByCreatedAt = duplicateUnreferencedLoasNoNulls.stream()
+            List<LineOfAccounting> sortedLoasByUpdatedAt = duplicateUnreferencedLoas.stream()
             .filter(loa -> loa.getLoaSysID().equals(loaSysId))
             .sorted((l1, l2) -> l1.getUpdatedAt().compareTo(l2.getUpdatedAt()))
             .collect(Collectors.toList());
 
-            loasToDelete.add(sortedLoasByCreatedAt.get(0));
+            loasToDelete.add(sortedLoasByUpdatedAt.get(0));
         }
 
         logger.info("finished identifying which duplicate unreferenced LOA codes to delete based on updated_at value");
