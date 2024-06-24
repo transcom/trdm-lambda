@@ -320,12 +320,15 @@ public class Trdm {
        // Get a set of loaSysIds made from the list of unreferenced duplicate loas to loop through to find the latest loa for deletion
         Set<String> setOfLoaSysIds = duplicateUnreferencedLoas.stream().map(loa -> loa.getLoaSysID()).collect(Collectors.toSet());
 
+        // Remove any LOA with a null updated_at value from consideration for deletion.
+        List<LineOfAccounting> duplicateUnreferencedLoasNoNulls = duplicateUnreferencedLoas.stream().filter(loa -> loa.getUpdatedAt() != null).toList();
+
         logger.info("starting to identify which duplicate unreferenced LOA codes to delete based on updated_at value");
         ArrayList<LineOfAccounting> loasToDelete = new ArrayList<LineOfAccounting>();
         for (String loaSysId : setOfLoaSysIds) {
 
             // Get a sorted by date list of loas with same sysId in duplicateUnreferencedLoas
-            List<LineOfAccounting> sortedLoasByCreatedAt = duplicateUnreferencedLoas.stream()
+            List<LineOfAccounting> sortedLoasByCreatedAt = duplicateUnreferencedLoasNoNulls.stream()
             .filter(loa -> loa.getLoaSysID().equals(loaSysId))
             .sorted((l1, l2) -> l1.getUpdatedAt().compareTo(l2.getUpdatedAt()))
             .collect(Collectors.toList());
