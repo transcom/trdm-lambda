@@ -1,20 +1,88 @@
 version: 2.1
 
-jobs:
-  build:
+references:
+  postgres: &postgres cimg/postgres:12.11
+
+executors:
+  trdm_compiler:
+    working_directory: ~/transcom/trdm-lambda
+    docker:
+      - image: milmove/circleci-docker:milmove-app-ab729849a08a773ea2557b19b67f378551d1ad3d
+        auth:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASSWORD
+      - image: *postgres
+        auth:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASSWORD
+        environment:
+          POSTGRES_PASSWORD: mysecretpassword
+          POSTGRES_DB: test_db
+          # use ramdisk for better performance
+          # https://circleci.com/docs/databases/#optimizing-postgresql-images
+          PGDATA: /dev/shm/pgdata/data
+        # override entrypoint/command for ramdisk
+        # this has been fixed in versions of postgres newer than 13.9
+        # https://github.com/CircleCI-Public/cimg-postgres/commit/3b320e26e4f187d0cd144efea1bc26cf5a2b68b0
+        # milmove is still on 12.11
+        entrypoint: /bin/bash
+        command: -c 'ln -s /dev/shm/pgdata/data /var/lib/postgresql/ && exec /usr/local/bin/docker-entrypoint.sh postgres'
+
+  trdm_tester:
     docker:
       - image: milmove/docker-mvn
         auth:
           password: $DOCKER_PASSWORD
           username: $DOCKER_USERNAME
+      - image: *postgres
+        auth:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASSWORD
         environment:
-          TEST_DB_HOST: localhost
-          TEST_DB_NAME: test_db
-          TEST_DB_USER: postgres
-          TEST_DB_PORT: 5433
-          TEST_DB_PASSWORD: mysecretpassword
-          TEST_DB_URL: jdbc:postgresql://localhost:5433/test_db?user=postgres&password=mysecretpassword
+          POSTGRES_PASSWORD: mysecretpassword
+          POSTGRES_DB: test_db
+          # use ramdisk for better performance
+          # https://circleci.com/docs/databases/#optimizing-postgresql-images
+          PGDATA: /dev/shm/pgdata/data
+        # override entrypoint/command for ramdisk
+        # this has been fixed in versions of postgres newer than 13.9
+        # https://github.com/CircleCI-Public/cimg-postgres/commit/3b320e26e4f187d0cd144efea1bc26cf5a2b68b0
+        # milmove is still on 12.11
+        entrypoint: /bin/bash
+        command: -c 'ln -s /dev/shm/pgdata/data /var/lib/postgresql/ && exec /usr/local/bin/docker-entrypoint.sh postgres'
 
+jobs:
+  pre_test:
+    executor: trdm_compiler
+    steps:
+      - run:
+          name: Checkout mymove repository
+          command: |
+            git clone https://github.com/transcom/mymove.git ~/mymove
+      - run:
+          name: Build and run test db
+          command: |
+            cd ~/mymove
+            make db_test_run 
+
+  mvn_test:
+    executor: trdm_tester
+    steps:
+      - checkout
+      - run:
+          name: Copy Workflow Job ID to file
+          command: |
+            echo "export SERVER_TEST_JOB_ID=$CIRCLE_WORKFLOW_JOB_ID" >> server_test_job_id.env
+      - run:
+          name: Maven tests
+          command: mvn test
+      - persist_to_workspace:
+          root: .
+          paths:
+            - server_test_job_id.env
+
+  build:
+    executor: trdm_tester
     steps:
       - checkout
       - run:
@@ -23,6 +91,7 @@ jobs:
       - run:
           name: Build
           command: scripts/build
+
   release:
     docker:
       - image: milmove/docker-mvn
@@ -61,15 +130,23 @@ jobs:
       - store_artifacts:
           path: workspace/*.txt
           destination: artifacts
+
 workflows:
-  version: 2
-  build:
+  build_zip_files:
     jobs:
+      - pre_test
+      - mvn_test
       - build:
+          requires:
+            - pre_test
+            - mvn_test
           context:
             - org-global
-  release:
+
+  release_to_github:
     jobs:
+      - mvn_test
+      - build
       - release:
           context:
             - org-global
