@@ -6,8 +6,7 @@ set -eu -o pipefail
 echo "Packaging..."
 
 # Build via sam
-# Tests have been disabled during the build because more work needs to be completed to automate the pipelines for trdm
-# sam build // This should be reinstated in B-20145 under E-05306
+# Tests are run before the build step
 MAVEN_OPTS="-DskipTests=true" sam build
 
 # Zip requires `cd` because if not it will compile the relative paths
@@ -33,5 +32,5 @@ cd ../../../
 echo "Packaging complete, saving as artifact."
 echo "Calculating checksum."
 sha512sum deployment-package.stg.zip > stg-checksums.txt
-sha512sum deployment-package.prd.zip > prd-checksums.txt
+sha512sum deployment-package.prd.zip > prd-checksums.txt 
 ls

@@ -18,6 +18,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Tests
+          command: mvn test
+      - run:
           name: Build
           command: scripts/build
   release:
@@ -28,6 +31,9 @@ jobs:
           username: $DOCKER_USERNAME
     steps:
       - checkout
+      - run:
+          name: Tests
+          command: mvn test
       - run:
           name: Build
           command: scripts/build
