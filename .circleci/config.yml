@@ -1,68 +1,93 @@
 version: 2.1
 
-references:
-  postgres: &postgres cimg/postgres:12.11
-
 executors:
-  trdm_compiler:
-    working_directory: ~/transcom/trdm-lambda
+  mymove_compiler:
     docker:
-      - image: *postgres
+      - image: milmove/circleci-docker:milmove-app-ab729849a08a773ea2557b19b67f378551d1ad3d
         auth:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
-        environment:
-          POSTGRES_PASSWORD: mysecretpassword
-          POSTGRES_DB: test_db
-          # use ramdisk for better performance
-          # https://circleci.com/docs/databases/#optimizing-postgresql-images
-          PGDATA: /dev/shm/pgdata/data
-        # override entrypoint/command for ramdisk
-        # this has been fixed in versions of postgres newer than 13.9
-        # https://github.com/CircleCI-Public/cimg-postgres/commit/3b320e26e4f187d0cd144efea1bc26cf5a2b68b0
-        # milmove is still on 12.11
-        entrypoint: /bin/bash
-        command: -c 'ln -s /dev/shm/pgdata/data /var/lib/postgresql/ && exec /usr/local/bin/docker-entrypoint.sh postgres'
-
-  trdm_tester:
-    docker:
-      - image: milmove/docker-mvn
-        auth:
-          password: $DOCKER_PASSWORD
-          username: $DOCKER_USERNAME
-      - image: *postgres
-        auth:
-          username: $DOCKERHUB_USERNAME
-          password: $DOCKERHUB_PASSWORD
-        environment:
-          POSTGRES_PASSWORD: mysecretpassword
-          POSTGRES_DB: test_db
-          # use ramdisk for better performance
-          # https://circleci.com/docs/databases/#optimizing-postgresql-images
-          PGDATA: /dev/shm/pgdata/data
-        # override entrypoint/command for ramdisk
-        # this has been fixed in versions of postgres newer than 13.9
-        # https://github.com/CircleCI-Public/cimg-postgres/commit/3b320e26e4f187d0cd144efea1bc26cf5a2b68b0
-        # milmove is still on 12.11
-        entrypoint: /bin/bash
-        command: -c 'ln -s /dev/shm/pgdata/data /var/lib/postgresql/ && exec /usr/local/bin/docker-entrypoint.sh postgres'
 
 jobs:
-  test_setup:
-    executor: trdm_compiler
+  setup_tests:
+    executor: mymove_compiler
+    environment:
+      GOPATH: /home/circleci/go
+      APPLICATION: app
+      DB_PASSWORD: mysecretpassword
+      DB_USER_LOW_PRIV: crud
+      DB_PASSWORD_LOW_PRIV: mysecretpassword
+      DB_USER: postgres
+      DB_HOST: localhost
+      DB_PORT_TEST: 5433 # Mymove's makefile will convert this to 5432 for CircleCI
+      DB_PORT: 5432
+      DB_NAME: test_db
+      DB_NAME_TEST: test_db
+      DTOD_USE_MOCK: 'true'
+      MIGRATION_MANIFEST: 'migrations/app/migrations_manifest.txt'
+      MIGRATION_PATH: 'file://migrations/app/schema;file://migrations/app/secure'
+      EIA_KEY: db2522a43820268a41a802a16ae9fd26 # dummy key generated with openssl rand -hex 16
+      ENV: test
+      ENVIRONMENT: test
+      SERVER_REPORT: 1
+      COVERAGE: 1
+      SERVE_API_INTERNAL: 'true'
+      OKTA_CUSTOMER_CLIENT_ID: 1q2w3e4r5t6y7u8i9o
+      OKTA_ADMIN_CLIENT_ID: AQ1SW2DE3FR4G5
+      OKTA_OFFICE_CLIENT_ID: 9f9f9s8s90gig9
+      OKTA_API_KEY: notrealapikey8675309
+      OKTA_OFFICE_GROUP_ID: notrealgroupId
+      OKTA_CUSTOMER_GROUP_ID: notrealcustomergroupId
     steps:
       - run:
           name: Checkout mymove repository
-          command: |
-            git clone https://github.com/transcom/mymove.git ~/mymove
+          command: git clone https://github.com/transcom/mymove.git ~/mymove
       - run:
-          name: Build and run test db
+          name: Create mymove binary
+          command: | 
+            cd ~/mymove
+            make bin/milmove
+      # Attempt to bypass CircleCI CLI docker version issues by using the old version https://circleci.com/docs/building-docker-images/#docker-version
+      # See ongoing issue here https://discuss.circleci.com/t/circleci-cli-error-response-from-daemon-invalid-uts-mode/48081/10
+      - setup_remote_docker:
+          version: 20.10.24
+      - run:
+          name: Ensure the PostgreSQL remote container is removed if something prevented shutdown previously
+          command: |
+            sudo docker rm -f setup_tests_postgres_container || true
+      - run:
+          name: Start PostgreSQL remote container
+          command: |
+            # Attempt force PostgreSQL to run on localhost, otherwise it defaults to IPv4 `0.0.0.0` and IPv6 `::`
+            # This container should shut down on its own on exit
+            sudo docker run --platform linux/amd64 --rm -d --name setup_tests_postgres_container -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_DB=test_db -v /dev/shm/pgdata:/var/lib/postgresql/data cimg/postgres:12.11 -c 'listen_addresses=127.0.0.1,::1'
+      - run:
+          name: List docker containers
+          command: |
+            sudo docker ps -a
+      - run:
+          name: List remote test container logs
+          command: |
+            sudo docker logs setup_tests_postgres_container
+      - run:
+          name: Wait for PostgreSQL to be ready on remote test container
+          command: |
+            until sudo docker exec setup_tests_postgres_container pg_isready -h localhost -p 5432 -U postgres; do
+              echo "Waiting for PostgreSQL on localhost:5432..."
+              sleep 2
+            done
+      - run:
+          name: Migrate the test db on the remote test container
           command: |
             cd ~/mymove
-            make db_test_run 
+            make db_test_run
+      - run:
+          name: Stop PostgreSQL remote container
+          command: sudo docker stop setup_tests_postgres_container
+          when: always # If a previous step fails make sure that it gets closed no matter what
 
   mvn_test:
-    executor: trdm_tester
+    executor: mymove_compiler
     steps:
       - checkout
       - run:
@@ -78,7 +103,7 @@ jobs:
             - server_test_job_id.env
 
   sam_package:
-    executor: trdm_tester
+    executor: mymove_compiler
     steps:
       - checkout
       - run:
@@ -121,21 +146,28 @@ jobs:
 workflows:
   build:
     jobs:
-      - test_setup
-      - mvn_test
+      - setup_tests
+      - mvn_test:
+          requires:
+            - setup_tests
       - sam_package:
           requires:
-            - test_setup
             - mvn_test
           context:
             - org-global
 
   release:
     jobs:
-      - test_setup
-      - mvn_test
-      - sam_package
+      - setup_tests
+      - mvn_test:
+          requires:
+            - setup_tests
+      - sam_package:
+          requires:
+            - mvn_test
       - upload_release_to_github:
+          requires:
+            - sam_package
           context:
             - org-global
           filters:
