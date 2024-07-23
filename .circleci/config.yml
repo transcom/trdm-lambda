@@ -52,7 +52,7 @@ executors:
         command: -c 'ln -s /dev/shm/pgdata/data /var/lib/postgresql/ && exec /usr/local/bin/docker-entrypoint.sh postgres'
 
 jobs:
-  pre_test:
+  test_setup:
     executor: trdm_compiler
     steps:
       - run:
@@ -81,18 +81,15 @@ jobs:
           paths:
             - server_test_job_id.env
 
-  build:
+  sam_package:
     executor: trdm_tester
     steps:
       - checkout
       - run:
-          name: Tests
-          command: mvn test
-      - run:
           name: Build
           command: scripts/build
 
-  release:
+  upload_release_to_github:
     docker:
       - image: milmove/docker-mvn
         auth:
@@ -100,12 +97,6 @@ jobs:
           username: $DOCKER_USERNAME
     steps:
       - checkout
-      - run:
-          name: Tests
-          command: mvn test
-      - run:
-          name: Build
-          command: scripts/build
       - run:
           name: Release
           command: scripts/release $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME << pipeline.git.tag >>
@@ -132,22 +123,23 @@ jobs:
           destination: artifacts
 
 workflows:
-  build_zip_files:
+  build:
     jobs:
-      - pre_test
+      - test_setup
       - mvn_test
-      - build:
+      - sam_package:
           requires:
-            - pre_test
+            - test_setup
             - mvn_test
           context:
             - org-global
 
-  release_to_github:
+  release:
     jobs:
+      - test_setup
       - mvn_test
-      - build
-      - release:
+      - sam_package
+      - upload_release_to_github:
           context:
             - org-global
           filters:
