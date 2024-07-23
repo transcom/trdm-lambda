@@ -7,10 +7,6 @@ executors:
   trdm_compiler:
     working_directory: ~/transcom/trdm-lambda
     docker:
-      - image: milmove/circleci-docker:milmove-app-ab729849a08a773ea2557b19b67f378551d1ad3d
-        auth:
-          username: $DOCKERHUB_USERNAME
-          password: $DOCKERHUB_PASSWORD
       - image: *postgres
         auth:
           username: $DOCKERHUB_USERNAME
@@ -144,6 +140,6 @@ workflows:
             - org-global
           filters:
             branches:
-              ignore: /^.*/
+              only: main
             tags:
               only: /^v.*/
