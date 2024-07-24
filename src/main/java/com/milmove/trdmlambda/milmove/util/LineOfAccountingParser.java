@@ -120,7 +120,11 @@ public class LineOfAccountingParser {
         // Check if LOA is empty or if ROW_STS_CD is "DLT"
         if (values[columnHeaders.get("LOA_SYS_ID")].isEmpty()
                 || "DLT".equals(values[columnHeaders.get("ROW_STS_CD")])) {
-            logger.info("LOA is skipped because the data has an empty LOA_SYS_ID or ROW_STS_CD = DLT");
+            if (values[columnHeaders.get("LOA_SYS_ID")].isEmpty()) {
+                logger.info("LOA is skipped because the LOA has an empty LOA_SYS_ID");
+            } else if ("DLT".equals(values[columnHeaders.get("ROW_STS_CD")])) {
+                logger.info("LOA is skipped because the LOA column ROW_STS_CD = DLT");
+            }
             return null; // Skip this line
         }
 
