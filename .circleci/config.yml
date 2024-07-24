@@ -60,19 +60,6 @@ jobs:
       OKTA_CUSTOMER_GROUP_ID: notrealcustomergroupId
     steps:
       # Temp skip these for faster debugging
-      # - run:
-      #     name: Checkout mymove repository
-      #     command: git clone https://github.com/transcom/mymove.git ~/mymove
-      # - run:
-      #     name: Create mymove binary
-      #     command: | 
-      #       cd ~/mymove
-      #       make bin/milmove
-      # - run:
-      #     name: Migrate the test db on the remote test container
-      #     command: |
-      #       cd ~/mymove
-      #       make db_test_run
       - checkout # Checkout our repo for faster debugging (Just the wait-for-db script)
       # Attempt to bypass CircleCI CLI docker version issues by using the old version https://circleci.com/docs/building-docker-images/#docker-version
       # See ongoing issue here https://discuss.circleci.com/t/circleci-cli-error-response-from-daemon-invalid-uts-mode/48081/10
@@ -108,6 +95,22 @@ jobs:
             echo "Create the ${DB_NAME_TEST} database..."
             DB_NAME=postgres DB_PORT=${DB_PORT_TEST} ./scripts/wait-for-db && \
             createdb -p ${DB_PORT_TEST} -h ${DB_HOST} -U postgres ${DB_NAME_TEST} || true
+      # Now that we have our test db, the next step is to get MyMove configured and migrate it
+      - run:
+          name: Checkout mymove repository
+          command: git clone https://github.com/transcom/mymove.git ~/mymove
+      - run:
+          name: Create mymove binary
+          command: | 
+            cd ~/mymove
+            make bin/milmove
+      - run:
+          name: Migrate the PostgreSQL container's test db with MyMove migrations
+          command: |
+            cd ~/mymove
+            make db_test_migrate_standalone
+      # Now that the test_db is setup and migrated, the next step is to setup the maven testing container
+      # to run tests against said test_dbß
       - run:
           name: Create the Maven test container while streaming the TRDM files to it for testing
           command: |
