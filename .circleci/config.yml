@@ -61,6 +61,9 @@ jobs:
           name: Start new docker network for port access
           command: sudo docker network create nested_docker_network
       - run:
+          name: Join the host container on the network
+          command: sudo docker network connect nested_docker_network $(hostname)
+      - run:
           name: Start PostgreSQL remote container
           command: |
             # Attempt force PostgreSQL to run on localhost, otherwise it defaults to IPv4 `0.0.0.0` and IPv6 `::`
@@ -111,6 +114,10 @@ jobs:
           name: Stop PostgreSQL remote container
           command: sudo docker stop setup_tests_postgres_container
           when: always # If a previous step fails make sure that it gets closed no matter what
+      - run:
+          name: Disconnect host from docker network
+          command: sudo docker network disconnect nested_docker_network $(hostname)
+          when: always
       - run:
           name: Stop docker network
           command: sudo docker network rm nested_docker_network
