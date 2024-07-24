@@ -1,15 +1,35 @@
 version: 2.1
 
+references:
+  circleci-docker: &circleci-docker milmove/circleci-docker:milmove-app-ab729849a08a773ea2557b19b67f378551d1ad3d
+
 executors:
+  # Additional docker images are utilized without executors further below
+  # It was done to circumvent known CircleCI local CLI issues to allow
+  # local testing instead of testing live
+  # See the following
+  # - https://discuss.circleci.com/t/circleci-cli-error-response-from-daemon-invalid-uts-mode/48081/10
+  # - https://github.com/CircleCI-Public/circleci-cli/issues/970
+  # - https://circleci.com/docs/building-docker-images/#docker-version 
+  # 20.10.24 is listed as the deprecated CircleCI docker, but is also the last working version of docker
+  # that didn't have this issue hence why we use remote docker containers
   mymove_compiler:
     docker:
-      - image: milmove/circleci-docker:milmove-app-ab729849a08a773ea2557b19b67f378551d1ad3d
+      - image: *circleci-docker
+        auth:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASSWORD
+  tls_small:
+    resource_class: small
+    working_directory: ~/transcom/mymove
+    docker:
+      - image: *circleci-docker
         auth:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
 
 jobs:
-  setup_tests:
+  test:
     executor: mymove_compiler
     environment:
       GOPATH: /home/circleci/go
@@ -39,7 +59,7 @@ jobs:
       OKTA_OFFICE_GROUP_ID: notrealgroupId
       OKTA_CUSTOMER_GROUP_ID: notrealcustomergroupId
     steps:
-      # Temp skip these 2 for faster debugging
+      # Temp skip these for faster debugging
       # - run:
       #     name: Checkout mymove repository
       #     command: git clone https://github.com/transcom/mymove.git ~/mymove
@@ -48,6 +68,11 @@ jobs:
       #     command: | 
       #       cd ~/mymove
       #       make bin/milmove
+      # - run:
+      #     name: Migrate the test db on the remote test container
+      #     command: |
+      #       cd ~/mymove
+      #       make db_test_run
       - checkout # Checkout our repo for faster debugging (Just the wait-for-db script)
       # Attempt to bypass CircleCI CLI docker version issues by using the old version https://circleci.com/docs/building-docker-images/#docker-version
       # See ongoing issue here https://discuss.circleci.com/t/circleci-cli-error-response-from-daemon-invalid-uts-mode/48081/10
@@ -55,8 +80,7 @@ jobs:
           version: 20.10.24
       - run:
           name: Ensure the PostgreSQL remote container is removed if something prevented shutdown previously
-          command: |
-            sudo docker rm -f setup_tests_postgres_container || true
+          command: sudo docker rm -f setup_tests_postgres_container || true
       - run:
           name: Start new docker network for port access
           command: sudo docker network create nested_docker_network
@@ -65,25 +89,7 @@ jobs:
           command: sudo docker network connect nested_docker_network $(hostname)
       - run:
           name: Start PostgreSQL remote container
-          command: |
-            # Attempt force PostgreSQL to run on localhost, otherwise it defaults to IPv4 `0.0.0.0` and IPv6 `::`
-            # This container should shut down on its own on exit
-            sudo docker run --network nested_docker_network --network-alias postgres_db_container --platform linux/amd64 --rm -d --name setup_tests_postgres_container -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_DB=test_db -v /dev/shm/pgdata:/var/lib/postgresql/data cimg/postgres:12.11 -c 'listen_addresses=*'
-      - run:
-          name: List docker containers
-          command: |
-            sudo docker ps -a
-      - run:
-          name: List remote test container logs
-          command: |
-            sudo docker logs setup_tests_postgres_container
-
-      # Temp skipping for faster debugging
-      # - run:
-      #     name: Migrate the test db on the remote test container
-      #     command: |
-      #       cd ~/mymove
-      #       make db_test_run
+          command: sudo docker run --network nested_docker_network --network-alias postgres_db_container --rm -d --name setup_tests_postgres_container -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_DB=test_db -v /dev/shm/pgdata:/var/lib/postgresql/data cimg/postgres:12.11 -c 'listen_addresses=*'
       - run:
           name: Get PostgreSQL container IP address
           command: |
@@ -97,23 +103,38 @@ jobs:
               sleep 2
             done
       - run:
-          name: Check PostgreSQL container logs
-          command: sudo docker logs setup_tests_postgres_container
-      - run:
-          name: Check PostgreSQL configuration
-          command: |
-            sudo docker exec setup_tests_postgres_container cat /var/lib/postgresql/data/postgresql.conf | grep listen_addresses
-            sudo docker exec setup_tests_postgres_container cat /var/lib/postgresql/data/pg_hba.conf
-      - run:
           name: Create the test db without mymove binary for faster debugging
           command: |
             echo "Create the ${DB_NAME_TEST} database..."
             DB_NAME=postgres DB_PORT=${DB_PORT_TEST} ./scripts/wait-for-db && \
-            createdb -p ${DB_PORT_TEST} -h postgres_db_container -U postgres ${DB_NAME_TEST} || true
+            createdb -p ${DB_PORT_TEST} -h ${DB_HOST} -U postgres ${DB_NAME_TEST} || true
+      - run:
+          name: Create the Maven test container while streaming the TRDM files to it for testing
+          command: |
+            # Tarball the current directory with the TRDM project files and send it to the maven_test_container
+            # The maven_test_container receives it as input rather than a volume
+            # This is important to allow local pipelines to run properly to avoid host machine volume mounting access issues
+            # This will also create the maven_test_container with the milmove/docker-mvn image
+            tar -czf - . | sudo docker run --network nested_docker_network --name maven_test_container --rm -i milmove/docker-mvn bash -c "
+            # Execute the following commands inside of maven_test_container
+            # Create a directory to store the tarball in the maven container
+            mkdir -p /tmp/trdm
+            # Extract the tarball from the input stream and place it into our directory
+            tar -xzf - -C /tmp/trdm
+            cd /tmp/trdm
+            # Set the test db to read from the postgres container in our docker network
+            # Create and feed in the test_db_url
+            export TEST_DB_URL='jdbc:postgresql://${DB_HOST}:${DB_PORT_TEST}/${DB_NAME_TEST}?user=${DB_USER}&password=${DB_PASSWORD}'
+            mvn test | tee /tmp/mvn_test_output.log"
+            # TODO: Verify successful testing
       - run:
           name: Stop PostgreSQL remote container
           command: sudo docker stop setup_tests_postgres_container
-          when: always # If a previous step fails make sure that it gets closed no matter what
+          when: always
+      - run:
+          name: Stop Maven testing remote container
+          command: sudo docker stop maven_test_container
+          when: always
       - run:
           name: Disconnect host from docker network
           command: sudo docker network disconnect nested_docker_network $(hostname)
@@ -122,22 +143,6 @@ jobs:
           name: Stop docker network
           command: sudo docker network rm nested_docker_network
           when: always
-
-  mvn_test:
-    executor: mymove_compiler
-    steps:
-      - checkout
-      - run:
-          name: Copy Workflow Job ID to file
-          command: |
-            echo "export SERVER_TEST_JOB_ID=$CIRCLE_WORKFLOW_JOB_ID" >> server_test_job_id.env
-      - run:
-          name: Maven tests
-          command: mvn test
-      - persist_to_workspace:
-          root: .
-          paths:
-            - server_test_job_id.env
 
   sam_package:
     executor: mymove_compiler
@@ -148,11 +153,7 @@ jobs:
           command: scripts/build
 
   upload_release_to_github:
-    docker:
-      - image: milmove/docker-mvn
-        auth:
-          password: $DOCKER_PASSWORD
-          username: $DOCKER_USERNAME
+    executor: tls_small
     steps:
       - checkout
       - run:
@@ -183,25 +184,19 @@ jobs:
 workflows:
   build:
     jobs:
-      - setup_tests
-      - mvn_test:
-          requires:
-            - setup_tests
+      - test
       - sam_package:
           requires:
-            - mvn_test
+            - test
           context:
             - org-global
 
   release:
     jobs:
-      - setup_tests
-      - mvn_test:
-          requires:
-            - setup_tests
+      - test
       - sam_package:
           requires:
-            - mvn_test
+            - test
       - upload_release_to_github:
           requires:
             - sam_package
@@ -210,5 +205,3 @@ workflows:
           filters:
             branches:
               only: main
-            tags:
-              only: /^v.*/
