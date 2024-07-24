@@ -18,8 +18,8 @@ jobs:
       DB_USER_LOW_PRIV: crud
       DB_PASSWORD_LOW_PRIV: mysecretpassword
       DB_USER: postgres
-      DB_HOST: localhost
-      DB_PORT_TEST: 5433 # Mymove's makefile will convert this to 5432 for CircleCI
+      DB_HOST: postgres_db_container
+      DB_PORT_TEST: 5432 # Mymove's makefile will convert this to 5432 for CircleCI
       DB_PORT: 5432
       DB_NAME: test_db
       DB_NAME_TEST: test_db
@@ -58,11 +58,14 @@ jobs:
           command: |
             sudo docker rm -f setup_tests_postgres_container || true
       - run:
+          name: Start new docker network for port access
+          command: sudo docker network create nested_docker_network
+      - run:
           name: Start PostgreSQL remote container
           command: |
             # Attempt force PostgreSQL to run on localhost, otherwise it defaults to IPv4 `0.0.0.0` and IPv6 `::`
             # This container should shut down on its own on exit
-            sudo docker run --platform linux/amd64 --rm -d --name setup_tests_postgres_container -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_DB=test_db -v /dev/shm/pgdata:/var/lib/postgresql/data cimg/postgres:12.11 -c 'listen_addresses=127.0.0.1,::1'
+            sudo docker run --network nested_docker_network --network-alias postgres_db_container --platform linux/amd64 --rm -d --name setup_tests_postgres_container -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_DB=test_db -v /dev/shm/pgdata:/var/lib/postgresql/data cimg/postgres:12.11 -c 'listen_addresses=*'
       - run:
           name: List docker containers
           command: |
@@ -71,13 +74,7 @@ jobs:
           name: List remote test container logs
           command: |
             sudo docker logs setup_tests_postgres_container
-      - run:
-          name: Wait for PostgreSQL to be ready on remote test container
-          command: |
-            until sudo docker exec setup_tests_postgres_container pg_isready -h localhost -p 5432 -U postgres; do
-              echo "Waiting for PostgreSQL on localhost:5432..."
-              sleep 2
-            done
+
       # Temp skipping for faster debugging
       # - run:
       #     name: Migrate the test db on the remote test container
@@ -85,16 +82,39 @@ jobs:
       #       cd ~/mymove
       #       make db_test_run
       - run:
+          name: Get PostgreSQL container IP address
+          command: |
+            export DB_HOST=$(sudo docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' setup_tests_postgres_container)
+            echo "DB_HOST=${DB_HOST}" | tee -a $BASH_ENV
+      - run:
+          name: Wait for PostgreSQL to be ready on remote test container
+          command: |
+            until sudo docker exec setup_tests_postgres_container pg_isready -h ${DB_HOST} -p 5432 -U postgres; do
+              echo "Waiting for PostgreSQL on ${DB_HOST}:5432..."
+              sleep 2
+            done
+      - run:
+          name: Check PostgreSQL container logs
+          command: sudo docker logs setup_tests_postgres_container
+      - run:
+          name: Check PostgreSQL configuration
+          command: |
+            sudo docker exec setup_tests_postgres_container cat /var/lib/postgresql/data/postgresql.conf | grep listen_addresses
+            sudo docker exec setup_tests_postgres_container cat /var/lib/postgresql/data/pg_hba.conf
+      - run:
           name: Create the test db without mymove binary for faster debugging
           command: |
             echo "Create the ${DB_NAME_TEST} database..."
-            ls scripts/
             DB_NAME=postgres DB_PORT=${DB_PORT_TEST} ./scripts/wait-for-db && \
-            createdb -p ${DB_PORT_TEST} -h ${DB_HOST} -U postgres ${DB_NAME_TEST} || true
+            createdb -p ${DB_PORT_TEST} -h postgres_db_container -U postgres ${DB_NAME_TEST} || true
       - run:
           name: Stop PostgreSQL remote container
           command: sudo docker stop setup_tests_postgres_container
           when: always # If a previous step fails make sure that it gets closed no matter what
+      - run:
+          name: Stop docker network
+          command: sudo docker network rm nested_docker_network
+          when: always
 
   mvn_test:
     executor: mymove_compiler
