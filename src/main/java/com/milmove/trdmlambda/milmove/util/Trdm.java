@@ -5,6 +5,7 @@ import com.milmove.trdmlambda.milmove.service.LastTableUpdateService;
 import ch.qos.logback.classic.Logger;
 
 import com.milmove.trdmlambda.milmove.service.DatabaseService;
+import com.milmove.trdmlambda.milmove.service.EmailService;
 import com.milmove.trdmlambda.milmove.service.GetTableService;
 
 import java.io.IOException;
@@ -180,8 +181,9 @@ public class Trdm {
                     case "transportation_accounting_codes":
                         // Parse the response attachment to get the codes
                         logger.info("parsing response back from TRDM getTable");
+                        EmailService malformedTACDataEmailService = new EmailService();
                         List<TransportationAccountingCode> codes = tacParser.parse(getTableResponse.getAttachment(),
-                                oneWeekLater);
+                                oneWeekLater, malformedTACDataEmailService);
 
                         // Generate list of TACs that needs to be updated. If TAC is in currentTacs then the
                         // TAC will be in updateTacs list because the TAC already exist
@@ -202,8 +204,9 @@ public class Trdm {
                     case "lines_of_accounting":
                         // Parse the response attachment to get the loas
                         logger.info("parsing response back from TRDM getTable");
+                        EmailService malformedLOADataEmailService = new EmailService();
                         List<LineOfAccounting> loas = loaParser.parse(getTableResponse.getAttachment(),
-                                oneWeekLater);
+                                oneWeekLater, malformedLOADataEmailService);
 
                         // Generate list of loas that needs to be updated. If loas are in curentLoas
                         // then the loa will be in updateLoas list because the loa already exist
