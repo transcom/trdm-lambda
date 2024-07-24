@@ -78,8 +78,7 @@ public class EmailService {
 
         logger.info("finished sending Malformed LOA Data email through from: " + this.sender + " to " + this.recipient);
     }
-
-    // 
+ 
     public void send(SesClient client) throws MessagingException {
         logger.info("start of EmailService.send()");
         Destination destination = Destination.builder()
