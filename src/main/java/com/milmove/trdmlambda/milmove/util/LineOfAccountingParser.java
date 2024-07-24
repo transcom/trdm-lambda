@@ -45,7 +45,8 @@ public class LineOfAccountingParser {
             "LOA_FNCL_AR_ID", "LOA_SCRTY_COOP_CUST_CD", "LOA_END_FY_TX", "LOA_BG_FY_TX", "LOA_BGT_RSTR_CD",
             "LOA_BGT_SUB_ACT_CD", "ROW_STS_CD" };
 
-    public List<LineOfAccounting> parse(byte[] fileContent, XMLGregorianCalendar trdmLastUpdate, EmailService emailService)
+    public List<LineOfAccounting> parse(byte[] fileContent, XMLGregorianCalendar trdmLastUpdate,
+            EmailService emailService)
             throws RuntimeException {
         logger.info("beginning to parse LOA TGET data");
         List<LineOfAccounting> codes = new ArrayList<>();
@@ -53,7 +54,7 @@ public class LineOfAccountingParser {
         logger.info("skipping the first line and then gathering headers");
         String[] columnHeaders = scanner.nextLine().split("\\|"); // Skip first line and gather headers immediately
         logger.info("parsed these column headers from LOA attachment {}", Arrays.toString(columnHeaders));
-        
+
         // Sort both the expectedColumnNames and columnHeaders before comparing
         String[] sortedExpectedColumnNames = Arrays.copyOf(expectedColumnNames, expectedColumnNames.length);
         String[] sortedColumnHeaders = Arrays.copyOf(columnHeaders, columnHeaders.length);
@@ -65,7 +66,7 @@ public class LineOfAccountingParser {
                     Arrays.toString(columnHeaders), Arrays.toString(expectedColumnNames));
             throw new RuntimeException(message);
         }
-        
+
         // Map their order for when processing the LOA values properly
         for (int i = 0; i < columnHeaders.length; i++) {
             columnNamesAndLocations.put(columnHeaders[i], i);
@@ -119,6 +120,7 @@ public class LineOfAccountingParser {
         // Check if LOA is empty or if ROW_STS_CD is "DLT"
         if (values[columnHeaders.get("LOA_SYS_ID")].isEmpty()
                 || "DLT".equals(values[columnHeaders.get("ROW_STS_CD")])) {
+            logger.info("LOA is skipped because the data has an empty LOA_SYS_ID or ROW_STS_CD = DLT");
             return null; // Skip this line
         }
 
