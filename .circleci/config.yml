@@ -27,6 +27,13 @@ executors:
         auth:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
+  trdm_compiler:
+    docker:
+      - image: milmove/docker-mvn
+        auth:
+          password: $DOCKER_PASSWORD
+          username: $DOCKER_USERNAME
+
 
 jobs:
   test:
@@ -145,8 +152,8 @@ jobs:
           command: sudo docker network rm nested_docker_network
           when: always
 
-  sam_package:
-    executor: mymove_compiler
+  build:
+    executor: trdm_compiler
     steps:
       - checkout
       - run:
@@ -183,24 +190,15 @@ jobs:
           destination: artifacts
 
 workflows:
-  build:
+  lambda:
     jobs:
       - test
-      - sam_package:
-          requires:
-            - test
-          context:
-            - org-global
-
-  release:
-    jobs:
-      - test
-      - sam_package:
+      - build:
           requires:
             - test
       - upload_release_to_github:
           requires:
-            - sam_package
+            - build
           context:
             - org-global
           filters:
