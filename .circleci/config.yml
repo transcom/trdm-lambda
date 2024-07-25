@@ -84,10 +84,11 @@ jobs:
       - run:
           name: Wait for PostgreSQL to be ready on remote test container
           command: |
+            timeout 60 bash -c '
             until sudo docker exec setup_tests_postgres_container pg_isready -h ${DB_HOST} -p 5432 -U postgres; do
               echo "Waiting for PostgreSQL on ${DB_HOST}:5432..."
               sleep 2
-            done
+            done' || echo "Timed out waiting for PostgreSQL on ${DB_HOST}:5432"
       - run:
           name: Create the test db without mymove binary for faster debugging
           command: |
