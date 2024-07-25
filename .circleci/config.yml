@@ -59,8 +59,7 @@ jobs:
       OKTA_OFFICE_GROUP_ID: notrealgroupId
       OKTA_CUSTOMER_GROUP_ID: notrealcustomergroupId
     steps:
-      # Temp skip these for faster debugging
-      - checkout # Checkout our repo for faster debugging (Just the wait-for-db script)
+      - checkout
       # Attempt to bypass CircleCI CLI docker version issues by using the old version https://circleci.com/docs/building-docker-images/#docker-version
       # See ongoing issue here https://discuss.circleci.com/t/circleci-cli-error-response-from-daemon-invalid-uts-mode/48081/10
       - setup_remote_docker:
