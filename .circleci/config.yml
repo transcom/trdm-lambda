@@ -112,7 +112,7 @@ jobs:
       # Now that the test_db is setup and migrated, the next step is to setup the maven testing container
       # to run tests against said test_dbß
       - run:
-          name: Create the Maven test container while streaming the TRDM files to it for testing
+          name: Create and test the Maven container
           command: |
             # Tarball the current directory with the TRDM project files and send it to the maven_test_container
             # The maven_test_container receives it as input rather than a volume
@@ -131,8 +131,7 @@ jobs:
             export TEST_DB_PORT=${DB_PORT_TEST}
             export TEST_DB_NAME=${DB_NAME_TEST}
             export TEST_DB_USER=${DB_USER}
-            mvn test | tee /tmp/mvn_test_output.log"
-            # TODO: Verify successful testing
+            mvn test"
       - run:
           name: Stop PostgreSQL remote container
           command: sudo docker stop setup_tests_postgres_container
