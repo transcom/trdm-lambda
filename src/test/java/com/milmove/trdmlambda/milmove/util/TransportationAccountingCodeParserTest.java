@@ -1,8 +1,11 @@
 package com.milmove.trdmlambda.milmove.util;
 
+import static org.mockito.Mockito.mock;
+
 import org.junit.jupiter.api.Test;
 
 import com.milmove.trdmlambda.milmove.model.TransportationAccountingCode;
+import com.milmove.trdmlambda.milmove.service.EmailService;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,8 +31,8 @@ class TransportationAccountingCodeParserTest {
 
         GregorianCalendar gregorianCalendar = new GregorianCalendar();
         XMLGregorianCalendar today = DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar);
-
-        List<TransportationAccountingCode> result = parser.parse(bytes, today);
+        EmailService emailService = mock(EmailService.class);
+        List<TransportationAccountingCode> result = parser.parse(bytes, today, emailService);
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
@@ -74,8 +77,8 @@ class TransportationAccountingCodeParserTest {
             
         GregorianCalendar gregorianCalendar = new GregorianCalendar();
         XMLGregorianCalendar today = DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar);
-
-        List<TransportationAccountingCode> result = parser.parse(bytes, today);
+        EmailService emailService = mock(EmailService.class);
+        List<TransportationAccountingCode> result = parser.parse(bytes, today, emailService);
 
         // The parser in the case of parsing an incomplete pipe row will return the array of codes without the incomplete row
         assertNotNull(result);
