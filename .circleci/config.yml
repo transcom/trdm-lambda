@@ -126,8 +126,11 @@ jobs:
             tar -xzf - -C /tmp/trdm
             cd /tmp/trdm
             # Set the test db to read from the postgres container in our docker network
-            # Create and feed in the test_db_url
             export TEST_DB_URL='jdbc:postgresql://${DB_HOST}:${DB_PORT_TEST}/${DB_NAME_TEST}?user=${DB_USER}&password=${DB_PASSWORD}'
+            export TEST_DB_HOST=${DB_HOST}
+            export TEST_DB_PORT=${DB_PORT_TEST}
+            export TEST_DB_NAME=${DB_NAME_TEST}
+            export TEST_DB_USER=${DB_USER}
             mvn test | tee /tmp/mvn_test_output.log"
             # TODO: Verify successful testing
       - run:
