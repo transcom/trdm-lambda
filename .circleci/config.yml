@@ -138,10 +138,6 @@ jobs:
           command: sudo docker stop setup_tests_postgres_container
           when: always
       - run:
-          name: Stop Maven testing remote container
-          command: sudo docker stop maven_test_container
-          when: always
-      - run:
           name: Disconnect host from docker network
           command: sudo docker network disconnect nested_docker_network $(hostname)
           when: always
