@@ -160,7 +160,7 @@ jobs:
           name: Build
           command: scripts/build
 
-  upload_release_to_github:
+  release:
     executor: tls_small
     steps:
       - checkout
@@ -196,7 +196,7 @@ workflows:
       - build:
           requires:
             - test
-      - upload_release_to_github:
+      - release:
           requires:
             - build
           context:
