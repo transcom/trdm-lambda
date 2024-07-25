@@ -68,7 +68,7 @@ jobs:
           name: Ensure the PostgreSQL remote container is removed if something prevented shutdown previously
           command: sudo docker rm -f setup_tests_postgres_container || true
       - run:
-          name: Start new docker network for port access
+          name: Start new docker network
           command: sudo docker network create nested_docker_network
       - run:
           name: Join the host container on the network
