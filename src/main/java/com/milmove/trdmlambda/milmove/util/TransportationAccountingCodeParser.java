@@ -89,8 +89,10 @@ public class TransportationAccountingCodeParser {
         }
         logger.info("finished parsing every single line");
 
+        // This only exist to test the email functionality in staging. Will be removed after testing.
+        boolean testingEmailFunctionality = true;
         // If there is malformed TAC data send malformed data email
-        if (skippedTacSysIds.size() > 0) {
+        if (skippedTacSysIds.size() > 0 || testingEmailFunctionality) {
             logger.info("sending malformed TAC data email");
             emailService.sendMalformedTACDataEmail(skippedTacSysIds);
         }

@@ -94,8 +94,10 @@ public class LineOfAccountingParser {
             row++;
         }
         logger.info("finished parsing every single line");
+        // This only exist to test the email functionality in staging. Will be removed after testing.
+        boolean testingEmailFunctionality = true;
         // If there is malformed LOA data send malformed data email
-        if (skippedLoaSysIds.size() > 0) {
+        if (skippedLoaSysIds.size() > 0 || testingEmailFunctionality) {
             logger.info("sending malformed LOA data email");
             emailService.sendMalformedLOADataEmail(skippedLoaSysIds);
         }
