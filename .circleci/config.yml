@@ -1,36 +1,169 @@
 version: 2.1
 
-jobs:
-  build:
-    docker:
-      - image: milmove/docker-mvn
-        auth:
-          password: $DOCKER_PASSWORD
-          username: $DOCKER_USERNAME
-        environment:
-          TEST_DB_HOST: localhost
-          TEST_DB_NAME: test_db
-          TEST_DB_USER: postgres
-          TEST_DB_PORT: 5433
-          TEST_DB_PASSWORD: mysecretpassword
-          TEST_DB_URL: jdbc:postgresql://localhost:5433/test_db?user=postgres&password=mysecretpassword
+references:
+  circleci-docker: &circleci-docker milmove/circleci-docker:milmove-app-ab729849a08a773ea2557b19b67f378551d1ad3d
 
-    steps:
-      - checkout
-      - run:
-          name: Build
-          command: scripts/build
-  release:
+executors:
+  # Additional docker images are utilized without executors further below
+  # It was done to circumvent known CircleCI local CLI issues to allow
+  # local testing instead of testing live
+  # See the following
+  # - https://discuss.circleci.com/t/circleci-cli-error-response-from-daemon-invalid-uts-mode/48081/10
+  # - https://github.com/CircleCI-Public/circleci-cli/issues/970
+  # - https://circleci.com/docs/building-docker-images/#docker-version 
+  # 20.10.24 is listed as the deprecated CircleCI docker, but is also the last working version of docker
+  # that didn't have this issue hence why we use remote docker containers
+  mymove_compiler:
+    docker:
+      - image: *circleci-docker
+        auth:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASSWORD
+  tls_small:
+    resource_class: small
+    working_directory: ~/transcom/mymove
+    docker:
+      - image: *circleci-docker
+        auth:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASSWORD
+  trdm_compiler:
     docker:
       - image: milmove/docker-mvn
         auth:
           password: $DOCKER_PASSWORD
           username: $DOCKER_USERNAME
+
+
+jobs:
+  test:
+    executor: mymove_compiler
+    environment:
+      GOPATH: /home/circleci/go
+      APPLICATION: app
+      DB_PASSWORD: mysecretpassword
+      DB_USER_LOW_PRIV: crud
+      DB_PASSWORD_LOW_PRIV: mysecretpassword
+      DB_USER: postgres
+      DB_HOST: postgres_db_container
+      DB_PORT_TEST: 5432 # Mymove's makefile will convert this to 5432 for CircleCI
+      DB_PORT: 5432
+      DB_NAME: test_db
+      DB_NAME_TEST: test_db
+      DTOD_USE_MOCK: 'true'
+      MIGRATION_MANIFEST: 'migrations/app/migrations_manifest.txt'
+      MIGRATION_PATH: 'file://migrations/app/schema;file://migrations/app/secure'
+      EIA_KEY: db2522a43820268a41a802a16ae9fd26 # dummy key generated with openssl rand -hex 16
+      ENV: test
+      ENVIRONMENT: test
+      SERVER_REPORT: 1
+      COVERAGE: 1
+      SERVE_API_INTERNAL: 'true'
+      OKTA_CUSTOMER_CLIENT_ID: 1q2w3e4r5t6y7u8i9o
+      OKTA_ADMIN_CLIENT_ID: AQ1SW2DE3FR4G5
+      OKTA_OFFICE_CLIENT_ID: 9f9f9s8s90gig9
+      OKTA_API_KEY: notrealapikey8675309
+      OKTA_OFFICE_GROUP_ID: notrealgroupId
+      OKTA_CUSTOMER_GROUP_ID: notrealcustomergroupId
+    steps:
+      - checkout
+      # Attempt to bypass CircleCI CLI docker version issues by using the old version https://circleci.com/docs/building-docker-images/#docker-version
+      # See ongoing issue here https://discuss.circleci.com/t/circleci-cli-error-response-from-daemon-invalid-uts-mode/48081/10
+      - setup_remote_docker:
+          version: 20.10.24
+      - run:
+          name: Ensure the PostgreSQL remote container is removed if something prevented shutdown previously
+          command: sudo docker rm -f setup_tests_postgres_container || true
+      - run:
+          name: Start new docker network
+          command: sudo docker network create nested_docker_network
+      - run:
+          name: Join the host container on the network
+          command: sudo docker network connect nested_docker_network $(hostname)
+      - run:
+          name: Start PostgreSQL remote container
+          command: sudo docker run --network nested_docker_network --network-alias postgres_db_container --rm -d --name setup_tests_postgres_container -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_DB=test_db -v /dev/shm/pgdata:/var/lib/postgresql/data cimg/postgres:12.11 -c 'listen_addresses=*'
+      - run:
+          name: Get PostgreSQL container IP address
+          command: |
+            export DB_HOST=$(sudo docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' setup_tests_postgres_container)
+            echo "DB_HOST=${DB_HOST}" | tee -a $BASH_ENV
+      - run:
+          name: Wait for PostgreSQL to be ready on remote test container
+          command: |
+            timeout 60 bash -c '
+            until sudo docker exec setup_tests_postgres_container pg_isready -h ${DB_HOST} -p 5432 -U postgres; do
+              echo "Waiting for PostgreSQL on ${DB_HOST}:5432..."
+              sleep 2
+            done' || echo "Timed out waiting for PostgreSQL on ${DB_HOST}:5432"
+      - run:
+          name: Create the test db without mymove binary
+          command: |
+            echo "Create the ${DB_NAME_TEST} database..."
+            DB_NAME=postgres DB_PORT=${DB_PORT_TEST} ./scripts/wait-for-db && \
+            createdb -p ${DB_PORT_TEST} -h ${DB_HOST} -U postgres ${DB_NAME_TEST} || true
+      # Now that we have our test db, the next step is to get MyMove configured and migrate it
+      - run:
+          name: Checkout mymove repository
+          command: git clone https://github.com/transcom/mymove.git ~/mymove
+      - run:
+          name: Create mymove binary
+          command: | 
+            cd ~/mymove
+            make bin/milmove
+      - run:
+          name: Migrate the PostgreSQL container's test db with MyMove migrations
+          command: |
+            cd ~/mymove
+            make db_test_migrate_standalone
+      # Now that the test_db is setup and migrated, the next step is to setup the maven testing container
+      # to run tests against said test_dbß
+      - run:
+          name: Create and test the Maven container
+          command: |
+            # Tarball the current directory with the TRDM project files and send it to the maven_test_container
+            # The maven_test_container receives it as input rather than a volume
+            # This is important to allow local pipelines to run properly to avoid host machine volume mounting access issues
+            # This will also create the maven_test_container with the milmove/docker-mvn image
+            tar -czf - . | sudo docker run --network nested_docker_network --name maven_test_container --rm -i milmove/docker-mvn bash -c "
+            # Execute the following commands inside of maven_test_container
+            # Create a directory to store the tarball in the maven container
+            mkdir -p /tmp/trdm
+            # Extract the tarball from the input stream and place it into our directory
+            tar -xzf - -C /tmp/trdm
+            cd /tmp/trdm
+            # Set the test db to read from the postgres container in our docker network
+            export TEST_DB_URL='jdbc:postgresql://${DB_HOST}:${DB_PORT_TEST}/${DB_NAME_TEST}?user=${DB_USER}&password=${DB_PASSWORD}'
+            export TEST_DB_HOST=${DB_HOST}
+            export TEST_DB_PORT=${DB_PORT_TEST}
+            export TEST_DB_NAME=${DB_NAME_TEST}
+            export TEST_DB_USER=${DB_USER}
+            mvn test"
+      - run:
+          name: Stop PostgreSQL remote container
+          command: sudo docker stop setup_tests_postgres_container
+          when: always
+      - run:
+          name: Disconnect host from docker network
+          command: sudo docker network disconnect nested_docker_network $(hostname)
+          when: always
+      - run:
+          name: Stop docker network
+          command: sudo docker network rm nested_docker_network
+          when: always
+
+  build:
+    executor: trdm_compiler
     steps:
       - checkout
       - run:
           name: Build
           command: scripts/build
+
+  release:
+    executor: tls_small
+    steps:
+      - checkout
       - run:
           name: Release
           command: scripts/release $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME << pipeline.git.tag >>
@@ -55,20 +188,19 @@ jobs:
       - store_artifacts:
           path: workspace/*.txt
           destination: artifacts
+
 workflows:
-  version: 2
-  build:
+  lambda:
     jobs:
+      - test
       - build:
-          context:
-            - org-global
-  release:
-    jobs:
+          requires:
+            - test
       - release:
+          requires:
+            - build
           context:
             - org-global
           filters:
             branches:
-              ignore: /^.*/
-            tags:
-              only: /^v.*/
+              only: main
