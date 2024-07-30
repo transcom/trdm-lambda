@@ -45,8 +45,13 @@ public class EmailService {
     public void sendMalformedTACDataEmail(ArrayList<String> tacSysIds) {
         logger.info("starting to send Malformed TAC Data email through from: " + this.sender + " to " + this.recipient + " with " + tacSysIds.size() + " TACs");
 
+        // Here for testing the email functionality. Test array of tacSysIds.
+        ArrayList<String> testTacArray = new ArrayList<String>();
+        testTacArray.add("TestTAC1");
+        testTacArray.add("TestTAC2");
+
         this.bodyHTML = "<html>" + "<head></head>" + "<body>" + "<h1>Malformed TAC Data</h1>"
-        + "<p> See all malformed TAC codes represented by their tacSysId: </p>" + "</body>" + "</html>";
+        + "<p> See all malformed TAC codes represented by their tacSysId: " + testTacArray + "</p>" + "</body>" + "</html>";
 
         this.subject = "Malformed Transportation Accounting Codes";
 
@@ -64,8 +69,13 @@ public class EmailService {
     public void sendMalformedLOADataEmail(ArrayList<String> loaSysIds) {
         logger.info("starting to send Malformed LOA Data email through from: " + this.sender + " to " + this.recipient + " with " + loaSysIds.size() + " LOAs");
 
+        // Here for testing the email functionality. Test array of loaSysIds.
+        ArrayList<String> testLoaArray = new ArrayList<String>();
+        testLoaArray.add("TestLOA1");
+        testLoaArray.add("TestLOA2");
+            
         this.bodyHTML = "<html>" + "<head></head>" + "<body>" + "<h1>Malformed LOA Data</h1>"
-        + "<p> See all malformed LOA codes represented by their loaSysId: </p>" + "</body>" + "</html>";
+        + "<p> See all malformed LOA codes represented by their loaSysId: " + testLoaArray  + "</p>" + "</body>" + "</html>";
 
         this.subject = "Malformed Line of Accounting Codes";
 
