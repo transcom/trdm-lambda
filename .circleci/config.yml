@@ -28,6 +28,7 @@ executors:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
   trdm_compiler:
+    working_directory: ~/transcom/trdm-lambda
     docker:
       - image: milmove/docker-mvn
         auth:
@@ -194,6 +195,18 @@ jobs:
       - store_artifacts:
           path: workspace/*.txt
           destination: artifacts
+    deploy:
+      executor: trdm_compiler
+      steps:
+        - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: /workspace
+        - run: |
+            if [-f /workspace/deployment-package.stg.zip]; then
+              echo "deployment-package.stg.zip found";
+            else
+              echo "deployment-package.stg.zip not found"; exit 1
+            fi
 
 workflows:
   lambda:
@@ -212,3 +225,10 @@ workflows:
               only: main
             tags:
               only: /^v.*/
+      - deploy:
+          requires:
+            - test
+            - build
+          # filters:
+          #   branches:
+          #   - main
