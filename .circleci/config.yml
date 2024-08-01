@@ -199,8 +199,7 @@ jobs:
     executor: trdm_compiler
     steps:
       - attach_workspace:
-        # Must be absolute path or relative path from working_directory
-        at: /workspace
+          at: /workspace
       - run: |
           if [-f /workspace/deployment-package.stg.zip]; then
             echo "deployment-package.stg.zip found";
