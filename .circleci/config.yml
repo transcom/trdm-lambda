@@ -195,18 +195,18 @@ jobs:
       - store_artifacts:
           path: workspace/*.txt
           destination: artifacts
-    deploy:
-      executor: trdm_compiler
-      steps:
-        - attach_workspace:
-          # Must be absolute path or relative path from working_directory
-          at: /workspace
-        - run: |
-            if [-f /workspace/deployment-package.stg.zip]; then
-              echo "deployment-package.stg.zip found";
-            else
-              echo "deployment-package.stg.zip not found"; exit 1
-            fi
+  trdm_deploy:
+    executor: trdm_compiler
+    steps:
+      - attach_workspace:
+        # Must be absolute path or relative path from working_directory
+        at: /workspace
+      - run: |
+          if [-f /workspace/deployment-package.stg.zip]; then
+            echo "deployment-package.stg.zip found";
+          else
+            echo "deployment-package.stg.zip not found"; exit 1
+          fi
 
 workflows:
   lambda:
@@ -225,7 +225,7 @@ workflows:
               only: main
             tags:
               only: /^v.*/
-      - deploy:
+      - trdm_deploy:
           requires:
             - test
             - build
