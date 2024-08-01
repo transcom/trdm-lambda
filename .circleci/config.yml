@@ -226,8 +226,7 @@ workflows:
               only: /^v.*/
       - trdm_deploy:
           requires:
-            - test
-            - build
+            - release
           # filters:
           #   branches:
           #   - main
