@@ -187,13 +187,12 @@ jobs:
             - "*.zip"
             - "*.txt"
       - attach_workspace:
-          command: echo "Attaching workspace"
           at: workspace
       - store_artifacts:
-          path: workspace/*.zip
+          path: workspace/deployment-package.stg.zip
           destination: artifacts
       - store_artifacts:
-          path: workspace/*.txt
+          path: workspace/deployment-package.stg.txt
           destination: artifacts
   deploy:
     executor: trdm_compiler
