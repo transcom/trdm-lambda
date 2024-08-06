@@ -15,5 +15,5 @@ readonly GITHUB_USER=$1
 readonly GITHUB_REPO=$2
 readonly NEW_TAG=$3
 
-# gh release upload --clobber --repo "${GITHUB_USER}/${GITHUB_REPO}" $NEW_TAG deployment-package.stg.zip stg-checksums.txt deployment-package.prd.zip prd-checksums.txt
+gh release upload --clobber --repo "${GITHUB_USER}/${GITHUB_REPO}" $NEW_TAG deployment-packagetest.stg.zip stg-checksumstest.txt deployment-packagetest.prd.zip prd-checksumstest.txt
 echo "Uploaded zipfiles and checksums to GitHub Release with tag ${NEW_TAG}"
