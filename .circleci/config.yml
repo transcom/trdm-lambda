@@ -10,7 +10,7 @@ executors:
   # See the following
   # - https://discuss.circleci.com/t/circleci-cli-error-response-from-daemon-invalid-uts-mode/48081/10
   # - https://github.com/CircleCI-Public/circleci-cli/issues/970
-  # - https://circleci.com/docs/building-docker-images/#docker-version 
+  # - https://circleci.com/docs/building-docker-images/#docker-version
   # 20.10.24 is listed as the deprecated CircleCI docker, but is also the last working version of docker
   # that didn't have this issue hence why we use remote docker containers
   mymove_compiler:
@@ -35,7 +35,6 @@ executors:
           password: $DOCKER_PASSWORD
           username: $DOCKER_USERNAME
 
-
 jobs:
   test:
     executor: mymove_compiler
@@ -51,15 +50,15 @@ jobs:
       DB_PORT: 5432
       DB_NAME: test_db
       DB_NAME_TEST: test_db
-      DTOD_USE_MOCK: 'true'
-      MIGRATION_MANIFEST: 'migrations/app/migrations_manifest.txt'
-      MIGRATION_PATH: 'file://migrations/app/schema;file://migrations/app/secure'
+      DTOD_USE_MOCK: "true"
+      MIGRATION_MANIFEST: "migrations/app/migrations_manifest.txt"
+      MIGRATION_PATH: "file://migrations/app/schema;file://migrations/app/secure"
       EIA_KEY: db2522a43820268a41a802a16ae9fd26 # dummy key generated with openssl rand -hex 16
       ENV: test
       ENVIRONMENT: test
       SERVER_REPORT: 1
       COVERAGE: 1
-      SERVE_API_INTERNAL: 'true'
+      SERVE_API_INTERNAL: "true"
       OKTA_CUSTOMER_CLIENT_ID: 1q2w3e4r5t6y7u8i9o
       OKTA_ADMIN_CLIENT_ID: AQ1SW2DE3FR4G5
       OKTA_OFFICE_CLIENT_ID: 9f9f9s8s90gig9
@@ -109,7 +108,7 @@ jobs:
           command: git clone https://github.com/transcom/mymove.git ~/mymove
       - run:
           name: Create mymove binary
-          command: | 
+          command: |
             cd ~/mymove
             make bin/milmove
       - run:
@@ -195,18 +194,19 @@ jobs:
       - store_artifacts:
           path: workspace/*.txt
           destination: artifacts
-  trdm_deploy:
+  deploy:
     executor: trdm_compiler
     steps:
       - attach_workspace:
           at: /workspace
       - run: |
           if [-f /workspace/deployment-package.stg.zip]; then
-            echo "deployment-package.stg.zip found";
+            echo "deployment-package.stg.zip found"; exit 1
           else
             echo "deployment-package.stg.zip not found"; exit 1
           fi
-
+# orbs:
+#   aws-s3: circleci/aws-s3@3.1.1 # use the AWS S3 orb
 workflows:
   lambda:
     jobs:
@@ -224,11 +224,10 @@ workflows:
               only: main
             tags:
               only: /^v.*/
-      - trdm_deploy:
+      - deploy:
           requires:
-            - test
-            - build
-            - release
+            - build # Only run deploy job once the build job has completed
+            - release # Only run deploy job once the build job has completed
           # filters:
           #   branches:
-          #   - main
+          #   - main # Only deploy when the commit is on the Main branch
