@@ -198,7 +198,7 @@ jobs:
     executor: trdm_compiler
     steps:
       - attach_workspace:
-          at: /workspace
+          at: ~/transcom/trdm-lambda/workspace
       - run: |
           if [-f /workspace/deployment-package.stg.zip]; then
             echo "deployment-package.stg.zip found"; exit 1
