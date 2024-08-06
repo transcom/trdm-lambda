@@ -177,22 +177,22 @@ jobs:
           name: Move zips and checksums to workspace
           command: |
             mkdir -p workspace
-            cp deployment-package.stg.zip workspace/
-            cp stg-checksums.txt workspace/
-            cp deployment-package.prd.zip workspace/
-            cp prd-checksums.txt workspace/
+            cp deployment-package.stg.zip ~/transcom/trdm-lambda/workspace/
+            cp stg-checksums.txt ~/transcom/trdm-lambda/workspace/
+            cp deployment-package.prd.zip ~/transcom/trdm-lambda/workspace/
+            cp prd-checksums.txt ~/transcom/trdm-lambda/workspace/
       - persist_to_workspace:
-          root: workspace
+          root: ~/transcom/trdm-lambda/workspace/
           paths:
             - "*.zip"
             - "*.txt"
       - attach_workspace:
-          at: workspace
+          at: ~/transcom/trdm-lambda/workspace/
       - store_artifacts:
-          path: workspace/deployment-package.stg.zip
+          path: ~/transcom/trdm-lambda/workspace//deployment-package.stg.zip
           destination: artifacts
       - store_artifacts:
-          path: workspace/deployment-package.stg.txt
+          path: ~/transcom/trdm-lambda/workspace//deployment-package.stg.txt
           destination: artifacts
   deploy:
     executor: trdm_compiler
