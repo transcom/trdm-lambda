@@ -181,19 +181,27 @@ jobs:
             cp stg-checksums.txt ~/transcom/trdm-lambda/workspace/
             cp deployment-package.prd.zip ~/transcom/trdm-lambda/workspace/
             cp prd-checksums.txt ~/transcom/trdm-lambda/workspace/
+      - run:
+          command: |
+            ls ~/transcom/trdm-lambda/workspace/
+            echo Test Point 1
       - persist_to_workspace:
-          root: ~/transcom/trdm-lambda/workspace/
+          root: ~/transcom/trdm-lambda/workspace
           paths:
-            - "*.zip"
-            - "*.txt"
-      - attach_workspace:
-          at: ~/transcom/trdm-lambda/workspace/
-      - store_artifacts:
-          path: ~/transcom/trdm-lambda/workspace//deployment-package.stg.zip
-          destination: artifacts
-      - store_artifacts:
-          path: ~/transcom/trdm-lambda/workspace//deployment-package.stg.txt
-          destination: artifacts
+            # - "*.zip"
+            # - "*.txt"
+            - "deployment-package.stg.zip"
+            - "workspace/stg-checksums.txt"
+            - "workspace/deployment-package.prd.zip"
+            - "workspace/prd-checksums.txt"
+      # - attach_workspace:
+      #     at: ~/transcom/trdm-lambda/workspace
+      # - store_artifacts:
+      #     path: ~/transcom/trdm-lambda/workspace/deployment-package.stg.zip
+      #     destination: artifacts
+      # - store_artifacts:
+      #     path: ~/transcom/trdm-lambda/workspace/deployment-package.stg.txt
+      #     destination: artifacts
   deploy:
     executor: trdm_compiler
     steps:
