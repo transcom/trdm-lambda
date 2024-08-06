@@ -187,9 +187,9 @@ jobs:
             # - "*.zip"
             # - "*.txt"
             - "deployment-package.stg.zip"
-            - "workspace/stg-checksums.txt"
-            - "workspace/deployment-package.prd.zip"
-            - "workspace/prd-checksums.txt"
+            - "stg-checksums.txt"
+            - "deployment-package.prd.zip"
+            - "prd-checksums.txt"
       # - attach_workspace:
       #     at: ~/transcom/trdm-lambda/workspace
       # - store_artifacts:
