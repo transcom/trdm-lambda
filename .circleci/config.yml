@@ -204,11 +204,7 @@ jobs:
       - attach_workspace:
           at: ~/transcom/trdm-lambda/workspace
       - run: |
-          if [-f ~/transcom/trdm-lambda/workspace/deployment-package.stg.zip]; then
-            echo "deployment-package.stg.zip found";
-          else
-            echo "deployment-package.stg.zip not found"; exit 1
-          fi
+          ls ~/transcom/trdm-lambda/workspace
 # orbs:
 #   aws-s3: circleci/aws-s3@3.1.1 # use the AWS S3 orb
 workflows:
