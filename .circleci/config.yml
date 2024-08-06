@@ -181,10 +181,6 @@ jobs:
             cp stg-checksums.txt ~/transcom/trdm-lambda/workspace/
             cp deployment-package.prd.zip ~/transcom/trdm-lambda/workspace/
             cp prd-checksums.txt ~/transcom/trdm-lambda/workspace/
-      - run:
-          command: |
-            ls ~/transcom/trdm-lambda/workspace/
-            echo Test Point 1
       - persist_to_workspace:
           root: ~/transcom/trdm-lambda/workspace
           paths:
@@ -208,7 +204,7 @@ jobs:
       - attach_workspace:
           at: ~/transcom/trdm-lambda/workspace
       - run: |
-          if [-f /workspace/deployment-package.stg.zip]; then
+          if [-f ~/transcom/trdm-lambda/workspace/deployment-package.stg.zip]; then
             echo "deployment-package.stg.zip found";
           else
             echo "deployment-package.stg.zip not found"; exit 1
