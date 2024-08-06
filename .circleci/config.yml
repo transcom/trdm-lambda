@@ -203,10 +203,10 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/transcom/trdm-lambda/workspace
-      - run: |
-          ls ~/transcom/trdm-lambda/workspace
-# orbs:
-#   aws-s3: circleci/aws-s3@3.1.1 # use the AWS S3 orb
+      - run: # Install the AWS CLI if it is not already included in the docker image
+          name: Deploy to S3
+          # command: aws s3 sync <path/to/bucket> <s3://location/in/S3-to-deploy-to>
+          command: aws -v
 workflows:
   lambda:
     jobs:
@@ -226,7 +226,6 @@ workflows:
           #     only: /^v.*/
       - deploy:
           requires:
-            # - build # Only run deploy job once the build job has completed
             - release # Only run deploy job once the build job has completed
           # filters:
           #   branches:
