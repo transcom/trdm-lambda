@@ -219,14 +219,14 @@ workflows:
             - build
           context:
             - org-global
-          filters:
-            branches:
-              only: main
-            tags:
-              only: /^v.*/
+          # filters:
+          #   branches:
+          #     only: main
+          #   tags:
+          #     only: /^v.*/
       - deploy:
           requires:
-            - build # Only run deploy job once the build job has completed
+            # - build # Only run deploy job once the build job has completed
             - release # Only run deploy job once the build job has completed
           # filters:
           #   branches:
