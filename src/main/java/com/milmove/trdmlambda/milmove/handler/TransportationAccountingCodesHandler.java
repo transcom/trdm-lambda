@@ -5,6 +5,7 @@ import com.milmove.trdmlambda.milmove.util.Trdm;
 import ch.qos.logback.classic.Logger;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.text.ParseException;
 
@@ -30,7 +31,7 @@ public class TransportationAccountingCodesHandler {
     // This cron job will handle the entirety of ensuring the RDS db
     // is up to date with proper TGET data.
     public void tacCron()
-            throws SQLException, DatatypeConfigurationException, TableRequestException, IOException, ParseException {
+            throws SQLException, DatatypeConfigurationException, TableRequestException, IOException, ParseException, URISyntaxException {
         // Gather the last update from TRDM
         logger.info("getting lastTableUpdate response with physical name TRNSPRTN_ACNT");
         LastTableUpdateResponse response = trdmUtil.LastTableUpdate("TRNSPRTN_ACNT");
