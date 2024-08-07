@@ -161,12 +161,18 @@ jobs:
           command: scripts/build
 
   release:
-    executor: tls_small
+    executor: trdm_compiler
     steps:
       - checkout
       - run:
+          name: Build
+          command: scripts/build
+      - run:
           name: Release
-          command: scripts/release $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME << pipeline.git.tag >>
+          command: |
+            VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
+            VERSION="v$VERSION"
+            scripts/release $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME $VERSION
       - run:
           name: Move zips and checksums to workspace
           command: |
@@ -204,3 +210,5 @@ workflows:
           filters:
             branches:
               only: main
+            tags:
+              only: /^v.*/
