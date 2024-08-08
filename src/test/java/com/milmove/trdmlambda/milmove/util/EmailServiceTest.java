@@ -20,13 +20,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.milmove.trdmlambda.milmove.model.TransportationAccountingCode;
 
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 
 @ExtendWith(MockitoExtension.class)
 public class EmailServiceTest {
 
     @Test // Test sendMalformedTACDataEmailTest()
-    void sendMalformedTACDataEmailTest() throws MessagingException {
+    void sendMalformedTACDataEmailTest() throws MessagingException, URISyntaxException {
 
         EmailService emailService = new EmailService();
         EmailService spyEmailService = spy(emailService);
@@ -42,7 +43,7 @@ public class EmailServiceTest {
     }
 
     @Test // Test sendMalformedLOADataEmailTest()
-    void sendMalformedLOADataEmailTest() throws MessagingException {
+    void sendMalformedLOADataEmailTest() throws MessagingException, URISyntaxException {
 
         EmailService emailService = new EmailService();
         EmailService spyEmailService = spy(emailService);

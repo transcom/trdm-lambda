@@ -10,6 +10,7 @@ import com.milmove.trdmlambda.milmove.service.GetTableService;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -130,7 +131,7 @@ public class Trdm {
 
     public void UpdateTGETData(XMLGregorianCalendar ourLastUpdate, String trdmTable, String rdsTable,
             XMLGregorianCalendar trdmLastUpdate)
-            throws TableRequestException, DatatypeConfigurationException, IOException, SQLException {
+            throws TableRequestException, DatatypeConfigurationException, IOException, SQLException, URISyntaxException {
         logger.info("checking if trdm table name provided is allowed..");
         if (!allowedTrdmTableNames.contains(trdmTable)) {
             throw new IllegalArgumentException("Invalid table name");
