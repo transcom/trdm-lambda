@@ -34,11 +34,8 @@ public class EmailService {
 
     public EmailService() throws URISyntaxException {
         logger.info("starting initialization of Email Service");
-        String sesVPCEndpoint = "http://email-smtp.us-gov-west-1.amazonaws.com";
         this.sesClient = SesClient.builder()
                 .region(Region.of("us-gov-west-1"))
-                .credentialsProvider(DefaultCredentialsProvider.create())
-                .endpointOverride(new URI(sesVPCEndpoint))
                 .build();
 
         logger.info("finished initializing Email Service");
