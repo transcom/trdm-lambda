@@ -1,8 +1,9 @@
 package com.milmove.trdmlambda.milmove.service;
 
-import org.glassfish.jaxb.runtime.v2.schemagen.xmlschema.List;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import com.milmove.trdmlambda.milmove.util.SecretFetcher;
 
 import ch.qos.logback.classic.Logger;
 import jakarta.mail.MessagingException;
@@ -39,8 +40,6 @@ public class EmailService {
                 .credentialsProvider(DefaultCredentialsProvider.create())
                 .endpointOverride(new URI(sesVPCEndpoint))
                 .build();
-        this.sender = "milmove-developers@caci.com";
-        this.recipient = "milmove-developers@caci.com";
 
         logger.info("finished initializing Email Service");
     }
@@ -98,6 +97,10 @@ public class EmailService {
     }
 
     public void send(SesClient client) throws MessagingException {
+        SecretFetcher secretFetcher = new SecretFetcher();
+        this.sender = secretFetcher.getSecret("ses_sender_email");
+        this.recipient = secretFetcher.getSecret("ses_recipient");
+
         logger.info("start of EmailService.send()");
         Destination destination = Destination.builder()
                 .toAddresses(this.recipient)
