@@ -4,21 +4,17 @@ import com.milmove.trdmlambda.milmove.service.EmailService;
 
 import jakarta.mail.MessagingException;
 
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 
-import org.apache.cxf.common.i18n.Exception;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import com.milmove.trdmlambda.milmove.model.TransportationAccountingCode;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -26,10 +22,15 @@ import java.util.ArrayList;
 @ExtendWith(MockitoExtension.class)
 public class EmailServiceTest {
 
+    @Mock
+    private SecretFetcher secretFetcher;
+
+    @InjectMocks
+    private EmailService emailService;
+
     @Test // Test sendMalformedTACDataEmailTest()
     void sendMalformedTACDataEmailTest() throws MessagingException, URISyntaxException {
 
-        EmailService emailService = new EmailService();
         EmailService spyEmailService = spy(emailService);
         ArrayList<String> codes = new ArrayList<String>();
 
@@ -45,7 +46,6 @@ public class EmailServiceTest {
     @Test // Test sendMalformedLOADataEmailTest()
     void sendMalformedLOADataEmailTest() throws MessagingException, URISyntaxException {
 
-        EmailService emailService = new EmailService();
         EmailService spyEmailService = spy(emailService);
         ArrayList<String> codes = new ArrayList<String>();
         codes.add("TEST");
