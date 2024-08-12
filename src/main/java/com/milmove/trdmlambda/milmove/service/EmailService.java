@@ -32,8 +32,10 @@ public class EmailService {
     private String subject;
     private String bodyHTML;
 
-    public EmailService() throws URISyntaxException {
+    public EmailService(SecretFetcher secretFetcher) throws URISyntaxException {
         logger.info("starting initialization of Email Service");
+        this.sender = secretFetcher.getSecret("ses_sender_email");
+        this.recipient = secretFetcher.getSecret("ses_recipient");
         this.sesClient = SesClient.builder()
                 .region(Region.of("us-gov-west-1"))
                 .build();
@@ -94,9 +96,6 @@ public class EmailService {
     }
 
     public void send(SesClient client) throws MessagingException {
-        SecretFetcher secretFetcher = new SecretFetcher();
-        this.sender = secretFetcher.getSecret("ses_sender_email");
-        this.recipient = secretFetcher.getSecret("ses_recipient");
 
         logger.info("start of EmailService.send()");
         Destination destination = Destination.builder()
