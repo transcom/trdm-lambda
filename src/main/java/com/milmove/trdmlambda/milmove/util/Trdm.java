@@ -10,6 +10,7 @@ import com.milmove.trdmlambda.milmove.service.GetTableService;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -51,6 +52,7 @@ public class Trdm {
     private final DatabaseService databaseService;
     private final TransportationAccountingCodeParser tacParser;
     private final LineOfAccountingParser loaParser;
+    private final EmailService emailService;
 
     private final Connection rdsConnection;
     private static final Set<String> allowedTableNames = Set.of("transportation_accounting_codes",
@@ -61,12 +63,14 @@ public class Trdm {
     public Trdm(LastTableUpdateService lastTableUpdateService,
             GetTableService getTableService,
             DatabaseService databaseService,
+            EmailService emailService,
             TransportationAccountingCodeParser tacParser,
             LineOfAccountingParser loaParser) throws SQLException {
 
         this.lastTableUpdateService = lastTableUpdateService;
         this.getTableService = getTableService;
         this.databaseService = databaseService;
+        this.emailService = emailService;
         this.tacParser = tacParser;
         this.loaParser = loaParser;
 
@@ -130,7 +134,7 @@ public class Trdm {
 
     public void UpdateTGETData(XMLGregorianCalendar ourLastUpdate, String trdmTable, String rdsTable,
             XMLGregorianCalendar trdmLastUpdate)
-            throws TableRequestException, DatatypeConfigurationException, IOException, SQLException {
+            throws TableRequestException, DatatypeConfigurationException, IOException, SQLException, URISyntaxException {
         logger.info("checking if trdm table name provided is allowed..");
         if (!allowedTrdmTableNames.contains(trdmTable)) {
             throw new IllegalArgumentException("Invalid table name");
@@ -181,9 +185,8 @@ public class Trdm {
                     case "transportation_accounting_codes":
                         // Parse the response attachment to get the codes
                         logger.info("parsing response back from TRDM getTable");
-                        EmailService malformedTACDataEmailService = new EmailService();
                         List<TransportationAccountingCode> codes = tacParser.parse(getTableResponse.getAttachment(),
-                                oneWeekLater, malformedTACDataEmailService);
+                                oneWeekLater, emailService);
 
                         // Generate list of TACs that needs to be updated. If TAC is in currentTacs then the
                         // TAC will be in updateTacs list because the TAC already exist
@@ -204,9 +207,8 @@ public class Trdm {
                     case "lines_of_accounting":
                         // Parse the response attachment to get the loas
                         logger.info("parsing response back from TRDM getTable");
-                        EmailService malformedLOADataEmailService = new EmailService();
                         List<LineOfAccounting> loas = loaParser.parse(getTableResponse.getAttachment(),
-                                oneWeekLater, malformedLOADataEmailService);
+                                oneWeekLater, emailService);
 
                         // Generate list of loas that needs to be updated. If loas are in curentLoas
                         // then the loa will be in updateLoas list because the loa already exist

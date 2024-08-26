@@ -1,8 +1,9 @@
 package com.milmove.trdmlambda.milmove.service;
 
-import org.glassfish.jaxb.runtime.v2.schemagen.xmlschema.List;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import com.milmove.trdmlambda.milmove.util.SecretFetcher;
 
 import ch.qos.logback.classic.Logger;
 import jakarta.mail.MessagingException;
@@ -16,6 +17,8 @@ import software.amazon.awssdk.services.ses.model.Body;
 import software.amazon.awssdk.services.ses.model.SendEmailRequest;
 import software.amazon.awssdk.services.ses.model.SesException;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 
 @Service
@@ -29,21 +32,21 @@ public class EmailService {
     private String subject;
     private String bodyHTML;
 
-    public EmailService() {
+    public EmailService(SecretFetcher secretFetcher) throws URISyntaxException {
         logger.info("starting initialization of Email Service");
+        this.sender = secretFetcher.getSecret("ses_sender_email");
+        this.recipient = secretFetcher.getSecret("ses_recipient");
         this.sesClient = SesClient.builder()
                 .region(Region.of("us-gov-west-1"))
-                .credentialsProvider(DefaultCredentialsProvider.create())
                 .build();
-        this.sender = "milmove-developers@caci.com";
-        this.recipient = "milmove-developers@caci.com";
 
         logger.info("finished initializing Email Service");
     }
 
     // Prepare and send Malformed Data Email for Transportation Accounting Codes
     public void sendMalformedTACDataEmail(ArrayList<String> tacSysIds) {
-        logger.info("starting to send Malformed TAC Data email through from: " + this.sender + " to " + this.recipient + " with " + tacSysIds.size() + " TACs");
+        logger.info("starting to send Malformed TAC Data email through from: " + this.sender + " to " + this.recipient
+                + " with " + tacSysIds.size() + " TACs");
 
         // Here for testing the email functionality. Test array of tacSysIds.
         ArrayList<String> testTacArray = new ArrayList<String>();
@@ -51,7 +54,8 @@ public class EmailService {
         testTacArray.add("TestTAC2");
 
         this.bodyHTML = "<html>" + "<head></head>" + "<body>" + "<h1>Malformed TAC Data</h1>"
-        + "<p> See all malformed TAC codes represented by their tacSysId: " + testTacArray + "</p>" + "</body>" + "</html>";
+                + "<p> See all malformed TAC codes represented by their tacSysId: " + testTacArray + "</p>" + "</body>"
+                + "</html>";
 
         this.subject = "Malformed Transportation Accounting Codes";
 
@@ -67,15 +71,17 @@ public class EmailService {
 
     // Prepare and send Malformed Data Email for Line of Accounting Codes
     public void sendMalformedLOADataEmail(ArrayList<String> loaSysIds) {
-        logger.info("starting to send Malformed LOA Data email through from: " + this.sender + " to " + this.recipient + " with " + loaSysIds.size() + " LOAs");
+        logger.info("starting to send Malformed LOA Data email through from: " + this.sender + " to " + this.recipient
+                + " with " + loaSysIds.size() + " LOAs");
 
         // Here for testing the email functionality. Test array of loaSysIds.
         ArrayList<String> testLoaArray = new ArrayList<String>();
         testLoaArray.add("TestLOA1");
         testLoaArray.add("TestLOA2");
-            
+
         this.bodyHTML = "<html>" + "<head></head>" + "<body>" + "<h1>Malformed LOA Data</h1>"
-        + "<p> See all malformed LOA codes represented by their loaSysId: " + testLoaArray  + "</p>" + "</body>" + "</html>";
+                + "<p> See all malformed LOA codes represented by their loaSysId: " + testLoaArray + "</p>" + "</body>"
+                + "</html>";
 
         this.subject = "Malformed Line of Accounting Codes";
 
@@ -88,8 +94,9 @@ public class EmailService {
 
         logger.info("finished sending Malformed LOA Data email through from: " + this.sender + " to " + this.recipient);
     }
- 
+
     public void send(SesClient client) throws MessagingException {
+
         logger.info("start of EmailService.send()");
         Destination destination = Destination.builder()
                 .toAddresses(this.recipient)
