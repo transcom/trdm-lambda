@@ -237,21 +237,21 @@ workflows:
           filters:
             branches:
               only: main
-      # - release:
-      #     requires:
-      #       - build
-      #       - auth_check
-      #       - approve
-      #     context:
-      #       - org-global
+      - release:
+          requires:
+            - build
+            - auth_check
+            - approve
+          context:
+            - org-global
           # filters:
           #   branches:
           #     only: main
           #   tags:
           #     only: /^v.*/
-      - deploy
-          # requires:
-            # - release
+      - deploy:
+          requires:
+            - release # Only run deploy job once the build job has completed
           # filters:
           #   branches:
           #   - main # Only deploy when the commit is on the Main branch
