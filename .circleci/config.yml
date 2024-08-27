@@ -2,6 +2,7 @@ version: 2.1
 
 references:
   circleci-docker: &circleci-docker milmove/circleci-docker:milmove-app-ab729849a08a773ea2557b19b67f378551d1ad3d
+  # tf132-docker: &tf132-docker milmove/circleci-docker:milmove-infra-tf132-ab729849a08a773ea2557b19b67f378551d1ad3d
 
 executors:
   # Additional docker images are utilized without executors further below
@@ -34,7 +35,6 @@ executors:
         auth:
           password: $DOCKER_PASSWORD
           username: $DOCKER_USERNAME
-
 jobs:
   test:
     executor: mymove_compiler
@@ -152,6 +152,7 @@ jobs:
           command: sudo docker network rm nested_docker_network
           when: always
 
+  # Utilize SAM CLI to build the lambda
   build:
     executor: trdm_compiler
     steps:
@@ -159,7 +160,18 @@ jobs:
       - run:
           name: Build
           command: scripts/build
-
+  # `auth_check` checks if approved before continuing
+  auth_check:
+    executor: tls_small
+    steps:
+      - run: echo "build approved by $CIRCLE_USERNAME"
+      - run:
+          name: Check if approval has rights
+          command: |
+            if [[ $CIRCLE_USERNAME != "josiahzimmerman-caci" && $CIRCLE_USERNAME != "deandreJones" && $CIRCLE_USERNAME != "cameroncaci" ]]; then
+               exit 1
+            fi
+  # Release to GitHub
   release:
     executor: trdm_compiler
     steps:
@@ -167,46 +179,45 @@ jobs:
       - run:
           name: Build
           command: scripts/build
-      # - run:
-      #     name: Release
-      #     command: |
-      #       VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
-      #       VERSION="v$VERSION"
-      #       scripts/release $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME $VERSION
+      - run:
+          name: Release
+          command: |
+            VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
+            scripts/release $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME "v$VERSION"
       - run:
           name: Move zips and checksums to workspace
           command: |
             mkdir -p workspace
             cp deployment-package.stg.zip ~/transcom/trdm-lambda/workspace/
+            # Duplicate stg zip for an exp deploy but with a different name
+            cp deployment-package.stg.zip ~/transcom/trdm-lambda/workspace/deployment-package.exp.zip
             cp stg-checksums.txt ~/transcom/trdm-lambda/workspace/
             cp deployment-package.prd.zip ~/transcom/trdm-lambda/workspace/
             cp prd-checksums.txt ~/transcom/trdm-lambda/workspace/
       - persist_to_workspace:
           root: ~/transcom/trdm-lambda/workspace
           paths:
-            # - "*.zip"
-            # - "*.txt"
+            - "deployment-package.exp.zip"
             - "deployment-package.stg.zip"
             - "stg-checksums.txt"
             - "deployment-package.prd.zip"
             - "prd-checksums.txt"
-      # - attach_workspace:
-      #     at: ~/transcom/trdm-lambda/workspace
-      # - store_artifacts:
-      #     path: ~/transcom/trdm-lambda/workspace/deployment-package.stg.zip
-      #     destination: artifacts
-      # - store_artifacts:
-      #     path: ~/transcom/trdm-lambda/workspace/deployment-package.stg.txt
-      #     destination: artifacts
+  # Deploy to AWS
   deploy:
     executor: trdm_compiler
     steps:
       - attach_workspace:
           at: ~/transcom/trdm-lambda/workspace
-      - run: # Install the AWS CLI if it is not already included in the docker image
-          name: Deploy to S3
-          # command: aws s3 sync <path/to/bucket> <s3://location/in/S3-to-deploy-to>
-          command: aws -v
+      - run:
+          name: Deploy
+          command: |
+            # tmp exp deploy
+            echo "export AWS_ACCOUNT_ID=$EXP_ACCOUNT_ID" >> $BASH_ENV
+            echo "export AWS_ACCESS_KEY_ID=$EXP_ACCESS_KEY_ID" >> $BASH_ENV
+            echo "export AWS_SECRET_ACCESS_KEY=$EXP_SECRET_ACCESS_KEY" >> $BASH_ENV
+            source $BASH_ENV
+            ENVIRONMENT=exp
+            scripts/deploy-lambda 
 workflows:
   lambda:
     jobs:
@@ -214,9 +225,20 @@ workflows:
       - build:
           requires:
             - test
+      - approve_deploy:
+          type: approval
+          context:
+            - Workflow Approvers
+      - auth_check:
+          requires:
+            - approve_deploy
+          filters:
+            branches:
+              only: main
       - release:
           requires:
             - build
+            - auth_check
           context:
             - org-global
           # filters:
