@@ -225,7 +225,7 @@ workflows:
       - build:
           requires:
             - test
-      - approve_release_and_deploy:
+      - approve:
           type: approval
           context:
             - Workflow Approvers
@@ -233,7 +233,7 @@ workflows:
             - build
       - auth_check:
           requires:
-            - approve_release_and_deploy
+            - approve
           filters:
             branches:
               only: main
@@ -241,7 +241,7 @@ workflows:
           requires:
             - build
             - auth_check
-            - approve_release_and_deploy
+            - approve
           context:
             - org-global
           # filters:
