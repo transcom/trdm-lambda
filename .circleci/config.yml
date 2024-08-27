@@ -229,6 +229,8 @@ workflows:
           type: approval
           context:
             - Workflow Approvers
+          requires:
+            - build
       - auth_check:
           requires:
             - approve_deploy
