@@ -205,6 +205,7 @@ jobs:
   # Deploy to AWS
   deploy:
     executor: trdm_compiler
+    working_directory: ~/transcom/trdm-lambda
     steps:
       - attach_workspace:
           at: ~/transcom/trdm-lambda/workspace
@@ -217,7 +218,7 @@ jobs:
             echo "export AWS_SECRET_ACCESS_KEY=$EXP_SECRET_ACCESS_KEY" >> $BASH_ENV
             source $BASH_ENV
             ENVIRONMENT=exp
-            scripts/deploy-lambda 
+            scripts/deploy-lambda $ENVIRONMENT $VERSION $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
 workflows:
   lambda:
     jobs:
