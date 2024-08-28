@@ -160,27 +160,6 @@ jobs:
       - run:
           name: Build
           command: scripts/build
-  # `auth_check` checks if approved before continuing
-  auth_check:
-    executor: tls_small
-    steps:
-      - run: echo "build approved by $CIRCLE_USERNAME"
-      - run:
-          name: Check if approval has rights
-          command: |
-            if [[ $CIRCLE_USERNAME != "josiahzimmerman-caci" && $CIRCLE_USERNAME != "deandreJones" && $CIRCLE_USERNAME != "cameroncaci" ]]; then
-               exit 1
-            fi
-  # Release to GitHub
-  release:
-    executor: trdm_compiler
-    steps:
-      - checkout
-      - run:
-          name: Release
-          command: |
-            VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
-            scripts/release $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME "v$VERSION"
       - run:
           name: Move zips and checksums to workspace
           command: |
@@ -202,6 +181,30 @@ jobs:
             - "deployment-package.prd.zip"
             - "prd-checksums.txt"
             - "scripts/"
+  # `auth_check` checks if approved before continuing
+  auth_check:
+    executor: tls_small
+    steps:
+      - run: echo "build approved by $CIRCLE_USERNAME"
+      - run:
+          name: Check if approval has rights
+          command: |
+            if [[ $CIRCLE_USERNAME != "josiahzimmerman-caci" && $CIRCLE_USERNAME != "deandreJones" && $CIRCLE_USERNAME != "cameroncaci" ]]; then
+               exit 1
+            fi
+  # Release to GitHub
+  release:
+    executor: trdm_compiler
+    working_directory: ~/transcom/trdm-lambda/workspace
+    steps:
+      - attach_workspace:
+          at: ~/transcom/trdm-lambda/workspace
+      - run:
+          name: Release
+          command: |
+            VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
+            scripts/release $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME "v$VERSION"
+
   # Deploy to AWS
   deploy:
     executor: trdm_compiler
