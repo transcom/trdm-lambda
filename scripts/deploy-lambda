@@ -14,7 +14,7 @@ readonly AWS_ACCESS_KEY_ID="$3"
 readonly AWS_SECRET_ACCESS_KEY="$4"
 readonly AWS_ACCOUNT_ID="$5"
 
-AWS_DEFAULT_REGION=us-gov-west-1
+export AWS_DEFAULT_REGION=us-gov-west-1
 
 # Environment validation
 case "${ENVIRONMENT}" in
