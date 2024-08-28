@@ -188,6 +188,8 @@ jobs:
           name: Move zips and checksums to workspace
           command: |
             mkdir -p workspace
+            # Persist scripts to workspace for future jobs
+            cp -r scripts/ ~/transcom/trdm-lambda/workspace/scripts/
             cp deployment-package.stg.zip ~/transcom/trdm-lambda/workspace/
             # Duplicate stg zip for an exp deploy but with a different name
             cp deployment-package.stg.zip ~/transcom/trdm-lambda/workspace/deployment-package.exp.zip
@@ -205,7 +207,6 @@ jobs:
   # Deploy to AWS
   deploy:
     executor: trdm_compiler
-    working_directory: ~/transcom/trdm-lambda
     steps:
       - attach_workspace:
           at: ~/transcom/trdm-lambda/workspace
