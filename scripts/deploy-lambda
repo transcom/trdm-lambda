@@ -30,12 +30,12 @@ S3_BUCKET="transcom-gov-milmove-${ENVIRONMENT}-lambda-builds-${AWS_DEFAULT_REGIO
 S3_KEY="trdm-soap-proxy/${VERSION}/deployment-package.${ENVIRONMENT}.zip"
 
 # Upload deployment package to S3
-aws s3 cp "deployment-package.${ENVIRONMENT}.zip" "s3://${S3_BUCKET}/${S3_KEY}"
+aws s3 cp "deployment-package.${ENVIRONMENT}.zip" "s3://${S3_BUCKET}/${S3_KEY}" --region $AWS_DEFAULT_REGION
 echo "Uploaded ${ENVIRONMENT} deployment package to S3: s3://${S3_BUCKET}/${S3_KEY}"
 
 # Update SSM parameter store with the new version
 # This allows us to automate terraform while maintaining version management for each environment
-aws ssm put-parameter --name "/trdm-lambda/version" --value "${VERSION}" --type String --overwrite
+aws ssm put-parameter --name "/trdm-lambda/version" --value "${VERSION}" --type String --overwrite --region $AWS_DEFAULT_REGION
 echo "Updated ${ENVIRONMENT} SSM parameter store with version: ${VERSION}"
 
 # TODO: Apply terraform
