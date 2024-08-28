@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e -o pipefail
+set -e -o pipefail -x
 
 usage() {
     echo "Usage: $0 <ENVIRONMENT> <VERSION> <AWS_ACCESS_KEY_ID> <AWS_SECRET_ACCESS_KEY>"

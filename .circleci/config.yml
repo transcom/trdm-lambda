@@ -221,6 +221,8 @@ jobs:
       - run:
           name: Deploy
           command: |
+            # Retrieve version from workspace
+            source version.env
             # tmp exp deploy
             echo "export AWS_ACCOUNT_ID=$EXP_ACCOUNT_ID" >> $BASH_ENV
             echo "export AWS_ACCESS_KEY_ID=$EXP_ACCESS_KEY_ID" >> $BASH_ENV
