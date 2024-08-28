@@ -163,9 +163,10 @@ jobs:
       - run:
           name: Move zips and checksums to workspace
           command: |
-            # Pull version from mvn and persist to bash
-            echo "export VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)" >> $BASH_ENV
             mkdir -p workspace
+            # Pull version from mvn and persist to workspace
+            VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
+            echo "VERSION=$VERSION" > ~/transcom/trdm-lambda/workspace/version.env
             # Persist scripts to workspace for future jobs
             cp -r scripts/ ~/transcom/trdm-lambda/workspace/scripts/
             cp deployment-package.stg.zip ~/transcom/trdm-lambda/workspace/
@@ -183,6 +184,7 @@ jobs:
             - "deployment-package.prd.zip"
             - "prd-checksums.txt"
             - "scripts/"
+            - "version.env"
   # `auth_check` checks if approved before continuing
   auth_check:
     executor: tls_small
@@ -204,8 +206,8 @@ jobs:
       - run:
           name: Release
           command: |
-            # Retrieve version from bash env
-            source $BASH_ENV
+            # Retrieve version from workspace
+            source version.env
             echo "Releasing version v$VERSION to GitHub"
             scripts/release $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME "v$VERSION"
 
