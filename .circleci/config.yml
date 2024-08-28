@@ -204,6 +204,7 @@ jobs:
       - run:
           name: Release
           command: |
+            echo "Releasing version v$VERSION to GitHub"
             scripts/release $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME "v$VERSION"
 
   # Deploy to AWS
