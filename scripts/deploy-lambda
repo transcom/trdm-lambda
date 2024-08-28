@@ -3,15 +3,17 @@
 set -e -o pipefail -x
 
 usage() {
-    echo "Usage: $0 <ENVIRONMENT> <VERSION> <AWS_ACCESS_KEY_ID> <AWS_SECRET_ACCESS_KEY>"
+    echo "Usage: $0 <ENVIRONMENT> <VERSION> <AWS_ACCESS_KEY_ID> <AWS_SECRET_ACCESS_KEY> <AWS_ACCOUNT_ID>"
     exit 1
 }
-[[ -z $1 || -z $2 || -z $3 || -z $4 ]] && usage
+[[ -z $1 || -z $2 || -z $3 || -z $4 || -z $5 ]] && usage
 
 readonly ENVIRONMENT="$1"
 readonly VERSION="$2"
 readonly AWS_ACCESS_KEY_ID="$3"
 readonly AWS_SECRET_ACCESS_KEY="$4"
+readonly AWS_ACCOUNT_ID="$5"
+
 AWS_DEFAULT_REGION=us-gov-west-1
 
 # Environment validation

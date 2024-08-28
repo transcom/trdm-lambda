@@ -229,7 +229,7 @@ jobs:
             echo "export AWS_SECRET_ACCESS_KEY=$EXP_SECRET_ACCESS_KEY" >> $BASH_ENV
             source $BASH_ENV
             ENVIRONMENT=exp
-            scripts/deploy-lambda $ENVIRONMENT $VERSION $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
+            scripts/deploy-lambda $ENVIRONMENT $VERSION $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY AWS_ACCOUNT_ID
 workflows:
   lambda:
     jobs:
