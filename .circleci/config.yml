@@ -204,6 +204,7 @@ jobs:
             - "stg-checksums.txt"
             - "deployment-package.prd.zip"
             - "prd-checksums.txt"
+            - "scripts/"
   # Deploy to AWS
   deploy:
     executor: trdm_compiler
