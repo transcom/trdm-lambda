@@ -205,6 +205,7 @@ jobs:
   # Deploy to AWS
   deploy:
     executor: trdm_compiler
+    working_directory: ~/transcom/trdm-lambda/workspace
     steps:
       - attach_workspace:
           at: ~/transcom/trdm-lambda/workspace
