@@ -163,6 +163,8 @@ jobs:
       - run:
           name: Move zips and checksums to workspace
           command: |
+            # Pull version from mvn
+            VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
             mkdir -p workspace
             # Persist scripts to workspace for future jobs
             cp -r scripts/ ~/transcom/trdm-lambda/workspace/scripts/
@@ -202,7 +204,6 @@ jobs:
       - run:
           name: Release
           command: |
-            VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
             scripts/release $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME "v$VERSION"
 
   # Deploy to AWS
