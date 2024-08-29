@@ -281,7 +281,8 @@ workflows:
       - build:
           requires:
             - test
-      - approve:
+      - approve_release:
+          name: approve before release
           type: approval
           context:
             - Workflow Approvers
@@ -289,7 +290,7 @@ workflows:
             - build
       - auth_check:
           requires:
-            - approve
+            - approve_release
           filters:
             branches:
               only: main
@@ -297,7 +298,7 @@ workflows:
           requires:
             - build
             - auth_check
-            - approve
+            - approve_release
           context:
             - org-global
           # filters:
@@ -311,7 +312,8 @@ workflows:
       - plan:
           requires:
             - deploy
-      - approve:
+      - approve_terraform:
+          name: approve before terraform apply
           type: approval
           context:
             - Workflow Approvers
@@ -319,7 +321,7 @@ workflows:
             - build
       - auth_check:
           requires:
-            - approve
+            - approve_terraform
           filters:
             branches:
               only: main
