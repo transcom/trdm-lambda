@@ -332,6 +332,7 @@ workflows:
       - apply:
           requires:
             - auth check before terraform apply
+            - approve before terraform apply
           # filters:
           #   branches:
           #   - main # Only deploy when the commit is on the Main branch
