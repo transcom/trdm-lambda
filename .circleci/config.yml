@@ -289,6 +289,7 @@ workflows:
           requires:
             - build
       - auth_check:
+          name: auth check before release
           requires:
             - approve before release
           filters:
@@ -297,7 +298,7 @@ workflows:
       - release:
           requires:
             - build
-            - auth_check
+            - auth check before release
             - approve before release
           context:
             - org-global
@@ -320,6 +321,7 @@ workflows:
           requires:
             - build
       - auth_check:
+          name: auth check before terraform apply
           requires:
             - approve before terraform apply
           filters:
@@ -327,7 +329,7 @@ workflows:
               only: main
       - apply:
           requires:
-            - auth_check
+            - auth check before terraform apply
           # filters:
           #   branches:
           #   - main # Only deploy when the commit is on the Main branch
