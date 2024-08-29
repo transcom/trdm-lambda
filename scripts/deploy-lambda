@@ -37,5 +37,3 @@ echo "Uploaded ${ENVIRONMENT} deployment package to S3: s3://${S3_BUCKET}/${S3_K
 # This allows us to automate terraform while maintaining version management for each environment
 aws ssm put-parameter --name "/trdm-lambda/version" --value "${VERSION}" --type String --overwrite
 echo "Updated ${ENVIRONMENT} SSM parameter store with version: ${VERSION}"
-
-# TODO: Apply terraform

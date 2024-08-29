@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -e -o pipefail -x
+
+usage() {
+    echo "Usage: $0 <DIRECTORY>"
+    exit 1
+}
+[[ -z $1 ]] && usage
+
+readonly DIRECTORY="$1"
+
+# Apply terraform plan for the given directory
+terraform -chdir=$DIRECTORY apply -auto-approve

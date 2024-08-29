@@ -2,7 +2,7 @@ version: 2.1
 
 references:
   circleci-docker: &circleci-docker milmove/circleci-docker:milmove-app-ab729849a08a773ea2557b19b67f378551d1ad3d
-  # tf132-docker: &tf132-docker milmove/circleci-docker:milmove-infra-tf132-ab729849a08a773ea2557b19b67f378551d1ad3d
+  tf132-docker: &tf132-docker milmove/circleci-docker:milmove-infra-tf132-ab729849a08a773ea2557b19b67f378551d1ad3d
 
 executors:
   # Additional docker images are utilized without executors further below
@@ -32,6 +32,13 @@ executors:
     working_directory: ~/transcom/trdm-lambda
     docker:
       - image: milmove/docker-mvn
+        auth:
+          password: $DOCKER_PASSWORD
+          username: $DOCKER_USERNAME
+  terraform_executor:
+    working_directory: ~/transcom/trdm-lambda
+    docker:
+      - image: *tf132-docker
         auth:
           password: $DOCKER_PASSWORD
           username: $DOCKER_USERNAME
@@ -210,6 +217,43 @@ jobs:
             source version.env
             echo "Releasing version v$VERSION to GitHub"
             scripts/release $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME "v$VERSION"
+  plan:
+    executor: terraform_executor
+    steps:
+      - attach_workspace:
+          at: ~/transcom/trdm-lambda/workspace
+      - run:
+          name: Fetch infrasec repo and set vars
+          command: |
+            # tmp pull the non-ato env
+            git clone https://github.com/transcom/transcom-infrasec-gov-nonato.git
+            # tmp set directory to exp
+            TERRAFORM_DIRECTORY=transcom-infrasec-gov-nonato/transcom-gov-milmove-exp/app-experimental/
+            # set to file for the apply job
+            echo "TERRAFORM_DIRECTORY=$TERRAFORM_DIRECTORY" > ~/transcom/trdm-lambda/workspace/terraform_directory.env
+      - run:
+          name: Terraform plan
+          command: |
+            # Execute the terraform init and plan script
+            ~/transcom/trdm-lambda/workspace/scripts/plan $TERRAFORM_DIRECTORY
+      - persist_to_workspace:
+          root: ~/transcom/trdm-lambda/workspace
+          paths:
+            - transcom-infrasec-gov-nonato/
+  apply:
+    executor: terraform_executor
+    working_directory: ~/transcom/trdm-lambda/workspace
+    steps:
+      - attach_workspace:
+          at: ~/transcom/trdm-lambda/workspace
+      - run:
+          name: Load necessary env vars
+          command: source terraform_directory.env
+      - run:
+          name: Apply terraform plan
+          command: |
+            # Execute the terraform apply script
+            ~/transcom/trdm-lambda/workspace/scripts/apply $TERRAFORM_DIRECTORY
 
   # Deploy to AWS
   deploy:
@@ -263,7 +307,25 @@ workflows:
           #     only: /^v.*/
       - deploy:
           requires:
-            - release # Only run deploy job once the build job has completed
+            - release
+      - plan:
+          requires:
+            - deploy
+      - approve:
+          type: approval
+          context:
+            - Workflow Approvers
+          requires:
+            - build
+      - auth_check:
+          requires:
+            - approve
+          filters:
+            branches:
+              only: main
+      - apply:
+          requires:
+            - auth_check
           # filters:
           #   branches:
           #   - main # Only deploy when the commit is on the Main branch

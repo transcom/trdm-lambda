@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e -o pipefail -x
+
+usage() {
+    echo "Usage: $0 <DIRECTORY>"
+    exit 1
+}
+[[ -z $1 ]] && usage
+
+readonly DIRECTORY="$1"
+
+# Init and plan terraform
+# Currently input parameters are not utilized
+terraform -chdir=$DIRECTORY init
+terraform -chdir=$DIRECTORY plan
