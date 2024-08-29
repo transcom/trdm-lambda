@@ -320,6 +320,8 @@ workflows:
             - Workflow Approvers
           requires:
             - build
+            - deploy
+            - plan
       - auth_check:
           name: auth check before terraform apply
           requires:
