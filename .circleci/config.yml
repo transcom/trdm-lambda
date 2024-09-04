@@ -270,6 +270,8 @@ jobs:
           name: Setup environment variables
           command: |
             # Retrieve version from workspace
+            echo "Pulling version from workspace environment file"
+            cat version.env
             source version.env
             # Adjust deployment variables
             case << parameters.environment >> in
