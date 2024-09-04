@@ -352,6 +352,29 @@ workflows:
           requires:
             - github release
       - plan:
+          name: terraform plan for exp
+          requires:
+            - upload and set ssm param for exp
+      - approve:
+          name: approve before terraform apply on exp
+          type: approval
+          context:
+            - Workflow Approvers
+          requires:
+            - upload and set ssm param for exp
+            - terraform plan for exp
+      - auth_check:
+          name: auth check before terraform apply on exp
+          requires:
+            - approve before terraform apply on exp
+          filters:
+            branches:
+              only: main
+      - apply:
+          requires:
+            - auth check before terraform apply on exp
+            - approve before terraform apply on exp
+      - plan:
           name: terraform plan for stg
           requires:
             - upload and set ssm param for stg
@@ -361,7 +384,6 @@ workflows:
           context:
             - Workflow Approvers
           requires:
-            - build
             - upload and set ssm param for stg
             - terraform plan for stg
       - auth_check:
