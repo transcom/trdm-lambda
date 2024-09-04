@@ -318,6 +318,9 @@ workflows:
             - Workflow Approvers
           requires:
             - build
+          filters:
+            branches:
+              only: main
       - auth_check:
           name: auth check before github release
           requires:
