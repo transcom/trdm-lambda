@@ -343,7 +343,7 @@ workflows:
           environment: exp
           requires:
             - github release
-        filters:
+          filters:
             branches:
               only: main
       - upload_and_set_ssm_version_control_param:
@@ -351,14 +351,14 @@ workflows:
           name: upload and set ssm param for stg
           requires:
             - github release
-        filters:
+          filters:
             branches:
               only: main
       - plan:
           name: terraform plan for exp
           requires:
             - upload and set ssm param for exp
-        filters:
+          filters:
             branches:
               only: main
       - approve:
@@ -369,7 +369,7 @@ workflows:
           requires:
             - upload and set ssm param for exp
             - terraform plan for exp
-        filters:
+          filters:
             branches:
               only: main
       - auth_check:
