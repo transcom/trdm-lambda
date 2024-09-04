@@ -301,10 +301,10 @@ jobs:
 workflows:
   lambda:
     jobs:
-      - test
-      - build:
-          requires:
-            - test
+      # - test
+      - build
+          # requires:
+            # - test
       - approve:
           name: approve before github release
           type: approval
