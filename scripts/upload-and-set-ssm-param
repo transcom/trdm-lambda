@@ -10,10 +10,10 @@ usage() {
 
 readonly ENVIRONMENT="$1"
 readonly VERSION="$2"
-readonly AWS_ACCESS_KEY_ID="$3"
-readonly AWS_SECRET_ACCESS_KEY="$4"
-readonly AWS_ACCOUNT_ID="$5"
 
+export AWS_ACCESS_KEY_ID="$3"
+export AWS_SECRET_ACCESS_KEY="$4"
+export AWS_ACCOUNT_ID="$5"
 export AWS_DEFAULT_REGION=us-gov-west-1
 
 # Environment validation
