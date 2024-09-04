@@ -300,7 +300,7 @@ jobs:
       - run:
           name: Upload and set SSM param
           command: |
-            scripts/upload-and-set-ssm-param << parameters.environment >> $VERSION $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY $AWS_ACCOUNT_ID
+            scripts/upload-and-set-ssm-param "<< parameters.environment >>" $VERSION $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY $AWS_ACCOUNT_ID
 workflows:
   lambda:
     jobs:
