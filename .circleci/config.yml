@@ -256,24 +256,48 @@ jobs:
             ~/transcom/trdm-lambda/workspace/scripts/apply $TERRAFORM_DIRECTORY
 
   # Deploy to AWS
-  deploy:
+  upload_and_set_ssm_version_control_param:
     executor: trdm_compiler
     working_directory: ~/transcom/trdm-lambda/workspace
+    parameters:
+      environment:
+        type: string
+        default: "exp"
     steps:
       - attach_workspace:
           at: ~/transcom/trdm-lambda/workspace
       - run:
-          name: Deploy
+          name: Setup environment variables
           command: |
             # Retrieve version from workspace
             source version.env
-            # tmp exp deploy
-            echo "export AWS_ACCOUNT_ID=$EXP_ACCOUNT_ID" >> $BASH_ENV
-            echo "export AWS_ACCESS_KEY_ID=$EXP_ACCESS_KEY_ID" >> $BASH_ENV
-            echo "export AWS_SECRET_ACCESS_KEY=$EXP_SECRET_ACCESS_KEY" >> $BASH_ENV
+            # Adjust deployment variables
+            case << parameters.environment >> in
+              "exp")
+                echo "export AWS_ACCOUNT_ID=$EXP_ACCOUNT_ID" >> $BASH_ENV
+                echo "export AWS_ACCESS_KEY_ID=$EXP_ACCESS_KEY_ID" >> $BASH_ENV
+                echo "export AWS_SECRET_ACCESS_KEY=$EXP_SECRET_ACCESS_KEY" >> $BASH_ENV
+                ;;
+              "stg")
+                echo "export AWS_ACCOUNT_ID=$STG_ACCOUNT_ID" >> $BASH_ENV
+                echo "export AWS_ACCESS_KEY_ID=$STG_ACCESS_KEY_ID" >> $BASH_ENV
+                echo "export AWS_SECRET_ACCESS_KEY=$STG_SECRET_ACCESS_KEY" >> $BASH_ENV
+                ;;
+              "prd")
+                echo "export AWS_ACCOUNT_ID=$PRD_ACCOUNT_ID" >> $BASH_ENV
+                echo "export AWS_ACCESS_KEY_ID=$PRD_ACCESS_KEY_ID" >> $BASH_ENV
+                echo "export AWS_SECRET_ACCESS_KEY=$PRD_SECRET_ACCESS_KEY" >> $BASH_ENV
+                ;;
+              *)
+                echo "Unknown environment: << parameters.environment >>"
+                exit 1
+                ;;
+            esac
             source $BASH_ENV
-            ENVIRONMENT=exp
-            scripts/deploy-lambda $ENVIRONMENT $VERSION $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY $AWS_ACCOUNT_ID
+      - run:
+          name: Upload and set SSM param
+          command: |
+            scripts/upload-and-set-ssm-param << parameters.environment >> $VERSION $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY $AWS_ACCOUNT_ID
 workflows:
   lambda:
     jobs:
@@ -282,24 +306,25 @@ workflows:
           requires:
             - test
       - approve:
-          name: approve before release
+          name: approve before github release
           type: approval
           context:
             - Workflow Approvers
           requires:
             - build
       - auth_check:
-          name: auth check before release
+          name: auth check before github release
           requires:
-            - approve before release
+            - approve before github release
           filters:
             branches:
               only: main
       - release:
+          name: github release
           requires:
             - build
-            - auth check before release
-            - approve before release
+            - auth check before github release
+            - approve before github release
           context:
             - org-global
           # filters:
@@ -307,32 +332,40 @@ workflows:
           #     only: main
           #   tags:
           #     only: /^v.*/
-      - deploy:
+      - upload_and_set_ssm_version_control_param:
+          name: upload and set ssm param for exp
+          environment: exp
           requires:
-            - release
+            - github release
+      - upload_and_set_ssm_version_control_param:
+          environment: stg
+          name: upload and set ssm param for stg
+          requires:
+            - github release
       - plan:
+          name: terraform plan for stg
           requires:
-            - deploy
+            - upload and set ssm param for stg
       - approve:
-          name: approve before terraform apply
+          name: approve before terraform apply on stg
           type: approval
           context:
             - Workflow Approvers
           requires:
             - build
-            - deploy
-            - plan
+            - upload and set ssm param for stg
+            - terraform plan for stg
       - auth_check:
-          name: auth check before terraform apply
+          name: auth check before terraform apply on stg
           requires:
-            - approve before terraform apply
+            - approve before terraform apply on stg
           filters:
             branches:
               only: main
       - apply:
           requires:
-            - auth check before terraform apply
-            - approve before terraform apply
+            - auth check before terraform apply on stg
+            - approve before terraform apply on stg
           # filters:
           #   branches:
           #   - main # Only deploy when the commit is on the Main branch
