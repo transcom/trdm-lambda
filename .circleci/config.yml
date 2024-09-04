@@ -354,69 +354,70 @@ workflows:
           filters:
             branches:
               only: main
-      - plan:
-          name: terraform plan for exp
-          requires:
-            - upload and set ssm param for exp
-          filters:
-            branches:
-              only: main
-      - approve:
-          name: approve before terraform apply on exp
-          type: approval
-          context:
-            - Workflow Approvers
-          requires:
-            - upload and set ssm param for exp
-            - terraform plan for exp
-          filters:
-            branches:
-              only: main
-      - auth_check:
-          name: auth check before terraform apply on exp
-          requires:
-            - approve before terraform apply on exp
-          filters:
-            branches:
-              only: main
-      - apply:
-          name: apply terraform plan on exp
-          requires:
-            - auth check before terraform apply on exp
-            - approve before terraform apply on exp
-          filters:
-            branches:
-              only: main
-      - plan:
-          name: terraform plan for stg
-          requires:
-            - upload and set ssm param for stg
-          filters:
-            branches:
-              only: main
-      - approve:
-          name: approve before terraform apply on stg
-          type: approval
-          context:
-            - Workflow Approvers
-          requires:
-            - upload and set ssm param for stg
-            - terraform plan for stg
-          filters:
-            branches:
-              only: main
-      - auth_check:
-          name: auth check before terraform apply on stg
-          requires:
-            - approve before terraform apply on stg
-          filters:
-            branches:
-              only: main
-      - apply:
-          name: apply terraform plan on stg
-          requires:
-            - auth check before terraform apply on stg
-            - approve before terraform apply on stg
-          filters:
-            branches:
-              only: main
+      # Awaiting further security review and permissions
+      # - plan:
+      #     name: terraform plan for exp
+      #     requires:
+      #       - upload and set ssm param for exp
+      #     filters:
+      #       branches:
+      #         only: main
+      # - approve:
+      #     name: approve before terraform apply on exp
+      #     type: approval
+      #     context:
+      #       - Workflow Approvers
+      #     requires:
+      #       - upload and set ssm param for exp
+      #       - terraform plan for exp
+      #     filters:
+      #       branches:
+      #         only: main
+      # - auth_check:
+      #     name: auth check before terraform apply on exp
+      #     requires:
+      #       - approve before terraform apply on exp
+      #     filters:
+      #       branches:
+      #         only: main
+      # - apply:
+      #     name: apply terraform plan on exp
+      #     requires:
+      #       - auth check before terraform apply on exp
+      #       - approve before terraform apply on exp
+      #     filters:
+      #       branches:
+      #         only: main
+      # - plan:
+      #     name: terraform plan for stg
+      #     requires:
+      #       - upload and set ssm param for stg
+      #     filters:
+      #       branches:
+      #         only: main
+      # - approve:
+      #     name: approve before terraform apply on stg
+      #     type: approval
+      #     context:
+      #       - Workflow Approvers
+      #     requires:
+      #       - upload and set ssm param for stg
+      #       - terraform plan for stg
+      #     filters:
+      #       branches:
+      #         only: main
+      # - auth_check:
+      #     name: auth check before terraform apply on stg
+      #     requires:
+      #       - approve before terraform apply on stg
+      #     filters:
+      #       branches:
+      #         only: main
+      # - apply:
+      #     name: apply terraform plan on stg
+      #     requires:
+      #       - auth check before terraform apply on stg
+      #       - approve before terraform apply on stg
+      #     filters:
+      #       branches:
+      #         only: main
