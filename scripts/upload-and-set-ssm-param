@@ -30,7 +30,7 @@ S3_BUCKET="transcom-gov-milmove-${ENVIRONMENT}-lambda-builds-${AWS_DEFAULT_REGIO
 S3_KEY="trdm-soap-proxy/${VERSION}/deployment-package.${ENVIRONMENT}.zip"
 
 # Upload deployment package to S3 with an S3 KMS key
-aws s3 cp "deployment-package.${ENVIRONMENT}.zip" "s3://${S3_BUCKET}/${S3_KEY}" --sse aws:kms --sse-kms-key-id alias/aws/s3
+aws s3 cp "deployment-package.${ENVIRONMENT}.zip" "s3://${S3_BUCKET}/${S3_KEY}" --sse aws:kms --sse-kms-key-id aws/s3
 echo "Uploaded ${ENVIRONMENT} deployment package to S3: s3://${S3_BUCKET}/${S3_KEY}"
 
 # Update SSM parameter store with the new version
