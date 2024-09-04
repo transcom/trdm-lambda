@@ -279,7 +279,6 @@ jobs:
               "exp")
                 echo "setting up environment variables for << parameters.environment >>"
                 echo "export AWS_ACCOUNT_ID=$EXP_ACCOUNT_ID" >> $BASH_ENV
-                echo "EXP_ACCOUNT_ID: ${EXP_ACCOUNT_ID}"
                 echo "export AWS_ACCESS_KEY_ID=$EXP_ACCESS_KEY_ID" >> $BASH_ENV
                 echo "export AWS_SECRET_ACCESS_KEY=$EXP_SECRET_ACCESS_KEY" >> $BASH_ENV
                 ;;
@@ -304,16 +303,14 @@ jobs:
       - run:
           name: Upload and set SSM param
           command: |
-            echo "Environment: << parameters.environment >>"
-            echo "AWS_ACCOUNT_ID: ${AWS_ACCOUNT_ID}"
             scripts/upload-and-set-ssm-param "<< parameters.environment >>" "${VERSION}" "${AWS_ACCESS_KEY_ID}" "${AWS_SECRET_ACCESS_KEY}" "${AWS_ACCOUNT_ID}"
 workflows:
   lambda:
     jobs:
-      # - test
-      - build
-          # requires:
-            # - test
+      - test
+      - build:
+          requires:
+            - test
       - approve:
           name: approve before github release
           type: approval
@@ -336,25 +333,34 @@ workflows:
             - approve before github release
           context:
             - org-global
-          # filters:
-          #   branches:
-          #     only: main
-          #   tags:
-          #     only: /^v.*/
+          filters:
+            branches:
+              only: main
+            tags:
+              only: /^v.*/
       - upload_and_set_ssm_version_control_param:
           name: upload and set ssm param for exp
           environment: exp
           requires:
             - github release
+        filters:
+            branches:
+              only: main
       - upload_and_set_ssm_version_control_param:
           environment: stg
           name: upload and set ssm param for stg
           requires:
             - github release
+        filters:
+            branches:
+              only: main
       - plan:
           name: terraform plan for exp
           requires:
             - upload and set ssm param for exp
+        filters:
+            branches:
+              only: main
       - approve:
           name: approve before terraform apply on exp
           type: approval
@@ -363,6 +369,9 @@ workflows:
           requires:
             - upload and set ssm param for exp
             - terraform plan for exp
+        filters:
+            branches:
+              only: main
       - auth_check:
           name: auth check before terraform apply on exp
           requires:
@@ -371,13 +380,20 @@ workflows:
             branches:
               only: main
       - apply:
+          name: apply terraform plan on exp
           requires:
             - auth check before terraform apply on exp
             - approve before terraform apply on exp
+          filters:
+            branches:
+              only: main
       - plan:
           name: terraform plan for stg
           requires:
             - upload and set ssm param for stg
+          filters:
+            branches:
+              only: main
       - approve:
           name: approve before terraform apply on stg
           type: approval
@@ -386,6 +402,9 @@ workflows:
           requires:
             - upload and set ssm param for stg
             - terraform plan for stg
+          filters:
+            branches:
+              only: main
       - auth_check:
           name: auth check before terraform apply on stg
           requires:
@@ -394,9 +413,10 @@ workflows:
             branches:
               only: main
       - apply:
+          name: apply terraform plan on stg
           requires:
             - auth check before terraform apply on stg
             - approve before terraform apply on stg
-          # filters:
-          #   branches:
-          #   - main # Only deploy when the commit is on the Main branch
+          filters:
+            branches:
+              only: main
