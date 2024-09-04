@@ -273,6 +273,7 @@ jobs:
             echo "Pulling version from workspace environment file"
             cat version.env
             source version.env
+            echo "export VERSION=$VERSION" >> $BASH_ENV
             # Adjust deployment variables
             case << parameters.environment >> in
               "exp")
