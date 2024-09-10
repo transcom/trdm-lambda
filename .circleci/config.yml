@@ -2,6 +2,7 @@ version: 2.1
 
 references:
   circleci-docker: &circleci-docker milmove/circleci-docker:milmove-app-ab729849a08a773ea2557b19b67f378551d1ad3d
+  tf132-docker: &tf132-docker milmove/circleci-docker:milmove-infra-tf132-ab729849a08a773ea2557b19b67f378551d1ad3d
 
 executors:
   # Additional docker images are utilized without executors further below
@@ -10,7 +11,7 @@ executors:
   # See the following
   # - https://discuss.circleci.com/t/circleci-cli-error-response-from-daemon-invalid-uts-mode/48081/10
   # - https://github.com/CircleCI-Public/circleci-cli/issues/970
-  # - https://circleci.com/docs/building-docker-images/#docker-version 
+  # - https://circleci.com/docs/building-docker-images/#docker-version
   # 20.10.24 is listed as the deprecated CircleCI docker, but is also the last working version of docker
   # that didn't have this issue hence why we use remote docker containers
   mymove_compiler:
@@ -28,13 +29,19 @@ executors:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
   trdm_compiler:
+    working_directory: ~/transcom/trdm-lambda
     docker:
       - image: milmove/docker-mvn
         auth:
           password: $DOCKER_PASSWORD
           username: $DOCKER_USERNAME
-
-
+  terraform_executor:
+    working_directory: ~/transcom/trdm-lambda
+    docker:
+      - image: *tf132-docker
+        auth:
+          password: $DOCKER_PASSWORD
+          username: $DOCKER_USERNAME
 jobs:
   test:
     executor: mymove_compiler
@@ -50,15 +57,15 @@ jobs:
       DB_PORT: 5432
       DB_NAME: test_db
       DB_NAME_TEST: test_db
-      DTOD_USE_MOCK: 'true'
-      MIGRATION_MANIFEST: 'migrations/app/migrations_manifest.txt'
-      MIGRATION_PATH: 'file://migrations/app/schema;file://migrations/app/secure'
+      DTOD_USE_MOCK: "true"
+      MIGRATION_MANIFEST: "migrations/app/migrations_manifest.txt"
+      MIGRATION_PATH: "file://migrations/app/schema;file://migrations/app/secure"
       EIA_KEY: db2522a43820268a41a802a16ae9fd26 # dummy key generated with openssl rand -hex 16
       ENV: test
       ENVIRONMENT: test
       SERVER_REPORT: 1
       COVERAGE: 1
-      SERVE_API_INTERNAL: 'true'
+      SERVE_API_INTERNAL: "true"
       OKTA_CUSTOMER_CLIENT_ID: 1q2w3e4r5t6y7u8i9o
       OKTA_ADMIN_CLIENT_ID: AQ1SW2DE3FR4G5
       OKTA_OFFICE_CLIENT_ID: 9f9f9s8s90gig9
@@ -108,7 +115,7 @@ jobs:
           command: git clone https://github.com/transcom/mymove.git ~/mymove
       - run:
           name: Create mymove binary
-          command: | 
+          command: |
             cd ~/mymove
             make bin/milmove
       - run:
@@ -152,6 +159,7 @@ jobs:
           command: sudo docker network rm nested_docker_network
           when: always
 
+  # Utilize SAM CLI to build the lambda
   build:
     executor: trdm_compiler
     steps:
@@ -159,42 +167,143 @@ jobs:
       - run:
           name: Build
           command: scripts/build
-
-  release:
-    executor: trdm_compiler
-    steps:
-      - checkout
-      - run:
-          name: Build
-          command: scripts/build
-      - run:
-          name: Release
-          command: |
-            VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
-            VERSION="v$VERSION"
-            scripts/release $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME $VERSION
       - run:
           name: Move zips and checksums to workspace
           command: |
             mkdir -p workspace
-            cp deployment-package.stg.zip workspace/
-            cp stg-checksums.txt workspace/
-            cp deployment-package.prd.zip workspace/
-            cp prd-checksums.txt workspace/
+            # Pull version from mvn and persist to workspace
+            VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)
+            echo "VERSION=$VERSION" > ~/transcom/trdm-lambda/workspace/version.env
+            # Persist scripts to workspace for future jobs
+            cp -r scripts/ ~/transcom/trdm-lambda/workspace/scripts/
+            cp deployment-package.stg.zip ~/transcom/trdm-lambda/workspace/
+            # Duplicate stg zip for an exp deploy but with a different name
+            cp deployment-package.stg.zip ~/transcom/trdm-lambda/workspace/deployment-package.exp.zip
+            cp stg-checksums.txt ~/transcom/trdm-lambda/workspace/
+            cp deployment-package.prd.zip ~/transcom/trdm-lambda/workspace/
+            cp prd-checksums.txt ~/transcom/trdm-lambda/workspace/
       - persist_to_workspace:
-          root: workspace
+          root: ~/transcom/trdm-lambda/workspace
           paths:
-            - "*.zip"
-            - "*.txt"
+            - "deployment-package.exp.zip"
+            - "deployment-package.stg.zip"
+            - "stg-checksums.txt"
+            - "deployment-package.prd.zip"
+            - "prd-checksums.txt"
+            - "scripts/"
+            - "version.env"
+  # `auth_check` checks if approved before continuing
+  auth_check:
+    executor: tls_small
+    steps:
+      - run: echo "build approved by $CIRCLE_USERNAME"
+      - run:
+          name: Check if approval has rights
+          command: |
+            if [[ $CIRCLE_USERNAME != "josiahzimmerman-caci" && $CIRCLE_USERNAME != "deandreJones" && $CIRCLE_USERNAME != "cameroncaci" ]]; then
+               exit 1
+            fi
+  # Release to GitHub
+  release:
+    executor: trdm_compiler
+    working_directory: ~/transcom/trdm-lambda/workspace
+    steps:
       - attach_workspace:
-          at: workspace
-      - store_artifacts:
-          path: workspace/*.zip
-          destination: artifacts
-      - store_artifacts:
-          path: workspace/*.txt
-          destination: artifacts
+          at: ~/transcom/trdm-lambda/workspace
+      - run:
+          name: Release
+          command: |
+            # Retrieve version from workspace
+            source version.env
+            echo "Releasing version v$VERSION to GitHub"
+            scripts/release $CIRCLE_PROJECT_USERNAME $CIRCLE_PROJECT_REPONAME "v$VERSION"
+  plan:
+    executor: terraform_executor
+    steps:
+      - attach_workspace:
+          at: ~/transcom/trdm-lambda/workspace
+      - run:
+          name: Fetch infrasec repo and set vars
+          command: |
+            # tmp pull the non-ato env
+            git clone https://github.com/transcom/transcom-infrasec-gov-nonato.git
+            # tmp set directory to exp
+            TERRAFORM_DIRECTORY=transcom-infrasec-gov-nonato/transcom-gov-milmove-exp/app-experimental/
+            # set to file for the apply job
+            echo "TERRAFORM_DIRECTORY=$TERRAFORM_DIRECTORY" > ~/transcom/trdm-lambda/workspace/terraform_directory.env
+      - run:
+          name: Terraform plan
+          command: |
+            # Execute the terraform init and plan script
+            ~/transcom/trdm-lambda/workspace/scripts/plan $TERRAFORM_DIRECTORY
+      - persist_to_workspace:
+          root: ~/transcom/trdm-lambda/workspace
+          paths:
+            - transcom-infrasec-gov-nonato/
+  apply:
+    executor: terraform_executor
+    working_directory: ~/transcom/trdm-lambda/workspace
+    steps:
+      - attach_workspace:
+          at: ~/transcom/trdm-lambda/workspace
+      - run:
+          name: Load necessary env vars
+          command: source terraform_directory.env
+      - run:
+          name: Apply terraform plan
+          command: |
+            # Execute the terraform apply script
+            ~/transcom/trdm-lambda/workspace/scripts/apply $TERRAFORM_DIRECTORY
 
+  # Deploy to AWS
+  upload_and_set_ssm_version_control_param:
+    executor: trdm_compiler
+    working_directory: ~/transcom/trdm-lambda/workspace
+    parameters:
+      environment:
+        type: string
+        default: "exp"
+    steps:
+      - attach_workspace:
+          at: ~/transcom/trdm-lambda/workspace
+      - run:
+          name: Setup environment variables
+          command: |
+            # Retrieve version from workspace
+            echo "Pulling version from workspace environment file"
+            cat version.env
+            source version.env
+            echo "export VERSION=$VERSION" >> $BASH_ENV
+            # Adjust deployment variables
+            case << parameters.environment >> in
+              "exp")
+                echo "setting up environment variables for << parameters.environment >>"
+                echo "export AWS_ACCOUNT_ID=$EXP_ACCOUNT_ID" >> $BASH_ENV
+                echo "export AWS_ACCESS_KEY_ID=$EXP_ACCESS_KEY_ID" >> $BASH_ENV
+                echo "export AWS_SECRET_ACCESS_KEY=$EXP_SECRET_ACCESS_KEY" >> $BASH_ENV
+                ;;
+              "stg")
+                echo "setting up environment variables for << parameters.environment >>"
+                echo "export AWS_ACCOUNT_ID=$STG_ACCOUNT_ID" >> $BASH_ENV
+                echo "export AWS_ACCESS_KEY_ID=$STG_ACCESS_KEY_ID" >> $BASH_ENV
+                echo "export AWS_SECRET_ACCESS_KEY=$STG_SECRET_ACCESS_KEY" >> $BASH_ENV
+                ;;
+              "prd")
+                echo "setting up environment variables for << parameters.environment >>"
+                echo "export AWS_ACCOUNT_ID=$PRD_ACCOUNT_ID" >> $BASH_ENV
+                echo "export AWS_ACCESS_KEY_ID=$PRD_ACCESS_KEY_ID" >> $BASH_ENV
+                echo "export AWS_SECRET_ACCESS_KEY=$PRD_SECRET_ACCESS_KEY" >> $BASH_ENV
+                ;;
+              *)
+                echo "Unknown environment: << parameters.environment >>"
+                exit 1
+                ;;
+            esac
+            source $BASH_ENV
+      - run:
+          name: Upload and set SSM param
+          command: |
+            scripts/upload-and-set-ssm-param "<< parameters.environment >>" "${VERSION}" "${AWS_ACCESS_KEY_ID}" "${AWS_SECRET_ACCESS_KEY}" "${AWS_ACCOUNT_ID}"
 workflows:
   lambda:
     jobs:
@@ -202,9 +311,29 @@ workflows:
       - build:
           requires:
             - test
-      - release:
+      - approve:
+          name: approve before github release
+          type: approval
+          context:
+            - Workflow Approvers
           requires:
             - build
+          filters:
+            branches:
+              only: main
+      - auth_check:
+          name: auth check before github release
+          requires:
+            - approve before github release
+          filters:
+            branches:
+              only: main
+      - release:
+          name: github release
+          requires:
+            - build
+            - auth check before github release
+            - approve before github release
           context:
             - org-global
           filters:
@@ -212,3 +341,86 @@ workflows:
               only: main
             tags:
               only: /^v.*/
+      - upload_and_set_ssm_version_control_param:
+          name: upload and set ssm param for exp
+          environment: exp
+          requires:
+            - github release
+          filters:
+            branches:
+              only: main
+      - upload_and_set_ssm_version_control_param:
+          environment: stg
+          name: upload and set ssm param for stg
+          requires:
+            - github release
+          filters:
+            branches:
+              only: main
+      # Awaiting further security review and permissions
+      # - plan:
+      #     name: terraform plan for exp
+      #     requires:
+      #       - upload and set ssm param for exp
+      #     filters:
+      #       branches:
+      #         only: main
+      # - approve:
+      #     name: approve before terraform apply on exp
+      #     type: approval
+      #     context:
+      #       - Workflow Approvers
+      #     requires:
+      #       - upload and set ssm param for exp
+      #       - terraform plan for exp
+      #     filters:
+      #       branches:
+      #         only: main
+      # - auth_check:
+      #     name: auth check before terraform apply on exp
+      #     requires:
+      #       - approve before terraform apply on exp
+      #     filters:
+      #       branches:
+      #         only: main
+      # - apply:
+      #     name: apply terraform plan on exp
+      #     requires:
+      #       - auth check before terraform apply on exp
+      #       - approve before terraform apply on exp
+      #     filters:
+      #       branches:
+      #         only: main
+      # - plan:
+      #     name: terraform plan for stg
+      #     requires:
+      #       - upload and set ssm param for stg
+      #     filters:
+      #       branches:
+      #         only: main
+      # - approve:
+      #     name: approve before terraform apply on stg
+      #     type: approval
+      #     context:
+      #       - Workflow Approvers
+      #     requires:
+      #       - upload and set ssm param for stg
+      #       - terraform plan for stg
+      #     filters:
+      #       branches:
+      #         only: main
+      # - auth_check:
+      #     name: auth check before terraform apply on stg
+      #     requires:
+      #       - approve before terraform apply on stg
+      #     filters:
+      #       branches:
+      #         only: main
+      # - apply:
+      #     name: apply terraform plan on stg
+      #     requires:
+      #       - auth check before terraform apply on stg
+      #       - approve before terraform apply on stg
+      #     filters:
+      #       branches:
+      #         only: main
