@@ -35,7 +35,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.milmove.trdmlambda.milmove.model.gettable.GetTableRequest;
 import com.milmove.trdmlambda.milmove.model.gettable.GetTableResponse;
 import com.milmove.trdmlambda.milmove.service.DatabaseService;
-import com.milmove.trdmlambda.milmove.service.EmailService;
 import com.milmove.trdmlambda.milmove.service.GetTableService;
 import com.milmove.trdmlambda.milmove.service.LastTableUpdateService;
 import com.milmove.trdmlambda.milmove.model.LineOfAccounting;
@@ -44,8 +43,6 @@ import com.milmove.trdmlambda.milmove.model.TransportationAccountingCode;
 @ExtendWith(MockitoExtension.class)
 class TrdmTest {
 
-    @Mock
-    private EmailService emailService;
     @Mock
     private LastTableUpdateService lastTableUpdateService;
     @Mock

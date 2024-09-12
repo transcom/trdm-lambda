@@ -1,11 +1,11 @@
 package com.milmove.trdmlambda.milmove.util;
 
 import com.milmove.trdmlambda.milmove.service.LastTableUpdateService;
+import com.milmove.trdmlambda.milmove.service.SNSService;
 
 import ch.qos.logback.classic.Logger;
 
 import com.milmove.trdmlambda.milmove.service.DatabaseService;
-import com.milmove.trdmlambda.milmove.service.EmailService;
 import com.milmove.trdmlambda.milmove.service.GetTableService;
 
 import java.io.IOException;
@@ -52,7 +52,7 @@ public class Trdm {
     private final DatabaseService databaseService;
     private final TransportationAccountingCodeParser tacParser;
     private final LineOfAccountingParser loaParser;
-    private final EmailService emailService;
+    private final SNSService snsService;
 
     private final Connection rdsConnection;
     private static final Set<String> allowedTableNames = Set.of("transportation_accounting_codes",
@@ -63,14 +63,14 @@ public class Trdm {
     public Trdm(LastTableUpdateService lastTableUpdateService,
             GetTableService getTableService,
             DatabaseService databaseService,
-            EmailService emailService,
+            SNSService snsService,
             TransportationAccountingCodeParser tacParser,
             LineOfAccountingParser loaParser) throws SQLException {
 
         this.lastTableUpdateService = lastTableUpdateService;
         this.getTableService = getTableService;
         this.databaseService = databaseService;
-        this.emailService = emailService;
+        this.snsService = snsService;
         this.tacParser = tacParser;
         this.loaParser = loaParser;
 
@@ -134,7 +134,8 @@ public class Trdm {
 
     public void UpdateTGETData(XMLGregorianCalendar ourLastUpdate, String trdmTable, String rdsTable,
             XMLGregorianCalendar trdmLastUpdate)
-            throws TableRequestException, DatatypeConfigurationException, IOException, SQLException, URISyntaxException {
+            throws TableRequestException, DatatypeConfigurationException, IOException, SQLException,
+            URISyntaxException {
         logger.info("checking if trdm table name provided is allowed..");
         if (!allowedTrdmTableNames.contains(trdmTable)) {
             throw new IllegalArgumentException("Invalid table name");
@@ -174,10 +175,12 @@ public class Trdm {
                 // Get all loasSysIds that occur more than once
                 ArrayList<String> duplicateLoaSysIds = databaseService.getLoaSysIdCountGreaterThan1();
 
-                // Identify Loas to delete based on if their loaSysId is not unique, their id/primary key is not referenced in TACS loa_id and the loa is the latest
-                ArrayList<LineOfAccounting> loasToDelete = identifyDuplicateLoasToDelete(currentLoas, currentTacs, duplicateLoaSysIds);
+                // Identify Loas to delete based on if their loaSysId is not unique, their
+                // id/primary key is not referenced in TACS loa_id and the loa is the latest
+                ArrayList<LineOfAccounting> loasToDelete = identifyDuplicateLoasToDelete(currentLoas, currentTacs,
+                        duplicateLoaSysIds);
 
-               // Delete duplicate Loas
+                // Delete duplicate Loas
                 databaseService.deleteLoas(loasToDelete);
 
                 // Insert the codes into RDS
@@ -186,14 +189,16 @@ public class Trdm {
                         // Parse the response attachment to get the codes
                         logger.info("parsing response back from TRDM getTable");
                         List<TransportationAccountingCode> codes = tacParser.parse(getTableResponse.getAttachment(),
-                                oneWeekLater, emailService);
+                                oneWeekLater);
 
-                        // Generate list of TACs that needs to be updated. If TAC is in currentTacs then the
+                        // Generate list of TACs that needs to be updated. If TAC is in currentTacs then
+                        // the
                         // TAC will be in updateTacs list because the TAC already exist
                         List<TransportationAccountingCode> updateTacs = identifyTacsToUpdate(codes, currentTacs);
 
                         // Generate list of TACs that needs to be created. If the TAC is not in
-                        // updateTacs then it will be in createTacs because it does not exist and needs to be created.
+                        // updateTacs then it will be in createTacs because it does not exist and needs
+                        // to be created.
                         List<TransportationAccountingCode> createTacs = identifyTacsToCreate(codes, updateTacs);
 
                         logger.info("updating TACs in DB");
@@ -203,12 +208,25 @@ public class Trdm {
                         logger.info("inserting TACs into DB");
                         databaseService.insertTransportationAccountingCodes(createTacs);
                         logger.info("finished inserting TACs into DB");
+
+                        if (tacParser.getMalformedTacList().size() > 0) {
+                            try {
+                                logger.info(
+                                        "malformed TAC data detected when parsing. Sending malformed TAC data SNS notification");
+                                snsService.sendMalformedDataSNSTAC(tacParser.getMalformedTacList());
+                                ;
+                                logger.info("finished sending malformed TAC SNS notification");
+                            } catch (Exception e) {
+                                logger.error("failed to send malformed TAC SNS notification: " + e.getMessage());
+                            }
+                        }
+
                         break;
                     case "lines_of_accounting":
                         // Parse the response attachment to get the loas
                         logger.info("parsing response back from TRDM getTable");
                         List<LineOfAccounting> loas = loaParser.parse(getTableResponse.getAttachment(),
-                                oneWeekLater, emailService);
+                                oneWeekLater);
 
                         // Generate list of loas that needs to be updated. If loas are in curentLoas
                         // then the loa will be in updateLoas list because the loa already exist
@@ -224,6 +242,19 @@ public class Trdm {
                         logger.info("inserting LOAs into DB");
                         databaseService.insertLinesOfAccounting(createLoas);
                         logger.info("finished inserting LOAs into DB");
+
+                        if (loaParser.getMalformedLoaList().size() > 0) {
+                            try {
+                                logger.info(
+                                        "malformed LOA data detected when parsing. Sending malformed LOA data SNS notification");
+                                snsService.sendMalformedDataSNSLOA(loaParser.getMalformedLoaList());
+                                ;
+                                logger.info("finished sending malformed LOA SNS notification");
+                            } catch (Exception e) {
+                                logger.error("failed to send malformed LOA SNS notification: " + e.getMessage());
+                            }
+                        }
+
                         break;
                     default:
                         throw new IllegalArgumentException("Data insertion for this table has not been configured");
@@ -262,33 +293,40 @@ public class Trdm {
                 .collect(Collectors.toList()).contains(newTac.getTacSysID())).collect(Collectors.toList());
     }
 
-    // Identify loas to update based on checking if the new loa loa_sys_id is in a list of loa_sys_ids made from mapping out loa_sys_ids from a list of currentLoas in the database
+    // Identify loas to update based on checking if the new loa loa_sys_id is in a
+    // list of loa_sys_ids made from mapping out loa_sys_ids from a list of
+    // currentLoas in the database
     public List<LineOfAccounting> identifyLoasToUpdate(List<LineOfAccounting> newLoas,
             ArrayList<LineOfAccounting> currentLoas) {
         logger.info("identifying Loas to update");
         return newLoas.stream()
-        .filter(newLoa -> currentLoas.stream()
-        .map(currentLoa -> currentLoa.getLoaSysID()) // Map out loa_sys_ids from a list of current loas in the database
-                .collect(Collectors.toList())
-                .contains(newLoa.getLoaSysID())) // Does the new LOA loaSysId exist in a list of loa_sys_ids
+                .filter(newLoa -> currentLoas.stream()
+                        .map(currentLoa -> currentLoa.getLoaSysID()) // Map out loa_sys_ids from a list of current loas
+                                                                     // in the database
+                        .collect(Collectors.toList())
+                        .contains(newLoa.getLoaSysID())) // Does the new LOA loaSysId exist in a list of loa_sys_ids
                 .collect(Collectors.toList());
     }
 
-    // This method identifies loas to create based on filtering the newLoas by which loa has a loaSysId that is in the update list
+    // This method identifies loas to create based on filtering the newLoas by which
+    // loa has a loaSysId that is in the update list
     public List<LineOfAccounting> identifyLoasToCreate(List<LineOfAccounting> newLoas,
             List<LineOfAccounting> updatedLoas) {
         logger.info("identifying Loas to create");
         return newLoas.stream()
-        .filter(newLoa -> !updatedLoas.stream() // If the newLoa loaSysId is not in the list of loaSysIds to be updated then include it because it needs to be created
-        .map(updatedLoa -> updatedLoa.getLoaSysID()) // Map out loa_sys_ids that are going to be updated
-        .collect(Collectors.toList())
-        .contains(newLoa.getLoaSysID())) // Does the newLoa loa_sys_id exist in a list of loa_sys_ids
-        .collect(Collectors.toList());
+                .filter(newLoa -> !updatedLoas.stream() // If the newLoa loaSysId is not in the list of loaSysIds to be
+                                                        // updated then include it because it needs to be created
+                        .map(updatedLoa -> updatedLoa.getLoaSysID()) // Map out loa_sys_ids that are going to be updated
+                        .collect(Collectors.toList())
+                        .contains(newLoa.getLoaSysID())) // Does the newLoa loa_sys_id exist in a list of loa_sys_ids
+                .collect(Collectors.toList());
     }
 
-
-    // Identify Loas to delete based on if their loaSysId is not unique, their id/primary key is not referenced in TACS loa_id and the loa created_at is the latest
-    public ArrayList<LineOfAccounting> identifyDuplicateLoasToDelete(ArrayList<LineOfAccounting> loas, ArrayList<TransportationAccountingCode> tacs, ArrayList<String> duplicateLoaSysIds) throws SQLException {
+    // Identify Loas to delete based on if their loaSysId is not unique, their
+    // id/primary key is not referenced in TACS loa_id and the loa created_at is the
+    // latest
+    public ArrayList<LineOfAccounting> identifyDuplicateLoasToDelete(ArrayList<LineOfAccounting> loas,
+            ArrayList<TransportationAccountingCode> tacs, ArrayList<String> duplicateLoaSysIds) throws SQLException {
         logger.info("identifying duplicate Line of Accounting codes to delete");
         logger.info("LOA codes count: " + loas.size());
         logger.info("TAC codes count: " + tacs.size());
@@ -312,7 +350,8 @@ public class Trdm {
         // Duplicate loas not referenced in TACS
         ArrayList<LineOfAccounting> duplicateUnreferencedLoas = new ArrayList<LineOfAccounting>();
 
-        // Map all TAC loa_id and eliminate duplicates by putting them in a Set. This will help speed up lookups
+        // Map all TAC loa_id and eliminate duplicates by putting them in a Set. This
+        // will help speed up lookups
         Set<UUID> tacLoaIdList = tacs.stream().map(tac -> tac.getLoaID()).collect(Collectors.toSet());
 
         // Check if duplicateLoas ID, Primary Key, are being referenced in TACS
@@ -322,21 +361,24 @@ public class Trdm {
             }
         }
 
-        logger.info("finished identifying duplicate LOA codes that are not referenced by a TAC code. Count: " + duplicateUnreferencedLoas.size());
+        logger.info("finished identifying duplicate LOA codes that are not referenced by a TAC code. Count: "
+                + duplicateUnreferencedLoas.size());
 
-
-       // Get a set of loaSysIds made from the list of unreferenced duplicate loas to loop through to find the latest loa for deletion
-        Set<String> setOfLoaSysIds = duplicateUnreferencedLoas.stream().map(loa -> loa.getLoaSysID()).collect(Collectors.toSet());
+        // Get a set of loaSysIds made from the list of unreferenced duplicate loas to
+        // loop through to find the latest loa for deletion
+        Set<String> setOfLoaSysIds = duplicateUnreferencedLoas.stream().map(loa -> loa.getLoaSysID())
+                .collect(Collectors.toSet());
 
         logger.info("starting to identify which duplicate unreferenced LOA codes to delete based on updated_at value");
         ArrayList<LineOfAccounting> loasToDelete = new ArrayList<LineOfAccounting>();
         for (String loaSysId : setOfLoaSysIds) {
 
-            // Get a sorted by date list of loas with same sysId in duplicateUnreferencedLoas
+            // Get a sorted by date list of loas with same sysId in
+            // duplicateUnreferencedLoas
             List<LineOfAccounting> sortedLoasByUpdatedAt = duplicateUnreferencedLoas.stream()
-            .filter(loa -> loa.getLoaSysID().equals(loaSysId))
-            .sorted((l1, l2) -> l1.getUpdatedAt().compareTo(l2.getUpdatedAt()))
-            .collect(Collectors.toList());
+                    .filter(loa -> loa.getLoaSysID().equals(loaSysId))
+                    .sorted((l1, l2) -> l1.getUpdatedAt().compareTo(l2.getUpdatedAt()))
+                    .collect(Collectors.toList());
 
             loasToDelete.add(sortedLoasByUpdatedAt.get(0));
         }

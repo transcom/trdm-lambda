@@ -22,13 +22,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.milmove.trdmlambda.milmove.model.TransportationAccountingCode;
-import com.milmove.trdmlambda.milmove.service.EmailService;
 
 @Component
 public class TransportationAccountingCodeParser {
     private Logger logger = (Logger) LoggerFactory.getLogger(TransportationAccountingCodeParser.class);
 
-    private ArrayList<String> skippedTacSysIds = new ArrayList<String>();
+    ArrayList<String> malformedTacSysIds = new ArrayList<String>();
 
     // Create our map for TGET parsing
     Map<String, Integer> columnNamesAndLocations = new HashMap<>();
@@ -41,7 +40,7 @@ public class TransportationAccountingCodeParser {
             "TAC_BLLD_ADD_FRTH_LN_TX", "TAC_FNCT_POC_NM", "ROW_STS_CD"
     };
 
-    public List<TransportationAccountingCode> parse(byte[] fileContent, XMLGregorianCalendar trdmLastUpdate, EmailService emailService)
+    public List<TransportationAccountingCode> parse(byte[] fileContent, XMLGregorianCalendar trdmLastUpdate)
             throws RuntimeException {
         logger.info("beginning to parse TAC TGET data");
         List<TransportationAccountingCode> codes = new ArrayList<>();
@@ -78,7 +77,7 @@ public class TransportationAccountingCodeParser {
                 break;
             }
             String[] values = line.split("\\|");
-            TransportationAccountingCode code = processLineIntoTAC(values, columnNamesAndLocations, trdmLastUpdate, emailService);
+            TransportationAccountingCode code = processLineIntoTAC(values, columnNamesAndLocations, trdmLastUpdate);
 
             if (code != null) {
                 codes.add(code);
@@ -89,27 +88,19 @@ public class TransportationAccountingCodeParser {
         }
         logger.info("finished parsing every single line");
 
-        // This only exist to test the email functionality in staging. Will be removed after testing.
-        boolean testingEmailFunctionality = true;
-        // If there is malformed TAC data send malformed data email
-        if (skippedTacSysIds.size() > 0 || testingEmailFunctionality) {
-            logger.info("sending malformed TAC data email");
-            emailService.sendMalformedTACDataEmail(skippedTacSysIds);
-        }
-        scanner.close();
-
         return codes;
     }
 
     private TransportationAccountingCode processLineIntoTAC(String[] values, Map<String, Integer> columnHeaders,
-            XMLGregorianCalendar trdmLastUpdate, EmailService emailService) throws RuntimeException {
+            XMLGregorianCalendar trdmLastUpdate) throws RuntimeException {
 
-         // Check if value length does not align with columns
-         if (values.length != columnHeaders.size()) {
+        // Check if value length does not align with columns
+        if (values.length != columnHeaders.size()) {
             logger.info("TGET file row is malformed. This row of TAC data will not be parsed.");
             // Add TAC_SYS_ID to skipped TACs array
-            skippedTacSysIds.add((values[columnHeaders.get("TAC_SYS_ID")]));
-            logger.info("TAC data with TAC_SYS_ID: " + values[columnHeaders.get("TAC_SYS_ID")] + " skipped due to malformed data.");
+            malformedTacSysIds.add((values[columnHeaders.get("TAC_SYS_ID")]));
+            logger.info("TAC data with TAC_SYS_ID: " + values[columnHeaders.get("TAC_SYS_ID")]
+                    + " skipped due to malformed data.");
             return null; // Skip this line
         }
 
@@ -157,13 +148,18 @@ public class TransportationAccountingCodeParser {
         }
     }
 
-        private LocalDateTime convertXMLGregorianCalendarToLocalDateTime(XMLGregorianCalendar xmlGregorianCalendar) {
+    private LocalDateTime convertXMLGregorianCalendarToLocalDateTime(XMLGregorianCalendar xmlGregorianCalendar) {
         if (xmlGregorianCalendar == null) {
             return null;
         }
         GregorianCalendar gregorianCalendar = xmlGregorianCalendar.toGregorianCalendar();
         gregorianCalendar.setTimeZone(TimeZone.getTimeZone("UTC"));
         return gregorianCalendar.toZonedDateTime().withZoneSameInstant(ZoneId.of("UTC")).toLocalDateTime();
+    }
+
+    public ArrayList<String> getMalformedTacList() {
+        malformedTacSysIds.add("TestTAC"); // TO BE REMOVED. FORCING NOTIFICATION
+        return malformedTacSysIds;
     }
 
 }

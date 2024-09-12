@@ -22,14 +22,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.milmove.trdmlambda.milmove.model.LineOfAccounting;
-import com.milmove.trdmlambda.milmove.service.EmailService;
 
 @Component
 public class LineOfAccountingParser {
     private Logger logger = (Logger) LoggerFactory.getLogger(LineOfAccountingParser.class);
     // Create our map for TGET parsing
     Map<String, Integer> columnNamesAndLocations = new HashMap<>();
-    private ArrayList<String> skippedLoaSysIds = new ArrayList<String>();
+    ArrayList<String> malformedLoaSysIds = new ArrayList<String>();
 
     private static final String[] expectedColumnNames = {
             "LOA_SYS_ID", "LOA_DPT_ID", "LOA_TNSFR_DPT_NM", "LOA_BAF_ID", "LOA_TRSY_SFX_TX", "LOA_MAJ_CLM_NM",
@@ -45,8 +44,7 @@ public class LineOfAccountingParser {
             "LOA_FNCL_AR_ID", "LOA_SCRTY_COOP_CUST_CD", "LOA_END_FY_TX", "LOA_BG_FY_TX", "LOA_BGT_RSTR_CD",
             "LOA_BGT_SUB_ACT_CD", "ROW_STS_CD" };
 
-    public List<LineOfAccounting> parse(byte[] fileContent, XMLGregorianCalendar trdmLastUpdate,
-            EmailService emailService)
+    public List<LineOfAccounting> parse(byte[] fileContent, XMLGregorianCalendar trdmLastUpdate)
             throws RuntimeException {
         logger.info("beginning to parse LOA TGET data");
         List<LineOfAccounting> codes = new ArrayList<>();
@@ -84,7 +82,7 @@ public class LineOfAccountingParser {
                 break;
             }
             String[] values = line.split("\\|");
-            LineOfAccounting code = processLineIntoLOA(values, columnNamesAndLocations, trdmLastUpdate, emailService);
+            LineOfAccounting code = processLineIntoLOA(values, columnNamesAndLocations, trdmLastUpdate);
 
             if (code != null) {
                 codes.add(code);
@@ -94,13 +92,6 @@ public class LineOfAccountingParser {
             row++;
         }
         logger.info("finished parsing every single line");
-        // This only exist to test the email functionality in staging. Will be removed after testing.
-        boolean testingEmailFunctionality = true;
-        // If there is malformed LOA data send malformed data email
-        if (skippedLoaSysIds.size() > 0 || testingEmailFunctionality) {
-            logger.info("sending malformed LOA data email");
-            emailService.sendMalformedLOADataEmail(skippedLoaSysIds);
-        }
 
         scanner.close();
 
@@ -108,13 +99,13 @@ public class LineOfAccountingParser {
     }
 
     private LineOfAccounting processLineIntoLOA(String[] values, Map<String, Integer> columnHeaders,
-            XMLGregorianCalendar lastLoaUpdate, EmailService emailService)
+            XMLGregorianCalendar lastLoaUpdate)
             throws RuntimeException {
         // Check if value length does not align with columns
         if (values.length != columnHeaders.size()) {
             logger.info("TGET file row is malformed. This row of LOA data will not be parsed.");
             // Add TAC_SYS_ID to skipped TACs array
-            skippedLoaSysIds.add((values[columnHeaders.get("LOA_SYS_ID")]));
+            malformedLoaSysIds.add((values[columnHeaders.get("LOA_SYS_ID")]));
             logger.info("LOA data with LOA_SYS_ID: " + values[columnHeaders.get("LOA_SYS_ID")]
                     + " skipped due to malformed data.");
             return null; // Skip this line
@@ -221,6 +212,11 @@ public class LineOfAccountingParser {
         GregorianCalendar gregorianCalendar = xmlGregorianCalendar.toGregorianCalendar();
         gregorianCalendar.setTimeZone(TimeZone.getTimeZone("UTC"));
         return gregorianCalendar.toZonedDateTime().withZoneSameInstant(ZoneId.of("UTC")).toLocalDateTime();
+    }
+
+    public ArrayList<String> getMalformedLoaList() {
+        malformedLoaSysIds.add("TestLOA"); // TO BE REMOVED. FORCING NOTIFICATION
+        return malformedLoaSysIds;
     }
 
 }
