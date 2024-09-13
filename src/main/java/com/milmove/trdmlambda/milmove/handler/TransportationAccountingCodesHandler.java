@@ -40,7 +40,7 @@ public class TransportationAccountingCodesHandler {
         XMLGregorianCalendar ourLastUpdate = trdmUtil.GetOurLastTGETUpdate("transportation_accounting_codes");
         logger.info("received out latest TGET update. Comparing the 2 values to see if our TGET data is out of date");
         boolean tgetOutOfDate = trdmUtil.IsTGETDataOutOfDate(ourLastUpdate, trdmLastUpdate);
-        if (tgetOutOfDate) {
+        if (true) { // TO BE REMOVED. FORCING EXECUTION. CHANGE BACK TO tgetOutOfDate
             logger.info("TAC TGET data is out of date. Starting updateTGETData flow");
             trdmUtil.UpdateTGETData(ourLastUpdate, "TRNSPRTN_ACNT", "transportation_accounting_codes", trdmLastUpdate);
             logger.info("finished updating TAC TGET data");
