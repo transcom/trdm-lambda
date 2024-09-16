@@ -40,7 +40,7 @@ public class LinesOfAccountingHandler {
         XMLGregorianCalendar ourLastUpdate = trdmUtil.GetOurLastTGETUpdate("lines_of_accounting");
         logger.info("received out latest TGET update. Comparing the 2 values to see if our TGET data is out of date");
         boolean tgetOutOfDate = trdmUtil.IsTGETDataOutOfDate(ourLastUpdate, trdmLastUpdate);
-        if (true) { // TO BE REMOVED. FORCING EXECUTION. CHANGE BACK TO tgetOutOfDate
+        if (tgetOutOfDate) {
             logger.info("LOA TGET data is out of date. Starting updateTGETData flow");
             trdmUtil.UpdateTGETData(ourLastUpdate, "LN_OF_ACCT", "lines_of_accounting", trdmLastUpdate);
             logger.info("finished updating LOA TGET data");

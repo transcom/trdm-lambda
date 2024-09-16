@@ -29,7 +29,7 @@ public class SNSService {
     public void sendMalformedDataSNSLOA(ArrayList<String> loaSysIds) throws MessagingException, URISyntaxException {
         if (loaSysIds.size() > 0) {
             logger.info("sending malformed LOA SNS");
-            String msg = "Malformed LOA data has been detected when ingesting TGET Data.";
+            String loaMsg = "Malformed LOA data has been detected when ingesting TGET Data.";
             String loaSysIdsListHeader = "The following loaSysIds had malformed rows: \n";
             String loaSysIdsListed = "";
 
@@ -37,9 +37,9 @@ public class SNSService {
                 loaSysIdsListed += loaSysId + "\n";
             }
 
-            msg += "\n" + loaSysIdsListHeader + "\n" + loaSysIdsListed;
+            loaMsg += "\n" + loaSysIdsListHeader + "\n" + loaSysIdsListed;
 
-            send(engGovTopicARN, msg);
+            send(engGovTopicARN, loaMsg);
         } else {
             logger.info("not sending malformed LOA SNS. List of malformed loaSysIds is empty");
         }
@@ -48,7 +48,7 @@ public class SNSService {
     public void sendMalformedDataSNSTAC(ArrayList<String> tacSysIds) throws MessagingException, URISyntaxException {
         if (tacSysIds.size() > 0) {
             logger.info("sending malformed TAC SNS");
-            String msg = "Malformed TAC data has been detected when ingesting TGET Data.";
+            String tacMsg = "Malformed TAC data has been detected when ingesting TGET Data.";
             String tacSysIdsListHeader = "The following tacSysIds had malformed rows: \n";
             String tacSysIdsListed = "";
 
@@ -56,9 +56,9 @@ public class SNSService {
                 tacSysIdsListed += tacSysId + "\n";
             }
 
-            msg += "\n" + tacSysIdsListHeader + "\n" + tacSysIdsListed;
+            tacMsg += "\n" + tacSysIdsListHeader + "\n" + tacSysIdsListed;
 
-            send(engGovTopicARN, msg);
+            send(engGovTopicARN, tacMsg);
             logger.info("finished sending malformed TAC SNS");
         } else {
             logger.info("not sending malformed TAC SNS. List of malformed tacSysIds is empty");

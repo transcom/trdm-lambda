@@ -215,7 +215,6 @@ public class LineOfAccountingParser {
     }
 
     public ArrayList<String> getMalformedLoaList() {
-        malformedLoaSysIds.add("loaSysIds..."); // TO BE REMOVED. FORCING NOTIFICATION
         return malformedLoaSysIds;
     }
 
