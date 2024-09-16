@@ -7,15 +7,11 @@ import ch.qos.logback.classic.Logger;
 import jakarta.mail.MessagingException;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.core.exception.SdkClientException;
-import software.amazon.awssdk.core.internal.http.loader.DefaultSdkHttpClientBuilder;
-import software.amazon.awssdk.http.SdkHttpClient;
-import software.amazon.awssdk.http.SdkHttpConfigurationOption;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.PublishRequest;
 import software.amazon.awssdk.services.sns.model.PublishResponse;
 import software.amazon.awssdk.services.sns.model.SnsException;
-import software.amazon.awssdk.utils.AttributeMap;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 
@@ -77,16 +73,9 @@ public class SNSService {
                     .topicArn(topicArn)
                     .build();
 
-            AttributeMap attributeMap = AttributeMap.builder()
-                    .put(SdkHttpConfigurationOption.TRUST_ALL_CERTIFICATES, true)
-                    .build();
-
-            SdkHttpClient sdkHttpClient = new DefaultSdkHttpClientBuilder().buildWithDefaults(attributeMap);
-
             SnsClient snsClient = SnsClient.builder()
                     .region(Region.US_GOV_WEST_1)
                     .credentialsProvider(DefaultCredentialsProvider.create())
-                    .httpClient(sdkHttpClient)
                     .build();
 
             PublishResponse result = snsClient.publish(request);
@@ -95,7 +84,6 @@ public class SNSService {
                     + result.messageId());
 
             snsClient.close();
-            sdkHttpClient.close();
             logger.info("finished sending SNS message");
         } catch (SnsException e) {
             logger.error("SnsException executing sns notification cron job", e);
