@@ -26,43 +26,32 @@ public class SNSService {
         logger.info("finished initializing SNS Service");
     }
 
-    public void sendMalformedDataSNSLOA(ArrayList<String> loaSysIds) throws MessagingException, URISyntaxException {
-        if (loaSysIds.size() > 0) {
-            logger.info("sending malformed LOA SNS");
-            String loaMsg = "Malformed LOA data has been detected when ingesting TGET Data.";
-            String loaSysIdsListHeader = "The following loaSysIds had malformed rows: \n";
-            String loaSysIdsListed = "";
+    public void sendMalformedData(ArrayList<String> sysIds, String msgType)
+            throws MessagingException, URISyntaxException {
 
-            for (String loaSysId : loaSysIds) {
-                loaSysIdsListed += loaSysId + "\n";
-            }
+        String msg = "";
+        String sysIdsListed = "";
+        String tacMsg = "Malformed TAC data has been detected when ingesting TGET Data. \n";
+        String tacSysIdsListHeader = "The following tacSysIds had malformed rows: \n";
+        String loaMsg = "Malformed LOA data has been detected when ingesting TGET Data. \n";
+        String loaSysIdsListHeader = "The following loaSysIds had malformed rows: \n";
 
-            loaMsg += "\n" + loaSysIdsListHeader + "\n" + loaSysIdsListed;
-
-            send(engGovTopicARN, loaMsg);
-        } else {
-            logger.info("not sending malformed LOA SNS. List of malformed loaSysIds is empty");
+        if (msgType == "TAC") {
+            msg += tacMsg + tacSysIdsListHeader;
+        } else if (msgType == "LOA") {
+            msg += loaMsg + loaSysIdsListHeader;
         }
-    }
 
-    public void sendMalformedDataSNSTAC(ArrayList<String> tacSysIds) throws MessagingException, URISyntaxException {
-        if (tacSysIds.size() > 0) {
-            logger.info("sending malformed TAC SNS");
-            String tacMsg = "Malformed TAC data has been detected when ingesting TGET Data.";
-            String tacSysIdsListHeader = "The following tacSysIds had malformed rows: \n";
-            String tacSysIdsListed = "";
-
-            for (String tacSysId : tacSysIds) {
-                tacSysIdsListed += tacSysId + "\n";
-            }
-
-            tacMsg += "\n" + tacSysIdsListHeader + "\n" + tacSysIdsListed;
-
-            send(engGovTopicARN, tacMsg);
-            logger.info("finished sending malformed TAC SNS");
-        } else {
-            logger.info("not sending malformed TAC SNS. List of malformed tacSysIds is empty");
+        for (String sysId : sysIds) {
+            sysIdsListed += sysId + "\n";
         }
+
+        msg += sysIdsListed;
+
+        logger.info("sending malformed " + msgType + " SNS");
+        send(engGovTopicARN, msg);
+        logger.info("finished sending malformed " + msgType + " SNS");
+
     }
 
     private void send(String topicArn, String msg) throws MessagingException, URISyntaxException {

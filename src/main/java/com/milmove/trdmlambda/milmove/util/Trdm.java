@@ -213,7 +213,7 @@ public class Trdm {
                             try {
                                 logger.info(
                                         "malformed TAC data detected when parsing. Sending malformed TAC data SNS notification");
-                                snsService.sendMalformedDataSNSTAC(tacParser.getMalformedTacList());
+                                snsService.sendMalformedData(tacParser.getMalformedTacList(), "TAC");
                                 ;
                                 logger.info("finished sending malformed TAC SNS notification");
                             } catch (Exception e) {
@@ -247,7 +247,7 @@ public class Trdm {
                             try {
                                 logger.info(
                                         "malformed LOA data detected when parsing. Sending malformed LOA data SNS notification");
-                                snsService.sendMalformedDataSNSLOA(loaParser.getMalformedLoaList());
+                                snsService.sendMalformedData(loaParser.getMalformedLoaList(), "LOA");
                                 ;
                                 logger.info("finished sending malformed LOA SNS notification");
                             } catch (Exception e) {
