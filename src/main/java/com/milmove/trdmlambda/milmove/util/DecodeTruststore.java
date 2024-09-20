@@ -7,18 +7,18 @@ import java.util.Base64;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import com.milmove.trdmlambda.milmove.service.S3Service;
+
 import ch.qos.logback.classic.Logger;
 
 @Component
 public class DecodeTruststore {
     private Logger logger = (Logger) LoggerFactory.getLogger(DecodeTruststore.class);
 
-    private String base64Content;
     private String filepath;
     private String password;
 
-    public DecodeTruststore(SecretFetcher secretFetcher) {
-        this.base64Content = secretFetcher.getSecret("trdm_lambda_milmove_truststore_base64");
+    public DecodeTruststore(SecretFetcher secretFetcher, S3Service s3Service) {
         this.filepath = secretFetcher.getSecret("trdm_lambda_milmove_truststore_filepath");
         this.password = secretFetcher.getSecret("trdm_lambda_milmove_truststore_password");
 
@@ -33,7 +33,8 @@ public class DecodeTruststore {
         }
 
         try {
-            byte[] decodedBytes = Base64.getDecoder().decode(base64Content);
+            String trdmTruststoreContent = s3Service.getTRDMTruststore();
+            byte[] decodedBytes = Base64.getDecoder().decode(trdmTruststoreContent);
             try (FileOutputStream fos = new FileOutputStream(file)) {
                 fos.write(decodedBytes);
             }
