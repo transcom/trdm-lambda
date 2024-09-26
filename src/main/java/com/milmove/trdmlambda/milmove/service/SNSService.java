@@ -3,6 +3,8 @@ package com.milmove.trdmlambda.milmove.service;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.milmove.trdmlambda.milmove.util.SecretFetcher;
+
 import ch.qos.logback.classic.Logger;
 import jakarta.mail.MessagingException;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
@@ -19,10 +21,11 @@ import java.util.ArrayList;
 public class SNSService {
 
     private Logger logger = (Logger) LoggerFactory.getLogger(SNSService.class);
-    private final String engGovTopicARN = "arn:aws-us-gov:sns:us-gov-west-1:015932076428:eng-gov-notification";
+    private String snsTopicARN;
 
-    public SNSService() throws URISyntaxException {
+    public SNSService(SecretFetcher secretFetcher) throws URISyntaxException {
         logger.info("starting initialization of SNS Service");
+        this.snsTopicARN = secretFetcher.getSecret("sns_topic_arn");
         logger.info("finished initializing SNS Service");
     }
 
@@ -49,7 +52,7 @@ public class SNSService {
         msg += sysIdsListed;
 
         logger.info("sending malformed " + msgType + " SNS");
-        send(engGovTopicARN, msg);
+        send(snsTopicARN, msg);
         logger.info("finished sending malformed " + msgType + " SNS");
 
     }

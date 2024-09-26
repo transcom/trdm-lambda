@@ -6,6 +6,8 @@ import java.net.URISyntaxException;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import com.milmove.trdmlambda.milmove.util.SecretFetcher;
+
 import ch.qos.logback.classic.Logger;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.core.ResponseInputStream;
@@ -21,16 +23,19 @@ public class S3Service {
     private Logger logger = (Logger) LoggerFactory.getLogger(S3Service.class);
 
     private S3Client s3Client;
-    private final String trdmBucketName = "transcom-gov-milmove-stg-lambda-trdm-soap-us-gov-west-1";
-    private final String trdmTruststoreKeyName = "trdm_lambda_milmove_truststore_base64.txt";
+    private String trdmBucketName;
+    private String trdmTruststoreKeyName;
 
-    public S3Service() throws URISyntaxException {
+    public S3Service(SecretFetcher secretFetcher) throws URISyntaxException {
         logger.info("S3Service::S3Service - starting initialization of S3 Service");
 
         this.s3Client = S3Client.builder()
                 .region(Region.US_GOV_WEST_1)
                 .credentialsProvider(DefaultCredentialsProvider.create())
                 .build();
+
+        this.trdmBucketName = secretFetcher.getSecret("trdm_s3_bucket_name");
+        this.trdmTruststoreKeyName = secretFetcher.getSecret("trdm_truststore_keystore");
 
         logger.info("S3Service::S3Service - finished initialization of S3 Service");
     }

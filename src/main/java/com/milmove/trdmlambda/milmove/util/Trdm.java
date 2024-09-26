@@ -53,6 +53,7 @@ public class Trdm {
     private final TransportationAccountingCodeParser tacParser;
     private final LineOfAccountingParser loaParser;
     private final SNSService snsService;
+    private String snsForcePublish;
 
     private final Connection rdsConnection;
     private static final Set<String> allowedTableNames = Set.of("transportation_accounting_codes",
@@ -65,6 +66,7 @@ public class Trdm {
             DatabaseService databaseService,
             SNSService snsService,
             TransportationAccountingCodeParser tacParser,
+            SecretFetcher secretFetcher,
             LineOfAccountingParser loaParser) throws SQLException {
 
         this.lastTableUpdateService = lastTableUpdateService;
@@ -73,6 +75,7 @@ public class Trdm {
         this.snsService = snsService;
         this.tacParser = tacParser;
         this.loaParser = loaParser;
+        this.snsForcePublish = secretFetcher.getSecret("sns_force_publish");
 
         rdsConnection = databaseService.getConnection();
 
@@ -209,7 +212,7 @@ public class Trdm {
                         databaseService.insertTransportationAccountingCodes(createTacs);
                         logger.info("finished inserting TACs into DB");
 
-                        if (tacParser.getMalformedTacList().size() > 0) {
+                        if (tacParser.getMalformedTacList().size() > 0 || snsForcePublish == "true") {
                             try {
                                 logger.info(
                                         "malformed TAC data detected when parsing. Sending malformed TAC data SNS notification");
@@ -243,7 +246,7 @@ public class Trdm {
                         databaseService.insertLinesOfAccounting(createLoas);
                         logger.info("finished inserting LOAs into DB");
 
-                        if (loaParser.getMalformedLoaList().size() > 0) {
+                        if (loaParser.getMalformedLoaList().size() > 0 || snsForcePublish == "true") {
                             try {
                                 logger.info(
                                         "malformed LOA data detected when parsing. Sending malformed LOA data SNS notification");
