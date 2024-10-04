@@ -52,6 +52,8 @@ class TrdmTest {
     @Mock
     private TransportationAccountingCodeParser tacParser;
     @Mock
+    private SecretFetcher secretFetcher;
+    @Mock
     private LineOfAccountingParser loaParser;
     private XMLGregorianCalendar ourLastUpdate;
     private XMLGregorianCalendar trdmLastUpdate;
