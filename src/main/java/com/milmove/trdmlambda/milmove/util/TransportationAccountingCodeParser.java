@@ -117,28 +117,28 @@ public class TransportationAccountingCodeParser {
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
             TransportationAccountingCode code = new TransportationAccountingCode();
-            code.setTacSysID(values[columnHeaders.get("TAC_SYS_ID")]);
-            code.setLoaSysID(values[columnHeaders.get("LOA_SYS_ID")]);
-            code.setTac(values[columnHeaders.get("TRNSPRTN_ACNT_CD")]);
-            code.setTacFyTxt(values[columnHeaders.get("TAC_FY_TXT")]);
-            code.setTacFnBlModCd(values[columnHeaders.get("TAC_FN_BL_MOD_CD")]);
-            code.setOrgGrpDfasCd(values[columnHeaders.get("ORG_GRP_DFAS_CD")]);
-            code.setTacMvtDsgID(values[columnHeaders.get("TAC_MVT_DSG_ID")]);
-            code.setTacTyCd(values[columnHeaders.get("TAC_TY_CD")]);
-            code.setTacUseCd(values[columnHeaders.get("TAC_USE_CD")]);
-            code.setTacMajClmtID(values[columnHeaders.get("TAC_MAJ_CLMT_ID")]);
-            code.setTacBillActTxt(values[columnHeaders.get("TAC_BILL_ACT_TXT")]);
-            code.setTacCostCtrNm(values[columnHeaders.get("TAC_COST_CTR_NM")]);
-            code.setBuic(values[columnHeaders.get("BUIC")]);
-            code.setTacHistCd(values[columnHeaders.get("TAC_HIST_CD")]);
-            code.setTacStatCd(values[columnHeaders.get("TAC_STAT_CD")]);
-            code.setTrnsprtnAcntTx(values[columnHeaders.get("TRNSPRTN_ACNT_TX")]);
-            code.setDdActvtyAdrsID(values[columnHeaders.get("DD_ACTVTY_ADRS_ID")]);
-            code.setTacBlldAddFrstLnTx(values[columnHeaders.get("TAC_BLLD_ADD_FRST_LN_TX")]);
-            code.setTacBlldAddScndLnTx(values[columnHeaders.get("TAC_BLLD_ADD_SCND_LN_TX")]);
-            code.setTacBlldAddThrdLnTx(values[columnHeaders.get("TAC_BLLD_ADD_THRD_LN_TX")]);
-            code.setTacBlldAddFrthLnTx(values[columnHeaders.get("TAC_BLLD_ADD_FRTH_LN_TX")]);
-            code.setTacFnctPocNm(values[columnHeaders.get("TAC_FNCT_POC_NM")]);
+            code.setTacSysID((String) getDelimitedValue(values[columnHeaders.get("TAC_SYS_ID")]));
+            code.setLoaSysID((String) getDelimitedValue(values[columnHeaders.get("LOA_SYS_ID")]));
+            code.setTac((String) getDelimitedValue(values[columnHeaders.get("TRNSPRTN_ACNT_CD")]));
+            code.setTacFyTxt((String) getDelimitedValue(values[columnHeaders.get("TAC_FY_TXT")]));
+            code.setTacFnBlModCd((String) getDelimitedValue(values[columnHeaders.get("TAC_FN_BL_MOD_CD")]));
+            code.setOrgGrpDfasCd((String) getDelimitedValue(values[columnHeaders.get("ORG_GRP_DFAS_CD")]));
+            code.setTacMvtDsgID((String) getDelimitedValue(values[columnHeaders.get("TAC_MVT_DSG_ID")]));
+            code.setTacTyCd((String) getDelimitedValue(values[columnHeaders.get("TAC_TY_CD")]));
+            code.setTacUseCd((String) getDelimitedValue(values[columnHeaders.get("TAC_USE_CD")]));
+            code.setTacMajClmtID((String) getDelimitedValue(values[columnHeaders.get("TAC_MAJ_CLMT_ID")]));
+            code.setTacBillActTxt((String) getDelimitedValue(values[columnHeaders.get("TAC_BILL_ACT_TXT")]));
+            code.setTacCostCtrNm((String) getDelimitedValue(values[columnHeaders.get("TAC_COST_CTR_NM")]));
+            code.setBuic((String) getDelimitedValue(values[columnHeaders.get("BUIC")]));
+            code.setTacHistCd((String) getDelimitedValue(values[columnHeaders.get("TAC_HIST_CD")]));
+            code.setTacStatCd((String) getDelimitedValue(values[columnHeaders.get("TAC_STAT_CD")]));
+            code.setTrnsprtnAcntTx((String) getDelimitedValue(values[columnHeaders.get("TRNSPRTN_ACNT_TX")]));
+            code.setDdActvtyAdrsID((String) getDelimitedValue(values[columnHeaders.get("DD_ACTVTY_ADRS_ID")]));
+            code.setTacBlldAddFrstLnTx((String) getDelimitedValue(values[columnHeaders.get("TAC_BLLD_ADD_FRST_LN_TX")]));
+            code.setTacBlldAddScndLnTx((String) getDelimitedValue(values[columnHeaders.get("TAC_BLLD_ADD_SCND_LN_TX")]));
+            code.setTacBlldAddThrdLnTx((String) getDelimitedValue(values[columnHeaders.get("TAC_BLLD_ADD_THRD_LN_TX")]));
+            code.setTacBlldAddFrthLnTx((String) getDelimitedValue(values[columnHeaders.get("TAC_BLLD_ADD_FRTH_LN_TX")]));
+            code.setTacFnctPocNm((String) getDelimitedValue(values[columnHeaders.get("TAC_FNCT_POC_NM")]));
             code.setTrnsprtnAcntBgnDt(effectiveDate);
             code.setTrnsprtnAcntEndDt(expiredDate);
             code.setUpdatedAt(convertXMLGregorianCalendarToLocalDateTime(trdmLastUpdate));
@@ -161,4 +161,11 @@ public class TransportationAccountingCodeParser {
         return malformedTacSysIds;
     }
 
+    // Helper function to support null and trimming from the file
+    private Object getDelimitedValue(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        return value.trim();
+    }
 }

@@ -2,7 +2,9 @@ package com.milmove.trdmlambda.milmove.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -262,7 +264,7 @@ public class DatabaseServiceTest {
         assertEquals(testTacs.get(0).getTac(), codes.get(0).getTac());
     }
 
-     // Test that we get a list of loa_sys_ids that occur more than once
+    // Test that we get a list of loa_sys_ids that occur more than once
     // DatabaseService.getLoaSysIdCountGreaterThan1()
     @Test
     void testGetLoaSysIdCountGreaterThan1() throws Exception {
@@ -277,7 +279,8 @@ public class DatabaseServiceTest {
         int min = time.getMinute();
         int sec = time.getSecond();
 
-        String dayTime = Integer.toString(mo) + Integer.toString(day) + Integer.toString(year) + Integer.toString(hr) + Integer.toString(hr) + Integer.toString(min) + Integer.toString(sec);
+        String dayTime = Integer.toString(mo) + Integer.toString(day) + Integer.toString(year) + Integer.toString(hr)
+                + Integer.toString(hr) + Integer.toString(min) + Integer.toString(sec);
 
         String testLoaSysId = "dum" + dayTime;
         String nonDupLoaSysId = testLoaSysId + "a";
@@ -309,7 +312,7 @@ public class DatabaseServiceTest {
     // DatabaseService.deleteLoas()
     @Test
     void testDeleteLoas() throws Exception {
-        
+
         setUpTests();
 
         // Create mock loas for test
@@ -476,4 +479,80 @@ public class DatabaseServiceTest {
 
         return mockTac;
     }
+
+    @Test
+    void testInsertLoasWithNullValues() throws Exception {
+        setUpTests();
+
+        // Create mock LOA with some null values
+        ArrayList<LineOfAccounting> testLoas = createMockLoasWithNullValues(1);
+        spyDatabaseService.insertLinesOfAccounting(testLoas);
+
+        // Verify
+        String sql = "select * from lines_of_accounting where id = ?";
+        try (Connection conn = DriverManager.getConnection(testDbUrl);
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setObject(1, testLoas.get(0).getId());
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                assertEquals(testLoas.get(0).getLoaTnsfrDptNm(), rs.getString("loa_tnsfr_dpt_nm"));
+                assertNull(rs.getString("loa_baf_id"));
+            } else {
+                fail("Inserted LOA with nulls not found in the database");
+            }
+        }
+    }
+
+    @Test
+    void testInsertTacsWithNullValues() throws Exception {
+        setUpTests();
+
+        // Create TACs with null values
+        ArrayList<TransportationAccountingCode> testTacs = createMockTacsWithNullValues(1);
+        spyDatabaseService.insertTransportationAccountingCodes(testTacs);
+        // Verify
+        String sql = "select * from transportation_accounting_codes where id = ?";
+        try (Connection conn = DriverManager.getConnection(testDbUrl);
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setObject(1, testTacs.get(0).getId());
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                assertEquals(testTacs.get(0).getTacCostCtrNm(), rs.getString("tac_cost_ctr_nm"));
+                assertNull(rs.getString("tac_mvt_dsg_id"));
+            } else {
+                fail("Inserted TAC with nulls not found in the database");
+            }
+        }
+    }
+
+    private ArrayList<TransportationAccountingCode> createMockTacsWithNullValues(int amount) {
+        ArrayList<TransportationAccountingCode> mockTacs = new ArrayList<>();
+
+        for (int i = 0; i < amount; i++) {
+            TransportationAccountingCode tac = createMockTac();
+            tac.setTacCostCtrNm(null);
+            tac.setTacMvtDsgID(null);
+            mockTacs.add(tac);
+        }
+
+        return mockTacs;
+    }
+
+    private ArrayList<LineOfAccounting> createMockLoasWithNullValues(int amount) {
+        ArrayList<LineOfAccounting> mockLoas = new ArrayList<>();
+
+        for (int i = 0; i < amount; i++) {
+            LineOfAccounting loa = createMockLoa();
+            loa.setLoaTnsfrDptNm(null);
+            loa.setLoaBafID(null);
+            mockLoas.add(loa);
+        }
+
+        return mockLoas;
+    }
+
 }
