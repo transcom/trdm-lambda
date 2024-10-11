@@ -123,33 +123,47 @@ public class LineOfAccountingParser {
 
         try {
             LineOfAccounting loa = new LineOfAccounting();
-            loa.setLoaSysID(values[columnHeaders.get("LOA_SYS_ID")]);
-            loa.setLoaDptID(values[columnHeaders.get("LOA_DPT_ID")]);
-            loa.setLoaTnsfrDptNm(values[columnHeaders.get("LOA_TNSFR_DPT_NM")]);
-            loa.setLoaBafID(values[columnHeaders.get("LOA_BAF_ID")]);
-            loa.setLoaTrsySfxTx(values[columnHeaders.get("LOA_TRSY_SFX_TX")]);
-            loa.setLoaMajClmNm(values[columnHeaders.get("LOA_MAJ_CLM_NM")]);
-            loa.setLoaOpAgncyID(values[columnHeaders.get("LOA_OP_AGNCY_ID")]);
-            loa.setLoaAlltSnID(values[columnHeaders.get("LOA_ALLT_SN_ID")]);
-            loa.setLoaPgmElmntID(values[columnHeaders.get("LOA_PGM_ELMNT_ID")]);
-            loa.setLoaTskBdgtSblnTx(values[columnHeaders.get("LOA_TSK_BDGT_SBLN_TX")]);
-            loa.setLoaDfAgncyAlctnRcpntID(values[columnHeaders.get("LOA_DF_AGNCY_ALCTN_RCPNT_ID")]);
-            loa.setLoaJbOrdNm(values[columnHeaders.get("LOA_JB_ORD_NM")]);
-            loa.setLoaSbaltmtRcpntID(values[columnHeaders.get("LOA_SBALTMT_RCPNT_ID")]);
-            loa.setLoaWkCntrRcpntNm(values[columnHeaders.get("LOA_WK_CNTR_RCPNT_NM")]);
-            loa.setLoaMajRmbsmtSrcID(values[columnHeaders.get("LOA_MAJ_RMBSMT_SRC_ID")]);
-            loa.setLoaDtlRmbsmtSrcID(values[columnHeaders.get("LOA_DTL_RMBSMT_SRC_ID")]);
-            loa.setLoaCustNm(values[columnHeaders.get("LOA_CUST_NM")]);
-            loa.setLoaObjClsID(values[columnHeaders.get("LOA_OBJ_CLS_ID")]);
-            loa.setLoaSrvSrcID(values[columnHeaders.get("LOA_SRV_SRC_ID")]);
-            loa.setLoaSpclIntrID(values[columnHeaders.get("LOA_SPCL_INTR_ID")]);
-            loa.setLoaBdgtAcntClsNm(values[columnHeaders.get("LOA_BDGT_ACNT_CLS_NM")]);
-            loa.setLoaDocID(values[columnHeaders.get("LOA_DOC_ID")]);
-            loa.setLoaClsRefID(values[columnHeaders.get("LOA_CLS_REF_ID")]);
-            loa.setLoaInstlAcntgActID(values[columnHeaders.get("LOA_INSTL_ACNTG_ACT_ID")]);
-            loa.setLoaLclInstlID(values[columnHeaders.get("LOA_LCL_INSTL_ID")]);
-            loa.setLoaFmsTrnsactnID(values[columnHeaders.get("LOA_FMS_TRNSACTN_ID")]);
-            loa.setLoaDscTx(values[columnHeaders.get("LOA_DSC_TX")]);
+            loa.setLoaSysID((String) getDelimitedValue(values[columnHeaders.get("LOA_SYS_ID")]));
+            loa.setLoaDptID((String) getDelimitedValue(values[columnHeaders.get("LOA_DPT_ID")]));
+            loa.setLoaTnsfrDptNm(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_TNSFR_DPT_NM")]));
+            loa.setLoaBafID((String) getDelimitedValue(values[columnHeaders.get("LOA_BAF_ID")]));
+            loa.setLoaTrsySfxTx((String) getDelimitedValue(values[columnHeaders.get("LOA_TRSY_SFX_TX")]));
+            loa.setLoaMajClmNm((String) getDelimitedValue(values[columnHeaders.get("LOA_MAJ_CLM_NM")]));
+            loa.setLoaOpAgncyID((String) getDelimitedValue(values[columnHeaders.get("LOA_OP_AGNCY_ID")]));
+            loa.setLoaAlltSnID((String) getDelimitedValue(values[columnHeaders.get("LOA_ALLT_SN_ID")]));
+            loa.setLoaPgmElmntID(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_PGM_ELMNT_ID")]));
+            loa.setLoaTskBdgtSblnTx(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_TSK_BDGT_SBLN_TX")]));
+            loa.setLoaDfAgncyAlctnRcpntID(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_DF_AGNCY_ALCTN_RCPNT_ID")]));
+            loa.setLoaJbOrdNm((String) getDelimitedValue(values[columnHeaders.get("LOA_JB_ORD_NM")]));
+            loa.setLoaSbaltmtRcpntID(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_SBALTMT_RCPNT_ID")]));
+            loa.setLoaWkCntrRcpntNm(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_WK_CNTR_RCPNT_NM")]));
+            loa.setLoaMajRmbsmtSrcID(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_MAJ_RMBSMT_SRC_ID")]));
+            loa.setLoaDtlRmbsmtSrcID(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_DTL_RMBSMT_SRC_ID")]));
+            loa.setLoaCustNm((String) getDelimitedValue(values[columnHeaders.get("LOA_CUST_NM")]));
+            loa.setLoaObjClsID((String) getDelimitedValue(values[columnHeaders.get("LOA_OBJ_CLS_ID")]));
+            loa.setLoaSrvSrcID((String) getDelimitedValue(values[columnHeaders.get("LOA_SRV_SRC_ID")]));
+            loa.setLoaSpclIntrID(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_SPCL_INTR_ID")]));
+            loa.setLoaBdgtAcntClsNm(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_BDGT_ACNT_CLS_NM")]));
+            loa.setLoaDocID((String) getDelimitedValue(values[columnHeaders.get("LOA_DOC_ID")]));
+            loa.setLoaClsRefID((String) getDelimitedValue(values[columnHeaders.get("LOA_CLS_REF_ID")]));
+            loa.setLoaInstlAcntgActID(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_INSTL_ACNTG_ACT_ID")]));
+            loa.setLoaLclInstlID(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_LCL_INSTL_ID")]));
+            loa.setLoaFmsTrnsactnID(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_FMS_TRNSACTN_ID")]));
+            loa.setLoaDscTx((String) getDelimitedValue(values[columnHeaders.get("LOA_DSC_TX")]));
+
             if (values[columnHeaders.get("LOA_BGN_DT")] != null) {
                 LocalDateTime beginDate = LocalDateTime.parse(values[columnHeaders.get("LOA_BGN_DT")],
                         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -160,30 +174,40 @@ public class LineOfAccountingParser {
                         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
                 loa.setLoaEndDt(endDate);
             }
-            loa.setLoaFnctPrsNm(values[columnHeaders.get("LOA_FNCT_PRS_NM")]);
-            loa.setLoaStatCd(values[columnHeaders.get("LOA_STAT_CD")]);
-            loa.setLoaHistStatCd(values[columnHeaders.get("LOA_HIST_STAT_CD")]);
-            loa.setLoaHsGdsCd(values[columnHeaders.get("LOA_HS_GDS_CD")]);
-            loa.setOrgGrpDfasCd(values[columnHeaders.get("ORG_GRP_DFAS_CD")]);
-            loa.setLoaUic(values[columnHeaders.get("LOA_UIC")]);
-            loa.setLoaTrnsnID(values[columnHeaders.get("LOA_TRNSN_ID")]);
-            loa.setLoaSubAcntID(values[columnHeaders.get("LOA_SUB_ACNT_ID")]);
-            loa.setLoaBetCd(values[columnHeaders.get("LOA_BET_CD")]);
-            loa.setLoaFndTyFgCd(values[columnHeaders.get("LOA_FND_TY_FG_CD")]);
-            loa.setLoaBgtLnItmID(values[columnHeaders.get("LOA_BGT_LN_ITM_ID")]);
-            loa.setLoaScrtyCoopImplAgncCd(values[columnHeaders.get("LOA_SCRTY_COOP_IMPL_AGNC_CD")]);
-            loa.setLoaScrtyCoopDsgntrCd(values[columnHeaders.get("LOA_SCRTY_COOP_DSGNTR_CD")]);
-            loa.setLoaScrtyCoopLnItmID(values[columnHeaders.get("LOA_SCRTY_COOP_LN_ITM_ID")]);
-            loa.setLoaAgncDsbrCd(values[columnHeaders.get("LOA_AGNC_DSBR_CD")]);
-            loa.setLoaAgncAcntngCd(values[columnHeaders.get("LOA_AGNC_ACNTNG_CD")]);
-            loa.setLoaFndCntrID(values[columnHeaders.get("LOA_FND_CNTR_ID")]);
-            loa.setLoaCstCntrID(values[columnHeaders.get("LOA_CST_CNTR_ID")]);
-            loa.setLoaPrjID(values[columnHeaders.get("LOA_PRJ_ID")]);
-            loa.setLoaActvtyID(values[columnHeaders.get("LOA_ACTVTY_ID")]);
-            loa.setLoaCstCd(values[columnHeaders.get("LOA_CST_CD")]);
-            loa.setLoaWrkOrdID(values[columnHeaders.get("LOA_WRK_ORD_ID")]);
-            loa.setLoaFnclArID(values[columnHeaders.get("LOA_FNCL_AR_ID")]);
-            loa.setLoaScrtyCoopCustCd(values[columnHeaders.get("LOA_SCRTY_COOP_CUST_CD")]);
+            loa.setLoaFnctPrsNm((String) getDelimitedValue(values[columnHeaders.get("LOA_FNCT_PRS_NM")]));
+            loa.setLoaStatCd((String) getDelimitedValue(values[columnHeaders.get("LOA_STAT_CD")]));
+            loa.setLoaHistStatCd(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_HIST_STAT_CD")]));
+            loa.setLoaHsGdsCd((String) getDelimitedValue(values[columnHeaders.get("LOA_HS_GDS_CD")]));
+            loa.setOrgGrpDfasCd((String) getDelimitedValue(values[columnHeaders.get("ORG_GRP_DFAS_CD")]));
+            loa.setLoaUic((String) getDelimitedValue(values[columnHeaders.get("LOA_UIC")]));
+            loa.setLoaTrnsnID((String) getDelimitedValue(values[columnHeaders.get("LOA_TRNSN_ID")]));
+            loa.setLoaSubAcntID((String) getDelimitedValue(values[columnHeaders.get("LOA_SUB_ACNT_ID")]));
+            loa.setLoaBetCd((String) getDelimitedValue(values[columnHeaders.get("LOA_BET_CD")]));
+            loa.setLoaFndTyFgCd(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_FND_TY_FG_CD")]));
+            loa.setLoaBgtLnItmID(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_BGT_LN_ITM_ID")]));
+            loa.setLoaScrtyCoopImplAgncCd(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_SCRTY_COOP_IMPL_AGNC_CD")]));
+            loa.setLoaScrtyCoopDsgntrCd(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_SCRTY_COOP_DSGNTR_CD")]));
+            loa.setLoaScrtyCoopLnItmID(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_SCRTY_COOP_LN_ITM_ID")]));
+            loa.setLoaAgncDsbrCd(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_AGNC_DSBR_CD")]));
+            loa.setLoaAgncAcntngCd(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_AGNC_ACNTNG_CD")]));
+            loa.setLoaFndCntrID((String) getDelimitedValue(values[columnHeaders.get("LOA_FND_CNTR_ID")]));
+            loa.setLoaCstCntrID((String) getDelimitedValue(values[columnHeaders.get("LOA_CST_CNTR_ID")]));
+            loa.setLoaPrjID((String) getDelimitedValue(values[columnHeaders.get("LOA_PRJ_ID")]));
+            loa.setLoaActvtyID((String) getDelimitedValue(values[columnHeaders.get("LOA_ACTVTY_ID")]));
+            loa.setLoaCstCd((String) getDelimitedValue(values[columnHeaders.get("LOA_CST_CD")]));
+            loa.setLoaWrkOrdID((String) getDelimitedValue(values[columnHeaders.get("LOA_WRK_ORD_ID")]));
+            loa.setLoaFnclArID((String) getDelimitedValue(values[columnHeaders.get("LOA_FNCL_AR_ID")]));
+            loa.setLoaScrtyCoopCustCd(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_SCRTY_COOP_CUST_CD")]));
+
             String loaEndFyTxValue = values[columnHeaders.get("LOA_END_FY_TX")];
             if (!loaEndFyTxValue.equals("")) {
                 loa.setLoaEndFyTx(Integer.parseInt(loaEndFyTxValue));
@@ -196,8 +220,9 @@ public class LineOfAccountingParser {
             } else {
                 loa.setLoaBgFyTx(null);
             }
-            loa.setLoaBgtRstrCd(values[columnHeaders.get("LOA_BGT_RSTR_CD")]);
-            loa.setLoaBgtSubActCd(values[columnHeaders.get("LOA_BGT_SUB_ACT_CD")]);
+            loa.setLoaBgtRstrCd((String) getDelimitedValue(values[columnHeaders.get("LOA_BGT_RSTR_CD")]));
+            loa.setLoaBgtSubActCd(
+                    (String) getDelimitedValue(values[columnHeaders.get("LOA_BGT_SUB_ACT_CD")]));
             loa.setUpdatedAt(convertXMLGregorianCalendarToLocalDateTime(lastLoaUpdate));
             return loa;
         } catch (DateTimeParseException e) {
@@ -218,4 +243,11 @@ public class LineOfAccountingParser {
         return malformedLoaSysIds;
     }
 
+    // Helper function to to support null and trimming from the file
+    private Object getDelimitedValue(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        return value.trim();
+    }
 }

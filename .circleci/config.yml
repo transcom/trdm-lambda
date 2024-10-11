@@ -357,6 +357,32 @@ workflows:
           filters:
             branches:
               only: main
+      - approve:
+          name: approve before production release
+          type: approval
+          context:
+            - Workflow Approvers
+          requires:
+            - upload and set ssm param for stg
+          filters:
+            branches:
+              only: main
+      - auth_check:
+          name: auth check before production release
+          requires:
+            - approve before production release
+          filters:
+            branches:
+              only: main
+      - upload_and_set_ssm_version_control_param:
+          environment: prd
+          name: upload and set ssm param for prd
+          requires:
+            - auth check before production release
+          filters:
+            branches:
+              only: main
+
       # Awaiting further security review and permissions
       # - plan:
       #     name: terraform plan for exp

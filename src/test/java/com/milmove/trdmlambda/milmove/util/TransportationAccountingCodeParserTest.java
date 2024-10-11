@@ -3,11 +3,13 @@ package com.milmove.trdmlambda.milmove.util;
 
 import org.junit.jupiter.api.Test;
 
+import com.milmove.trdmlambda.milmove.model.LineOfAccounting;
 import com.milmove.trdmlambda.milmove.model.TransportationAccountingCode;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -55,10 +57,10 @@ class TransportationAccountingCodeParserTest {
         expectedCode.setTacBlldAddThrdLnTx("THIRD LINE");
         expectedCode.setTacBlldAddFrthLnTx("FOURTH LINE");
         expectedCode.setTacFnctPocNm("Contact Person Here");
-        expectedCode.setTacMvtDsgID("");
-        expectedCode.setTacBillActTxt("");
-        expectedCode.setBuic("");
-        expectedCode.setTacHistCd("");
+        expectedCode.setTacMvtDsgID(null);
+        expectedCode.setTacBillActTxt(null);
+        expectedCode.setBuic(null);
+        expectedCode.setTacHistCd(null);
         expectedCode.setUpdatedAt(convertXMLGregorianCalendarToLocalDateTime(today));
 
         assertEquals(expectedCode, result.get(0));
@@ -83,6 +85,37 @@ class TransportationAccountingCodeParserTest {
         assertTrue(result.isEmpty());
     }
 
+    // Test that when the delimited value is empty spaces or if it has trailing
+    // spaces that it will be omitted
+    @Test
+    void testTacParserWithTrailingSpaces() throws IOException, DatatypeConfigurationException, IllegalArgumentException, IllegalAccessException {
+        byte[] bytes = Files.readAllBytes(Paths.get("src/test/resources/Transportation_Account.txt"));
+        TransportationAccountingCodeParser parser = new TransportationAccountingCodeParser();
+
+        GregorianCalendar gregorianCalendar = new GregorianCalendar();
+        XMLGregorianCalendar today = DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar);
+        List<TransportationAccountingCode> result = parser.parse(bytes, today);
+
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+
+        // Check no field has empty strings or trailing spaces
+        for (TransportationAccountingCode tac : result) {
+            // Reflect
+            for (Field field : tac.getClass().getDeclaredFields()) {
+                if (field.getType().equals(String.class)) {
+                    field.setAccessible(true); // Set field public for testing purposes
+                    String value = (String) field.get(tac);
+                    if (value != null) {
+                        assertFalse(value.isEmpty(), "Field " + field.getName() + " should not be empty");
+                        assertEquals(value.trim(), value,
+                                "Field " + field.getName() + " should not have trailing spaces");
+                    }
+                }
+            }
+        }
+    }
+ 
     private LocalDateTime convertXMLGregorianCalendarToLocalDateTime(XMLGregorianCalendar xmlGregorianCalendar) {
         if (xmlGregorianCalendar == null) {
             return null;
