@@ -312,13 +312,21 @@ public class Trdm {
     public List<LineOfAccounting> identifyLoasToUpdate(List<LineOfAccounting> newLoas,
             ArrayList<LineOfAccounting> currentLoas) {
         logger.info("identifying Loas to update");
-        return newLoas.stream()
-                .filter(newLoa -> currentLoas.stream()
-                        .map(currentLoa -> currentLoa.getLoaSysID()) // Map out loa_sys_ids from a list of current loas
-                                                                     // in the database
-                        .collect(Collectors.toList())
-                        .contains(newLoa.getLoaSysID())) // Does the new LOA loaSysId exist in a list of loa_sys_ids
-                .collect(Collectors.toList());
+
+        ArrayList<LineOfAccounting> loasToUpdate = new ArrayList<LineOfAccounting>();
+
+        ArrayList<String> currentloaSysIds = new ArrayList<String>();
+        for (LineOfAccounting loa : currentLoas) {
+            currentloaSysIds.add(loa.getLoaSysID());
+        }
+
+        for (LineOfAccounting loa : newLoas) {
+            if (currentloaSysIds.contains(loa.getLoaSysID())) {
+                loasToUpdate.add(loa);
+            }
+        }
+
+        return loasToUpdate;
     }
 
     // This method identifies loas to create based on filtering the newLoas by which
