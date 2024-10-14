@@ -194,15 +194,20 @@ public class Trdm {
                         List<TransportationAccountingCode> codes = tacParser.parse(getTableResponse.getAttachment(),
                                 oneWeekLater);
 
+                        logger.info("building list of TACs to update");
                         // Generate list of TACs that needs to be updated. If TAC is in currentTacs then
                         // the
                         // TAC will be in updateTacs list because the TAC already exist
                         List<TransportationAccountingCode> updateTacs = identifyTacsToUpdate(codes, currentTacs);
+                        logger.info("finished building list of TACs to update");
 
+                        logger.info("building list of TACs to create");
                         // Generate list of TACs that needs to be created. If the TAC is not in
                         // updateTacs then it will be in createTacs because it does not exist and needs
                         // to be created.
                         List<TransportationAccountingCode> createTacs = identifyTacsToCreate(codes, updateTacs);
+                        logger.info("finished building list of TACs to create");
+
 
                         logger.info("updating TACs in DB");
                         databaseService.updateTransportationAccountingCodes(updateTacs);
@@ -231,13 +236,18 @@ public class Trdm {
                         List<LineOfAccounting> loas = loaParser.parse(getTableResponse.getAttachment(),
                                 oneWeekLater);
 
+                        logger.info("building list of LOAs to update");
                         // Generate list of loas that needs to be updated. If loas are in curentLoas
                         // then the loa will be in updateLoas list because the loa already exist
                         List<LineOfAccounting> updateLoas = identifyLoasToUpdate(loas, currentLoas);
+                        logger.info("finished building list of LOAs to update");
 
+
+                        logger.info("building list of LOAs to create");
                         // Build Loa codes needed to create. If the code is not in updateLoas then it
                         // will be in createLoas because it does not exist and needs to be created.
                         List<LineOfAccounting> createLoas = identifyLoasToCreate(loas, updateLoas);
+                        logger.info("finished building list of LOAs to create");
 
                         logger.info("updating LOAs in DB");
                         databaseService.updateLinesOfAccountingCodes(updateLoas);
