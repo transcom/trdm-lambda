@@ -293,8 +293,28 @@ public class Trdm {
     // update it
     public List<TransportationAccountingCode> identifyTacsToUpdate(List<TransportationAccountingCode> newTacs,
             ArrayList<TransportationAccountingCode> currentTacs) {
-        return newTacs.stream().filter(newTac -> currentTacs.stream().map(currentTac -> currentTac.getTacSysID())
-                .collect(Collectors.toList()).contains(newTac.getTacSysID())).collect(Collectors.toList());
+
+                logger.info("identifying Tacs to update. new TAC count: " + newTacs.size() + ". Current TAC count: " + currentTacs.size());
+
+        ArrayList<TransportationAccountingCode> tacsToUpdate = new ArrayList<TransportationAccountingCode>();
+
+        ArrayList<String> currentTacSysIds = new ArrayList<String>();
+        for (TransportationAccountingCode tac : currentTacs) {
+            currentTacSysIds.add(tac.getTacSysID());
+        }
+
+        logger.info("built list of current tacSysIds");
+
+
+        for (TransportationAccountingCode tac : newTacs) {
+            if (currentTacSysIds.contains(tac.getTacSysID())) {
+                tacsToUpdate.add(tac);
+            }
+        }
+
+        logger.info("built list of tacs to update");
+
+        return tacsToUpdate;
     }
 
     // Identify TACS to create. If the tacSysId is not in the update list then it it
@@ -311,20 +331,25 @@ public class Trdm {
     // currentLoas in the database
     public List<LineOfAccounting> identifyLoasToUpdate(List<LineOfAccounting> newLoas,
             ArrayList<LineOfAccounting> currentLoas) {
-        logger.info("identifying Loas to update");
+        logger.info("identifying Loas to update. new LOA count: " + newLoas.size() + ". Current LOA count: " + currentLoas.size());
 
         ArrayList<LineOfAccounting> loasToUpdate = new ArrayList<LineOfAccounting>();
 
-        ArrayList<String> currentloaSysIds = new ArrayList<String>();
+        ArrayList<String> currentLoaSysIds = new ArrayList<String>();
         for (LineOfAccounting loa : currentLoas) {
-            currentloaSysIds.add(loa.getLoaSysID());
+            currentLoaSysIds.add(loa.getLoaSysID());
         }
 
+        logger.info("built list of current loaSysIds");
+
+
         for (LineOfAccounting loa : newLoas) {
-            if (currentloaSysIds.contains(loa.getLoaSysID())) {
+            if (currentLoaSysIds.contains(loa.getLoaSysID())) {
                 loasToUpdate.add(loa);
             }
         }
+
+        logger.info("built list of loas to update");
 
         return loasToUpdate;
     }
