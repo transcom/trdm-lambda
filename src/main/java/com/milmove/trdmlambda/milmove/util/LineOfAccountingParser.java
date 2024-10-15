@@ -92,7 +92,7 @@ public class LineOfAccountingParser {
                     logger.info("failed to parse TGET LOA data row: " + row);
                 }
             } catch (RuntimeException e) {
-                logger.error("Error processing row " + row + ": " + e.getMessage(), e);
+                logger.error("Error processing TGET LOA data row " + row + ": " + e.getMessage(), e);
             }
 
             row++;

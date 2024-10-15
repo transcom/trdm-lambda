@@ -77,13 +77,18 @@ public class TransportationAccountingCodeParser {
                 break;
             }
             String[] values = line.split("\\|");
-            TransportationAccountingCode code = processLineIntoTAC(values, columnNamesAndLocations, trdmLastUpdate);
+            try {
+                TransportationAccountingCode code = processLineIntoTAC(values, columnNamesAndLocations, trdmLastUpdate);
 
             if (code != null) {
                 codes.add(code);
             } else {
                 logger.info("failed to parse TGET TAC data row: " + row);
             }
+            } catch (Exception e) {
+                logger.error("Error processing TGET TAC data row " + row + ": " + e.getMessage(), e);
+            }
+            
             row++;
         }
         logger.info("finished parsing every single line");
