@@ -82,13 +82,19 @@ public class LineOfAccountingParser {
                 break;
             }
             String[] values = line.split("\\|");
-            LineOfAccounting code = processLineIntoLOA(values, columnNamesAndLocations, trdmLastUpdate);
 
-            if (code != null) {
-                codes.add(code);
-            } else {
-                logger.info("failed to parse TGET LOA data row: " + row);
+            try {
+                LineOfAccounting code = processLineIntoLOA(values, columnNamesAndLocations, trdmLastUpdate);
+
+                if (code != null) {
+                    codes.add(code);
+                } else {
+                    logger.info("failed to parse TGET LOA data row: " + row);
+                }
+            } catch (RuntimeException e) {
+                logger.error("Error processing row " + row + ": " + e.getMessage(), e);
             }
+
             row++;
         }
         logger.info("finished parsing every single line");
