@@ -169,23 +169,6 @@ public class Trdm {
                 // We received rows from the getTable request
                 receivedData = true;
 
-                // Get all Tacs
-                ArrayList<TransportationAccountingCode> currentTacs = databaseService.getCurrentTacInformation();
-
-                // Get all loas
-                ArrayList<LineOfAccounting> currentLoas = databaseService.getCurrentLoaInformation();
-
-                // Get all loasSysIds that occur more than once
-                ArrayList<String> duplicateLoaSysIds = databaseService.getLoaSysIdCountGreaterThan1();
-
-                // Identify Loas to delete based on if their loaSysId is not unique, their
-                // id/primary key is not referenced in TACS loa_id and the loa is the latest
-                ArrayList<LineOfAccounting> loasToDelete = identifyDuplicateLoasToDelete(currentLoas, currentTacs,
-                        duplicateLoaSysIds);
-
-                // Delete duplicate Loas
-                databaseService.deleteLoas(loasToDelete);
-
                 // Insert the codes into RDS
                 switch (rdsTable) {
                     case "transportation_accounting_codes":
@@ -194,27 +177,8 @@ public class Trdm {
                         List<TransportationAccountingCode> codes = tacParser.parse(getTableResponse.getAttachment(),
                                 oneWeekLater);
 
-                        logger.info("building list of TACs to update");
-                        // Generate list of TACs that needs to be updated. If TAC is in currentTacs then
-                        // the
-                        // TAC will be in updateTacs list because the TAC already exist
-                        List<TransportationAccountingCode> updateTacs = identifyTacsToUpdate(codes, currentTacs);
-                        logger.info("finished building list of TACs to update");
-
-                        logger.info("building list of TACs to create");
-                        // Generate list of TACs that needs to be created. If the TAC is not in
-                        // updateTacs then it will be in createTacs because it does not exist and needs
-                        // to be created.
-                        List<TransportationAccountingCode> createTacs = identifyTacsToCreate(codes, updateTacs);
-                        logger.info("finished building list of TACs to create");
-
-
-                        logger.info("updating TACs in DB");
-                        databaseService.updateTransportationAccountingCodes(updateTacs);
-                        logger.info("finished updating TACs in DB");
-
                         logger.info("inserting TACs into DB");
-                        databaseService.insertTransportationAccountingCodes(createTacs);
+                        databaseService.insertTransportationAccountingCodes(codes);
                         logger.info("finished inserting TACs into DB");
 
                         if (tacParser.getMalformedTacList().size() > 0 || snsForcePublish == "true") {
@@ -236,24 +200,8 @@ public class Trdm {
                         List<LineOfAccounting> loas = loaParser.parse(getTableResponse.getAttachment(),
                                 oneWeekLater);
 
-                        logger.info("building list of LOAs to update");
-                        // Generate list of loas that needs to be updated. If loas are in curentLoas
-                        // then the loa will be in updateLoas list because the loa already exist
-                        List<LineOfAccounting> updateLoas = identifyLoasToUpdate(loas, currentLoas);
-                        logger.info("finished building list of LOAs to update");
-
-
-                        logger.info("building list of LOAs to create");
-                        // Build Loa codes needed to create. If the code is not in updateLoas then it
-                        // will be in createLoas because it does not exist and needs to be created.
-                        List<LineOfAccounting> createLoas = identifyLoasToCreate(loas, updateLoas);
-                        logger.info("finished building list of LOAs to create");
-
-                        logger.info("updating LOAs in DB");
-                        databaseService.updateLinesOfAccountingCodes(updateLoas);
-                        logger.info("finished updating LOAs in DB");
                         logger.info("inserting LOAs into DB");
-                        databaseService.insertLinesOfAccounting(createLoas);
+                        databaseService.insertLinesOfAccounting(loas);
                         logger.info("finished inserting LOAs into DB");
 
                         if (loaParser.getMalformedLoaList().size() > 0 || snsForcePublish == "true") {
@@ -289,33 +237,6 @@ public class Trdm {
 
     }
 
-    // Identify TACS to update. If their tacSysId already exist then we need to
-    // update it
-    public List<TransportationAccountingCode> identifyTacsToUpdate(List<TransportationAccountingCode> newTacs,
-            ArrayList<TransportationAccountingCode> currentTacs) {
-
-                logger.info("identifying Tacs to update. new TAC count: " + newTacs.size() + ". Current TAC count: " + currentTacs.size());
-
-        ArrayList<TransportationAccountingCode> tacsToUpdate = new ArrayList<TransportationAccountingCode>();
-
-        ArrayList<String> currentTacSysIds = new ArrayList<String>();
-        for (TransportationAccountingCode tac : currentTacs) {
-            currentTacSysIds.add(tac.getTacSysID());
-        }
-
-        logger.info("built list of current tacSysIds");
-
-
-        for (TransportationAccountingCode tac : newTacs) {
-            if (currentTacSysIds.contains(tac.getTacSysID())) {
-                tacsToUpdate.add(tac);
-            }
-        }
-
-        logger.info("built list of tacs to update");
-
-        return tacsToUpdate;
-    }
 
     // Identify TACS to create. If the tacSysId is not in the update list then it it
     // doesn't exist and needs to be created.
