@@ -169,23 +169,6 @@ public class Trdm {
                 // We received rows from the getTable request
                 receivedData = true;
 
-                // Get all Tacs
-                ArrayList<TransportationAccountingCode> currentTacs = databaseService.getCurrentTacInformation();
-
-                // Get all loas
-                ArrayList<LineOfAccounting> currentLoas = databaseService.getCurrentLoaInformation();
-
-                // Get all loasSysIds that occur more than once
-                ArrayList<String> duplicateLoaSysIds = databaseService.getLoaSysIdCountGreaterThan1();
-
-                // Identify Loas to delete based on if their loaSysId is not unique, their
-                // id/primary key is not referenced in TACS loa_id and the loa is the latest
-                ArrayList<LineOfAccounting> loasToDelete = identifyDuplicateLoasToDelete(currentLoas, currentTacs,
-                        duplicateLoaSysIds);
-
-                // Delete duplicate Loas
-                databaseService.deleteLoas(loasToDelete);
-
                 // Insert the codes into RDS
                 switch (rdsTable) {
                     case "transportation_accounting_codes":
@@ -194,22 +177,8 @@ public class Trdm {
                         List<TransportationAccountingCode> codes = tacParser.parse(getTableResponse.getAttachment(),
                                 oneWeekLater);
 
-                        // Generate list of TACs that needs to be updated. If TAC is in currentTacs then
-                        // the
-                        // TAC will be in updateTacs list because the TAC already exist
-                        List<TransportationAccountingCode> updateTacs = identifyTacsToUpdate(codes, currentTacs);
-
-                        // Generate list of TACs that needs to be created. If the TAC is not in
-                        // updateTacs then it will be in createTacs because it does not exist and needs
-                        // to be created.
-                        List<TransportationAccountingCode> createTacs = identifyTacsToCreate(codes, updateTacs);
-
-                        logger.info("updating TACs in DB");
-                        databaseService.updateTransportationAccountingCodes(updateTacs);
-                        logger.info("finished updating TACs in DB");
-
                         logger.info("inserting TACs into DB");
-                        databaseService.insertTransportationAccountingCodes(createTacs);
+                        databaseService.insertTransportationAccountingCodes(codes);
                         logger.info("finished inserting TACs into DB");
 
                         if (tacParser.getMalformedTacList().size() > 0 || snsForcePublish == "true") {
@@ -231,19 +200,8 @@ public class Trdm {
                         List<LineOfAccounting> loas = loaParser.parse(getTableResponse.getAttachment(),
                                 oneWeekLater);
 
-                        // Generate list of loas that needs to be updated. If loas are in curentLoas
-                        // then the loa will be in updateLoas list because the loa already exist
-                        List<LineOfAccounting> updateLoas = identifyLoasToUpdate(loas, currentLoas);
-
-                        // Build Loa codes needed to create. If the code is not in updateLoas then it
-                        // will be in createLoas because it does not exist and needs to be created.
-                        List<LineOfAccounting> createLoas = identifyLoasToCreate(loas, updateLoas);
-
-                        logger.info("updating LOAs in DB");
-                        databaseService.updateLinesOfAccountingCodes(updateLoas);
-                        logger.info("finished updating LOAs in DB");
                         logger.info("inserting LOAs into DB");
-                        databaseService.insertLinesOfAccounting(createLoas);
+                        databaseService.insertLinesOfAccounting(loas);
                         logger.info("finished inserting LOAs into DB");
 
                         if (loaParser.getMalformedLoaList().size() > 0 || snsForcePublish == "true") {
@@ -279,13 +237,6 @@ public class Trdm {
 
     }
 
-    // Identify TACS to update. If their tacSysId already exist then we need to
-    // update it
-    public List<TransportationAccountingCode> identifyTacsToUpdate(List<TransportationAccountingCode> newTacs,
-            ArrayList<TransportationAccountingCode> currentTacs) {
-        return newTacs.stream().filter(newTac -> currentTacs.stream().map(currentTac -> currentTac.getTacSysID())
-                .collect(Collectors.toList()).contains(newTac.getTacSysID())).collect(Collectors.toList());
-    }
 
     // Identify TACS to create. If the tacSysId is not in the update list then it it
     // doesn't exist and needs to be created.
@@ -301,14 +252,27 @@ public class Trdm {
     // currentLoas in the database
     public List<LineOfAccounting> identifyLoasToUpdate(List<LineOfAccounting> newLoas,
             ArrayList<LineOfAccounting> currentLoas) {
-        logger.info("identifying Loas to update");
-        return newLoas.stream()
-                .filter(newLoa -> currentLoas.stream()
-                        .map(currentLoa -> currentLoa.getLoaSysID()) // Map out loa_sys_ids from a list of current loas
-                                                                     // in the database
-                        .collect(Collectors.toList())
-                        .contains(newLoa.getLoaSysID())) // Does the new LOA loaSysId exist in a list of loa_sys_ids
-                .collect(Collectors.toList());
+        logger.info("identifying Loas to update. new LOA count: " + newLoas.size() + ". Current LOA count: " + currentLoas.size());
+
+        ArrayList<LineOfAccounting> loasToUpdate = new ArrayList<LineOfAccounting>();
+
+        ArrayList<String> currentLoaSysIds = new ArrayList<String>();
+        for (LineOfAccounting loa : currentLoas) {
+            currentLoaSysIds.add(loa.getLoaSysID());
+        }
+
+        logger.info("built list of current loaSysIds");
+
+
+        for (LineOfAccounting loa : newLoas) {
+            if (currentLoaSysIds.contains(loa.getLoaSysID())) {
+                loasToUpdate.add(loa);
+            }
+        }
+
+        logger.info("built list of loas to update");
+
+        return loasToUpdate;
     }
 
     // This method identifies loas to create based on filtering the newLoas by which

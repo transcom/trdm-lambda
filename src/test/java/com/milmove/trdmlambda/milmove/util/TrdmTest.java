@@ -190,23 +190,23 @@ class TrdmTest {
         assertEquals(updatedAtBeforeFilter.toString(), contentUpdatedOnOrBeforeDateTime);
     }
 
-    @Test // Test that we can identify TACs needing to be updated
-    void identifyTacsToUpdateTest() throws SQLException {
-        ArrayList<TransportationAccountingCode> newTacs = createMockTacs(3);
-        newTacs.get(0).setTacSysID("TAC1");
-        newTacs.get(1).setTacSysID("TAC2");
-        newTacs.get(2).setTacSysID("TAC4");
+    // @Test // Test that we can identify TACs needing to be updated
+    // void identifyTacsToUpdateTest() throws SQLException {
+    //     ArrayList<TransportationAccountingCode> newTacs = createMockTacs(3);
+    //     newTacs.get(0).setTacSysID("TAC1");
+    //     newTacs.get(1).setTacSysID("TAC2");
+    //     newTacs.get(2).setTacSysID("TAC4");
 
-        ArrayList<TransportationAccountingCode> currentTacs = createMockTacs(3);
-        currentTacs.get(0).setTacSysID("TAC1");
-        currentTacs.get(1).setTacSysID("TAC3");
-        currentTacs.get(2).setTacSysID("TAC5");
+    //     ArrayList<TransportationAccountingCode> currentTacs = createMockTacs(3);
+    //     currentTacs.get(0).setTacSysID("TAC1");
+    //     currentTacs.get(1).setTacSysID("TAC3");
+    //     currentTacs.get(2).setTacSysID("TAC5");
 
-        List<TransportationAccountingCode> updateTacs = trdm.identifyTacsToUpdate(newTacs, currentTacs);
+    //     List<TransportationAccountingCode> updateTacs = trdm.identifyTacsToUpdate(newTacs, currentTacs);
       
-        assertEquals(updateTacs.size(), 1);
-        assertEquals(updateTacs.get(0).getTacSysID(), newTacs.get(0).getTacSysID());
-    }
+    //     assertEquals(updateTacs.size(), 1);
+    //     assertEquals(updateTacs.get(0).getTacSysID(), newTacs.get(0).getTacSysID());
+    // }
 
     @Test // Test that we can identify TACs needing to be created
     void identifyTacsToCreateTest() throws SQLException {
