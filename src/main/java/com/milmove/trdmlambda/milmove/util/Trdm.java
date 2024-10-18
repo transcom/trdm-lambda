@@ -204,7 +204,7 @@ public class Trdm {
                         databaseService.insertLinesOfAccounting(loas);
                         logger.info("finished inserting LOAs into DB");
 
-                        if (loaParser.getMalformedLoaList().size() > 0 || snsForcePublish == "true") {
+                        if (loaParser.getMalformedLoaList().size() > 0 || snsForcePublish.equals("true")) {
                             try {
                                 logger.info(
                                         "malformed LOA data detected when parsing. Sending malformed LOA data SNS notification");
