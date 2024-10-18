@@ -181,7 +181,7 @@ public class Trdm {
                         databaseService.insertTransportationAccountingCodes(codes);
                         logger.info("finished inserting TACs into DB");
 
-                        if (tacParser.getMalformedTacList().size() > 0 || snsForcePublish == "true") {
+                        if (tacParser.getMalformedTacList().size() > 0 || snsForcePublish.equals("true")) {
                             try {
                                 logger.info(
                                         "malformed TAC data detected when parsing. Sending malformed TAC data SNS notification");
