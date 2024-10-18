@@ -147,6 +147,11 @@ public class Trdm {
 
         boolean receivedData = false;
 
+        boolean forcePublish = false;
+        if (snsForcePublish != null && snsForcePublish.equals(Boolean.toString(true))) {
+            forcePublish = true;
+        }
+
         while (ourLastUpdate.compare(trdmLastUpdate) <= 0 && !receivedData) {
             XMLGregorianCalendar oneWeekLater = AddOneWeek(ourLastUpdate);
             // Add check that our "One week later" addition doesn't go past the TRDM last
@@ -181,7 +186,7 @@ public class Trdm {
                         databaseService.insertTransportationAccountingCodes(codes);
                         logger.info("finished inserting TACs into DB");
 
-                        if (tacParser.getMalformedTacList().size() > 0 || snsForcePublish == "true") {
+                        if (tacParser.getMalformedTacList().size() > 0 || forcePublish) {
                             try {
                                 logger.info(
                                         "malformed TAC data detected when parsing. Sending malformed TAC data SNS notification");
@@ -204,7 +209,7 @@ public class Trdm {
                         databaseService.insertLinesOfAccounting(loas);
                         logger.info("finished inserting LOAs into DB");
 
-                        if (loaParser.getMalformedLoaList().size() > 0 || snsForcePublish == "true") {
+                        if (loaParser.getMalformedLoaList().size() > 0 || forcePublish) {
                             try {
                                 logger.info(
                                         "malformed LOA data detected when parsing. Sending malformed LOA data SNS notification");
